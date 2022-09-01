@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: xmaxima-trailer.tcl,v 1.13 2011/03/09 11:31:23 villate Exp $
+#       $Id: xmaxima-trailer.tcl,v 1.13 2011-03-09 11:31:23 villate Exp $
 #
 # Attach this at the bottom of the xmaxima code to start up the interface.
 

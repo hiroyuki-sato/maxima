@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Macros.tcl,v 1.6 2006/06/29 13:09:58 villate Exp $
+#       $Id: Macros.tcl,v 1.6 2006-06-29 13:09:58 villate Exp $
 #
 ###### Macros.tcl ######
 ############################################################

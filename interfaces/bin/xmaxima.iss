@@ -1,6 +1,6 @@
 ; -*-mode: text; fill-column: 75; tab-width: 8; coding: iso-latin-1-dos -*-
 ;
-; $Id: xmaxima.iss,v 1.3 2002/09/24 02:38:03 mikeclarkson Exp $
+; $Id: xmaxima.iss,v 1.3 2002-09-24 02:38:03 mikeclarkson Exp $
 ;
 
 [Setup]

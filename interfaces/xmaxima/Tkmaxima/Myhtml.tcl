@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Myhtml.tcl,v 1.15 2006/10/01 23:58:29 villate Exp $
+#       $Id: Myhtml.tcl,v 1.15 2006-10-01 23:58:29 villate Exp $
 #
 ###### Myhtml.tcl ######
 ############################################################

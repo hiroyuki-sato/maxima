@@ -1,4 +1,4 @@
-#  $Id: scene.tcl,v 1.2 2011/03/19 23:13:04 villate Exp $
+#  $Id: scene.tcl,v 1.2 2011-03-19 23:13:04 villate Exp $
 #
 ###### scene.tcl ######
 # Copyright (c) 2011, Jaime E. Villate <villate@fe.up.pt>

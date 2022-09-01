@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Push.tcl,v 1.4 2003/01/22 02:59:02 mikeclarkson Exp $
+#       $Id: Push.tcl,v 1.4 2003-01-22 02:59:02 mikeclarkson Exp $
 #
 ###### push.tcl ######
 ############################################################

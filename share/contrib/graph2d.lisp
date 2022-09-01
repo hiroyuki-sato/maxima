@@ -21,7 +21,7 @@
 ;; See graph2d.usg (which should come together with this program) for
 ;; a usage summary, and graph2d.dem for examples.
 ;;
-;; $Id: graph2d.lisp,v 1.3 2009/09/13 01:50:03 robert_dodier Exp $
+;; $Id: graph2d.lisp,v 1.3 2009-09-13 01:50:03 robert_dodier Exp $
 
 (in-package :maxima)
 

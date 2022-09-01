@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Plot2d.tcl,v 1.20 2011/03/09 11:28:25 villate Exp $
+#       $Id: Plot2d.tcl,v 1.20 2011-03-09 11:28:25 villate Exp $
 #
 ###### Plot2d.tcl ######
 ############################################################

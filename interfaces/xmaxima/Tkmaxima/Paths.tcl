@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Paths.tcl,v 1.27 2009/01/18 20:17:24 robert_dodier Exp $
+#       $Id: Paths.tcl,v 1.27 2009-01-18 20:17:24 robert_dodier Exp $
 #
 # Attach this near the bottom of the xmaxima code to find the paths needed
 # to start up the interface.

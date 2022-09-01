@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.26 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -9,9 +9,1612 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: Funciones y variables para simetrías,  Prev: Simetrías,  Up: Simetrías
+
+30.1 Funciones y variables para simetrías
+=========================================
+
+ -- Función: comp2pui (<n>, <l>)
+     Realiza el paso de las funciones simétricas completas de la lista
+     <l> a las funciones simétricas elementales de 0 a <n>. En caso de
+     que la lista <l> contenga menos de `<n>+1' elementos, se
+     completará con valores formales.  El primer elemento de la lista
+     <l> almacena el cardinal del alfabeto, en caso de que exista; en
+     caso contrario se le da el valor <n>.
+
+          (%i1) comp2pui (3, [4, g]);
+                                  2                    2
+          (%o1)    [4, g, 2 h2 - g , 3 h3 - g h2 + g (g  - 2 h2)]
+
+
+ -- Función: cont2part (<pc>, <lvar>)
+     Convierte el polinomio particionado asociado a la forma contraída
+     <pc>, cuyas variables se encuentran en <lvar>.
+
+          (%i1) pc: 2*a^3*b*x^4*y + x^5;
+                                     3    4      5
+          (%o1)                   2 a  b x  y + x
+          (%i2) cont2part (pc, [x, y]);
+                                             3
+          (%o2)              [[1, 5, 0], [2 a  b, 4, 1]]
+
+     Otras funciones para efectuar cambios de representación son:
+     `contract', `explose', `part2cont', `partpol', `tcontract' y
+     `tpartpol'.
+
+
+ -- Función: contract (<psym>, <lvar>)
+     Convierte una forma contraída (como un monomio por órbita sobre la
+     acción del grupo simétrico) del polinomio <psym> cuyas variables
+     se encuentran en la lista <lvar>. La función `explose' realiza la
+     operación inversa. A mayopes, la función `tcontract' comprueba la
+     simetría del polinomio.
+
+          (%i1) psym: explose (2*a^3*b*x^4*y, [x, y, z]);
+                   3      4      3      4      3    4        3    4
+          (%o1) 2 a  b y z  + 2 a  b x z  + 2 a  b y  z + 2 a  b x  z
+
+                                                     3      4      3    4
+                                                + 2 a  b x y  + 2 a  b x  y
+          (%i2) contract (psym, [x, y, z]);
+                                        3    4
+          (%o2)                      2 a  b x  y
+
+     Otras funciones para efectuar cambios de representación son:
+
+     `cont2part', `explose', `part2cont', `partpol', `tcontract',
+     `tpartpol'.
+
+
+ -- Función: direct ([<p_1>, ..., <p_n>], <y>, <f>, [<lvar_1>, ...,
+          <lvar_n>])
+     Calcula la imagen directa (véase M. Giusti, D. Lazard et A.
+     Valibouze, ISSAC 1988, Roma) asociada a la función <f>, en las
+     listas de variables <lvar_1>, ..., <lvar_n>, y en los polinomios
+     <p_1>, ..., <p_n> de una variable <y>. Si la expresión de <f> no
+     depende de variable alguna, no sólo es inútil aportar esa
+     variable, sino que también disminuyen considerablemente los
+     cálculos cuando la variable no se declara.
+
+          (%i1) direct ([z^2  - e1* z + e2, z^2  - f1* z + f2],
+                        z, b*v + a*u, [[u, v], [a, b]]);
+                 2
+          (%o1) y  - e1 f1 y
+
+                                           2            2             2   2
+                            - 4 e2 f2 - (e1  - 2 e2) (f1  - 2 f2) + e1  f1
+                          + -----------------------------------------------
+                                                   2
+          (%i2) ratsimp (%);
+                        2                2                   2
+          (%o2)        y  - e1 f1 y + (e1  - 4 e2) f2 + e2 f1
+          (%i3) ratsimp (direct ([z^3-e1*z^2+e2*z-e3,z^2  - f1* z + f2],
+                        z, b*v + a*u, [[u, v], [a, b]]));
+                 6            5         2                        2    2   4
+          (%o3) y  - 2 e1 f1 y  + ((2 e1  - 6 e2) f2 + (2 e2 + e1 ) f1 ) y
+
+                                    3                               3   3
+           + ((9 e3 + 5 e1 e2 - 2 e1 ) f1 f2 + (- 2 e3 - 2 e1 e2) f1 ) y
+
+                   2       2        4    2
+           + ((9 e2  - 6 e1  e2 + e1 ) f2
+
+                              2       2       2                   2    4
+           + (- 9 e1 e3 - 6 e2  + 3 e1  e2) f1  f2 + (2 e1 e3 + e2 ) f1 )
+
+            2          2                      2     3          2
+           y  + (((9 e1  - 27 e2) e3 + 3 e1 e2  - e1  e2) f1 f2
+
+                           2            2    3                5
+           + ((15 e2 - 2 e1 ) e3 - e1 e2 ) f1  f2 - 2 e2 e3 f1 ) y
+
+                     2                   3           3     2   2    3
+           + (- 27 e3  + (18 e1 e2 - 4 e1 ) e3 - 4 e2  + e1  e2 ) f2
+
+                   2      3                   3    2   2
+           + (27 e3  + (e1  - 9 e1 e2) e3 + e2 ) f1  f2
+
+                             2    4        2   6
+           + (e1 e2 e3 - 9 e3 ) f1  f2 + e3  f1
+
+     Búsqueda del polinomio cuyas raíces son la suma a+u o a es la raíz
+     de z^2  - e1* z + e2 y u es la raíz de z^2  - f1* z + f2
+
+          (%i1) ratsimp (direct ([z^2  - e1* z + e2, z^2  - f1* z + f2],
+                                    z, a + u, [[u], [a]]));
+                 4                    3             2
+          (%o1) y  + (- 2 f1 - 2 e1) y  + (2 f2 + f1  + 3 e1 f1 + 2 e2
+
+               2   2                              2               2
+           + e1 ) y  + ((- 2 f1 - 2 e1) f2 - e1 f1  + (- 2 e2 - e1 ) f1
+
+                            2                     2            2
+           - 2 e1 e2) y + f2  + (e1 f1 - 2 e2 + e1 ) f2 + e2 f1  + e1 e2 f1
+
+               2
+           + e2
+
+     La función `direct' acepta dos indicadores: `elementaires'
+     (elementales) y `puissances' (potenciales, que es el valor por
+     defecto) que permiten hacer la descomposición de los polinomios
+     simétricos que aparezcan en los cálculos en funciones simétricas
+     elementales o en funciones potenciales, respectivamente.
+
+     Funciones de `sym' utilizadas en esta función:
+
+     `multi_orbit'(por tanto `orbit'),`pui_direct', `multi_elem' (por
+     tanto `elem'), `multi_pui' (por tanto `pui'), `pui2ele', `ele2pui'
+     (si al indicador `direct' se le asignó `puissances').
+
+
+ -- Función: ele2comp (<m>, <l>)
+     Pasa las funciones simétricas elementales a funciones completas,
+     de forma similar a `comp2ele' y `comp2pui'.
+
+     Otras funciones para cambio de bases son:
+
+     `comp2ele', `comp2pui', `ele2pui', `elem', `mon2schur',
+     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
+     `puireduc' y `schur2comp'.
+
+
+ -- Función: ele2polynome (<l>, <z>)
+     Devuelve el polinomio en <z> en el que las funciones simétricas
+     elementales de las raíces son las de la lista <l>.  `<l> = [<n>,
+     <e_1>, ..., <e_n>]', donde <n> es el grado del polinomio y <e_i>
+     la <i>-ésima función simétrica elemental.
+
+          (%i1) ele2polynome ([2, e1, e2], z);
+                                    2
+          (%o1)                    z  - e1 z + e2
+          (%i2) polynome2ele (x^7 - 14*x^5 + 56*x^3  - 56*x + 22, x);
+          (%o2)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
+          (%i3) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
+                            7       5       3
+          (%o3)            x  - 14 x  + 56 x  - 56 x + 22
+
+     La función recíproca es `polynome2ele (<P>, <z>)'
+
+     Véanse también `polynome2ele' y `pui2polynome'.
+
+
+ -- Función: ele2pui (<m>, <l>)
+     Pasa las funciones simétricas elementales a funciones completas,
+     de forma similar a `comp2ele' y `comp2comp'.
+
+     Otras funciones para cambio de bases son:
+
+     `comp2ele', `comp2pui', `ele2comp', `elem', `mon2schur',
+     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
+     `puireduc' y `schur2comp'.
+
+
+ -- Función: elem (<ele>, <sym>, <lvar>)
+     Descompone el polinomio simétrico <sym> con las variables
+     continuas de la lista <lvar> en las funciones simétricas
+     elementales contenidas en la lista <ele>.  El primer elemento de
+     la lista <ele> almacena el cardinal del alfabeto, en caso de que
+     exista; en caso contrario se le da como valor el grado del
+     polinomio <sym>.  Si faltan valores en la lista <ele>, ésta se
+     completará con valores formales del tipo "ei".  El polinomio <sym>
+     puede especificarse de tres formas diferentes: contraído (en cuyo
+     caso `elem' debe valer 1, que es el valor por defecto),
+     particionado (`elem' valdrá 3) o extendido (por ejemplo, el
+     polinomio completo) (en este caso, `elem' valdrá 2). La
+     utilización de la función `pui' se hace siguiendo este mismo
+     modelo.
+
+     Con un alfabeto de cardinal 3 con <e1>, la primera función
+     simétrica elemental valiendo 7, el polinomio simétrico de tres
+     variables cuya forma contraída (aquí dependiendo solamente de dos
+     de sus variables) es ^4-2*x*y, se descompone en funciones
+     simétricas elementales:
+
+          (%i1) elem ([3, 7], x^4 - 2*x*y, [x, y]);
+          (%o1) 7 (e3 - 7 e2 + 7 (49 - e2)) + 21 e3
+
+                                                   + (- 2 (49 - e2) - 2) e2
+          (%i2) ratsimp (%);
+                                        2
+          (%o2)             28 e3 + 2 e2  - 198 e2 + 2401
+
+     Otras funciones para cambio de bases son: `comp2ele', `comp2pui',
+     `ele2comp', `ele2pui', `mon2schur', `multi_elem', `multi_pui',
+     `pui', `pui2comp', `pui2ele', `puireduc' y `schur2comp'.
+
+
+ -- Función: explose (<pc>, <lvar>)
+     Devuelve el polinomio simétrico asociado a la forma contraída
+     <pc>. La lista <lvar> contiene las variables.
+
+          (%i1) explose (a*x + 1, [x, y, z]);
+          (%o1)                  a z + a y + a x + 1
+
+     Otras funciones para efectuar cambios de representación son:
+     `contract', `cont2part', `part2cont', `partpol', `tcontract' y
+     `tpartpol'.
+
+
+ -- Función: kostka (<part_1>, <part_2>)
+     Función escrita por P. Espert, calcula el número de Kostka
+     asociado a las particiones <part_1> y <part_2>.
+
+          (%i1) kostka ([3, 3, 3], [2, 2, 2, 1, 1, 1]);
+          (%o1)                           6
+
+
+ -- Función: lgtreillis (<n>, <m>)
+     Devuelve la lista de particiones de peso <n> y longitud <m>.
+
+          (%i1) lgtreillis (4, 2);
+          (%o1)                   [[3, 1], [2, 2]]
+
+     Véanse también `ltreillis', `treillis' y `treinat'.
+
+
+ -- Función: ltreillis (<n>, <m>)
+     Devuelve la lista de particiones de peso <n> y longitud menor o
+     igual que <m>.
+
+          (%i1) ltreillis (4, 2);
+          (%o1)               [[4, 0], [3, 1], [2, 2]]
+
+     Véanse tambiént `lgtreillis', `treillis' y `treinat'.
+
+
+ -- Función: mon2schur (<l>)
+     La lista <l> representa la función de Schur S_<l>: Se tiene <l> =
+     [<i_1>, <i_2>, ..., <i_q>] con <i_1> <= <i_2> <= ... <= <i_q>.  La
+     función de Schur es S_[<i_1>, <i_2>, ..., <i_q>], el menor de la
+     matriz infinita (h_{i-j}) <i> >= 1, <j> >= 1 compuesto de las <q>
+     primeras filas y columnas <i_1> + 1, <i_2> + 2, ..., <i_q> + <q>.
+
+     Se ha escrito esta función de Schur en función de las formas
+     monomiales utilizando las funciones `treinat' y `kostka'.  La
+     forma devuelta es un polinomio simétrico en una de sus
+     representaciones contraídas con las variables <x_1>, <x_2>, ...
+
+          (%i1) mon2schur ([1, 1, 1]);
+          (%o1)                       x1 x2 x3
+          (%i2) mon2schur ([3]);
+                                            2        3
+          (%o2)                x1 x2 x3 + x1  x2 + x1
+          (%i3) mon2schur ([1, 2]);
+                                                2
+          (%o3)                  2 x1 x2 x3 + x1  x2
+
+     Para 3 variables se tendrá:
+
+             2 x1 x2 x3 + x1^2 x2 + x2^2 x1 + x1^2 x3 + x3^2 x1
+              + x2^2 x3 + x3^2 x2
+
+     Otras funciones para cambio de bases son:
+
+     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem',
+     `multi_elem', `multi_pui', `pui', `pui2comp', `pui2ele',
+     `puireduc' y `schur2comp'.
+
+
+ -- Función: multi_elem (<l_elem>, <multi_pc>, <l_var>)
+     Descompone un polinomio multisimétrico sobre una forma
+     multicontraída <multi_pc> en los grupos de variables contenidas en
+     la lista de listas  <l_var> sobre los grupos de funciones
+     simétricas elementales contenidas en <l_elem>.
+
+          (%i1) multi_elem ([[2, e1, e2], [2, f1, f2]], a*x + a^2 + x^3,
+                [[x, y], [a, b]]);
+                                                            3
+          (%o1)         - 2 f2 + f1 (f1 + e1) - 3 e1 e2 + e1
+          (%i2) ratsimp (%);
+                                   2                       3
+          (%o2)         - 2 f2 + f1  + e1 f1 - 3 e1 e2 + e1
+
+     Otras funciones para cambio de bases son:
+
+     `comp2ele', `comp2pui', `ele2comp', `ele2pui', `elem',
+     `mon2schur', `multi_pui', `pui', `pui2comp', `pui2ele', `puireduc'
+     y `schur2comp'.
+
+
+ -- Función: multi_orbit (<P>, [<lvar_1>, <lvar_2>, ..., <lvar_p>])
+     <P> es un polinomio en el conjunto de variables contenidas en las
+     listas <lvar_1>, <lvar_2>, ..., <lvar_p>.  Esta función restablece
+     la órbita del polinomio <P> sobre la acción del producto de los
+     grupos simétricos de los conjuntos de variables representadas por
+     esas <p> listas.
+
+          (%i1) multi_orbit (a*x + b*y, [[x, y], [a, b]]);
+          (%o1)                [b y + a x, a y + b x]
+          (%i2) multi_orbit (x + y + 2*a, [[x, y], [a, b, c]]);
+          (%o2)        [y + x + 2 c, y + x + 2 b, y + x + 2 a]
+
+     Véase también `orbit' para la acción de un solo grupo simérico.
+
+
+ -- Función: multi_pui
+     Es a la función `pui' lo que la función `multi_elem' es a la
+     función `elem'.
+
+          (%i1) multi_pui ([[2, p1, p2], [2, t1, t2]], a*x + a^2 + x^3,
+                [[x, y], [a, b]]);
+                                                      3
+                                          3 p1 p2   p1
+          (%o1)              t2 + p1 t1 + ------- - ---
+                                             2       2
+
+
+ -- Función: multinomial (<r>, <part>)
+     El argumento <r> es el peso de la partición <part>.  Esta función
+     calcula el coeficiente multinomial asociado: si las partes de las
+     particiones <part> son <i_1>, <i_2>, ..., <i_k>, el resultado de
+     `multinomial' es `<r>!/(<i_1>! <i_2>! ... <i_k>!)'.
+
+
+ -- Función: multsym (<ppart_1>, <ppart_2>, <n>)
+     Calcula el producto de dos polinomios simétricos de <n> variables
+     operando solamente con el módulo de la acción del grupo simétrico
+     de orden <n>. Los polinomios están en su representación
+     particionada.
+
+     Sean los dos polinomios simétricos en `x' e `y': `3*(x + y) +
+     2*x*y' y `5*(x^2 + y^2)' cuyas formas particionadas son `[[3, 1],
+     [2, 1, 1]]' y `[[5, 2]]', respectivamente; el producto de ambos
+     será:
+
+          (%i1) multsym ([[3, 1], [2, 1, 1]], [[5, 2]], 2);
+          (%o1)         [[10, 3, 1], [15, 3, 0], [15, 2, 1]]
+
+     o sea, `10*(x^3*y + y^3*x) + 15*(x^2*y + y^2*x) + 15*(x^3 + y^3)'.
+
+     Funciones de cambio de representación de un polinomio simétrico:
+
+     `contract', `cont2part', `explose', `part2cont', `partpol',
+     `tcontract' y `tpartpol'.
+
+
+ -- Función: orbit (<P>, <lvar>)
+     Calcula la órbita de un polinomio <P> en las variables de la lista
+     <lvar> bajo la acción del grupo simétrico del conjunto de
+     variables contenidas en la lista <lvar>.
+
+          (%i1) orbit (a*x + b*y, [x, y]);
+          (%o1)                [a y + b x, b y + a x]
+          (%i2) orbit (2*x + x^2, [x, y]);
+                                  2         2
+          (%o2)                 [y  + 2 y, x  + 2 x]
+
+     Véase también `multi_orbit' para la acción de un producto de
+     grupos simétricos sobre un polinomio.
+
+
+ -- Función: part2cont (<ppart>, <lvar>)
+     Transforma un polinomio simétrico de su forma particionada a su
+     forma contraída. La forma contraída se devuelve con las variables
+     contenidas en <lvar>.
+
+          (%i1) part2cont ([[2*a^3*b, 4, 1]], [x, y]);
+                                        3    4
+          (%o1)                      2 a  b x  y
+
+     Otras funciones para efectuar cambios de representación son:
+
+     `contract', `cont2part', `explose', `partpol', `tcontract' y
+     `tpartpol'.
+
+
+ -- Función: partpol (<psym>, <lvar>)
+     Restablece la representación particionada del polinomio simétrico
+     <psym> de variables en <lvar>.
+
+          (%i1) partpol (-a*(x + y) + 3*x*y, [x, y]);
+          (%o1)               [[3, 1, 1], [- a, 1, 0]]
+
+     Otras funciones para efectuar cambios de representación son:
+
+     `contract', `cont2part', `explose', `part2cont', `tcontract' y
+     `tpartpol'.
+
+
+ -- Función: permut (<l>)
+     Devuelve la lista de permutaciones de la lista <l>.
+
+ -- Función: polynome2ele (<P>, <x>)
+     Devuelve la lista `<l> = [<n>, <e_1>, ..., <e_n>]', en la que <n>
+     es el grado del polinomio <P> de variable <x> y <e_i> es la
+     <i>-ésima función simétrica elemental de las raíces de <P>.
+
+          (%i1) polynome2ele (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x);
+          (%o1)          [7, 0, - 14, 0, 56, 0, - 56, - 22]
+          (%i2) ele2polynome ([7, 0, -14, 0, 56, 0, -56, -22], x);
+                            7       5       3
+          (%o2)            x  - 14 x  + 56 x  - 56 x + 22
+
+     La función recíproca es `ele2polynome (<l>, <x>)'.
+
+
+ -- Función: prodrac (<l>, <k>)
+     Siendo <l> una lista que contiene las funciones simétricas
+     elementales sobre un conjunto <A>, la función `prodrac' calcula el
+     polinomio cuyas raíces son los productos <k> a <k> de los
+     elementos de <A>.
+
+ -- Función: pui (<l>, <sym>, <lvar>)
+     Descompone el polinomio simétrico <sym>, cuyas variables son las
+     contenidas en <lvar>, en las funciones potenciales contenidas en
+     la lista <l>.  El primer elemento de la lista <l> almacena el
+     cardinal del alfabeto, en caso de que exista; en caso contrario se
+     le da el grado del polinomio <sym>.  Si faltan los valores de la
+     lista <l>, en su lugar serán colocados valores formales del tipo
+     "pi".  El polinomio <sym> puede especificarse de tres formas
+     diferentes: contraído (en cuyo caso `pui' debe valer 1, que es el
+     valor por defecto), particionado (`pui' valdrá 3) o extendido (por
+     ejemplo, el polinomio completo) (en este caso, `pui' valdrá 2). La
+     utilización de la función `elem' se hace siguiendo este mismo
+     modelo.
+
+          (%i1) pui;
+          (%o1)                           1
+          (%i2) pui ([3, a, b], u*x*y*z, [x, y, z]);
+                                 2
+                             a (a  - b) u   (a b - p3) u
+          (%o2)              ------------ - ------------
+                                  6              3
+          (%i3) ratsimp (%);
+                                                 3
+                                (2 p3 - 3 a b + a ) u
+          (%o3)                 ---------------------
+                                          6
+
+     Otras funciones para cambio de bases son: `comp2ele', `comp2pui',
+     `ele2comp', `ele2pui', `elem', `mon2schur', `multi_elem',
+     `multi_pui', `pui2comp', `pui2ele', `puireduc' y `schur2comp'.
+
+
+ -- Función: pui2comp (<n>, <lpui>)
+     Devuelve la lista de las <n> primeras funciones completas (con el
+     cardinal en primer lugar) en función de las funciones potenciales
+     dadas en la lista <lpui>. Si la lista <lpui> estuviese vacía, el
+     cardinal sería <N>; si no estuviese vacía, se tomaría como
+     cardinal su primer elemento, de forma similar a como se procede en
+     `comp2ele' y en `comp2pui'.
+
+          (%i1) pui2comp (2, []);
+                                                 2
+                                          p2 + p1
+          (%o1)                   [2, p1, --------]
+                                             2
+          (%i2) pui2comp (3, [2, a1]);
+                                                      2
+                                           a1 (p2 + a1 )
+                                   2  p3 + ------------- + a1 p2
+                            p2 + a1              2
+          (%o2)     [2, a1, --------, --------------------------]
+                               2                  3
+          (%i3) ratsimp (%);
+                                      2                     3
+                               p2 + a1   2 p3 + 3 a1 p2 + a1
+          (%o3)        [2, a1, --------, --------------------]
+                                  2               6
+
+     Otras funciones para cambio de bases son: `comp2ele', `comp2pui',
+     `ele2comp', `ele2pui', `elem', `mon2schur', `multi_elem',
+     `multi_pui', `pui', `pui2ele', `puireduc' y `schur2comp'.
+
+
+ -- Función: pui2ele (<n>, <lpui>)
+     Transforma las funciones potenciales a funciones simétricas
+     elementales. Si la variable global `pui2ele' vale `girard', se
+     recupera la lista de funciones simétricas elementales de 1 <n>, y
+     si es igual a `close', se recupera la <n>-ésima función simétrica
+     elemental.
+
+     Otras funciones para cambio de bases son: `comp2ele', `comp2pui',
+     `ele2comp', `ele2pui', `elem', `mon2schur', `multi_elem',
+     `multi_pui', `pui', `pui2comp', `puireduc' y `schur2comp'.
+
+
+ -- Función: pui2polynome (<x>, <lpui>)
+     Calcula el polinomio en <x> cuyas raíces tienen como funciones
+     potenciales las dadas en la lista <lpui>.
+
+          (%i1) pui;
+          (%o1)                           1
+          (%i2) kill(labels);
+          (%o0)                         done
+          (%i1) polynome2ele (x^3 - 4*x^2 + 5*x - 1, x);
+          (%o1)                     [3, 4, 5, 1]
+          (%i2) ele2pui (3, %);
+          (%o2)                     [3, 4, 6, 7]
+          (%i3) pui2polynome (x, %);
+                                  3      2
+          (%o3)                  x  - 4 x  + 5 x - 1
+
+     Véanse también `polynome2ele' y `ele2polynome'.
+
+
+ -- Función: pui_direct (<orbite>, [<lvar_1>, ..., <lvar_n>], [<d_1>,
+          <d_2>, ..., <d_n>])
+     Sea <f> un polinomio en <n> bloques de variables <lvar_1>, ...,
+     <lvar_n>.  Sea <c_i> el número de variables en <lvar_i> y <SC> el
+     producto de los <n> grupos simétricos de grados <c_1>, ..., <c_n>,
+     que actúan sobre <f>.  La lista <orbite> es la órbita,
+     representada por `<SC>(<f>)', de la función <f> sobre la acción de
+     <SC>, la cual puede ser obtenida por medio de la función
+     `multi_orbit'.  Los valores `d_i' son enteros tales que <c_1> <=
+     <d_1>, <c_2> <= <d_2>, ..., <c_n> <= <d_n>.  Por último, sea <SD>
+     el producto de los grupos simétricos <S_d1> x <S_d2> x ... x
+     <S_dn>.
+
+     La función `pui_direct' devuelve las <n> primeras funciones
+     potenciales de `<SD>(<f>)' deducidas de las funciones potenciales
+     de `<SC>(<f>)', siendo <n> el cardinal de `<SD>(<f>)'.
+
+     El resultado se devuelve en la forma multicontraída respecto de
+     <SD>.
+
+          (%i1) l: [[x, y], [a, b]];
+          (%o1)                   [[x, y], [a, b]]
+          (%i2) pui_direct (multi_orbit (a*x + b*y, l), l, [2, 2]);
+                                                 2  2
+          (%o2)               [a x, 4 a b x y + a  x ]
+          (%i3) pui_direct (multi_orbit (a*x + b*y, l), l, [3, 2]);
+                                       2  2     2    2        3  3
+          (%o3) [2 a x, 4 a b x y + 2 a  x , 3 a  b x  y + 2 a  x ,
+
+              2  2  2  2      3    3        4  4
+          12 a  b  x  y  + 4 a  b x  y + 2 a  x ,
+
+              3  2  3  2      4    4        5  5
+          10 a  b  x  y  + 5 a  b x  y + 2 a  x ,
+
+              3  3  3  3       4  2  4  2      5    5        6  6
+          40 a  b  x  y  + 15 a  b  x  y  + 6 a  b x  y + 2 a  x ]
+          (%i4) pui_direct ([y + x + 2*c, y + x + 2*b, y + x + 2*a],
+                [[x, y], [a, b, c]], [2, 3]);
+                                       2              2
+          (%o4) [3 x + 2 a, 6 x y + 3 x  + 4 a x + 4 a ,
+
+                           2                   3        2       2        3
+                        9 x  y + 12 a x y + 3 x  + 6 a x  + 12 a  x + 8 a ]
+
+
+ -- Función: puireduc (<n>, <lpui>)
+     Siendo <lpui> una lista en la que el primer elemento es un entero
+     <m>, `puireduc' devuelve las <n> primeras funciones potenciales en
+     función de las <m> primeras.
+
+          (%i1) puireduc (3, [2]);
+                                                   2
+                                             p1 (p1  - p2)
+          (%o1)          [2, p1, p2, p1 p2 - -------------]
+                                                   2
+          (%i2) ratsimp (%);
+                                                     3
+                                         3 p1 p2 - p1
+          (%o2)              [2, p1, p2, -------------]
+                                               2
+
+
+ -- Función: resolvante (<P>, <x>, <f>, [<x_1>, ..., <x_d>])
+     Calcula la resolvente del polinomio <P> de variable <x> y grado
+     <n> >= <d> por la función <f> de variables <x_1>, ..., <x_d>.
+     Para mejorar los cálculos, es importante no incluir en la lista
+     `[<x_1>, ..., <x_d>]' las variables que no intervienen en la
+     función de transformación <f>.
+
+     Con el fin de hacer más eficaces los cálculos, se puede asignar a
+     `resolvante' un indicador que permita seleccionar el algoritmo más
+     apropiado:
+
+        *   `unitaire',
+
+        *   `lineaire',
+
+        *   `alternee',
+
+        *   `somme',
+
+        *   `produit',
+
+        *   `cayley',
+
+        *   `generale'.
+
+          (%i1) resolvante: unitaire$
+          (%i2) resolvante (x^7 - 14*x^5 + 56*x^3 - 56*x + 22, x, x^3 - 1,
+                [x]);
+
+          " resolvante unitaire " [7, 0, 28, 0, 168, 0, 1120, - 154, 7840,
+                                   - 2772, 56448, - 33880,
+
+          413952, - 352352, 3076668, - 3363360, 23114112, - 30494464,
+
+          175230832, - 267412992, 1338886528, - 2292126760]
+            3       6      3       9      6      3
+          [x  - 1, x  - 2 x  + 1, x  - 3 x  + 3 x  - 1,
+
+           12      9      6      3       15      12       9       6      3
+          x   - 4 x  + 6 x  - 4 x  + 1, x   - 5 x   + 10 x  - 10 x  + 5 x
+
+                 18      15       12       9       6      3
+           - 1, x   - 6 x   + 15 x   - 20 x  + 15 x  - 6 x  + 1,
+
+           21      18       15       12       9       6      3
+          x   - 7 x   + 21 x   - 35 x   + 35 x  - 21 x  + 7 x  - 1]
+          [- 7, 1127, - 6139, 431767, - 5472047, 201692519, - 3603982011]
+                 7      6        5         4          3           2
+          (%o2) y  + 7 y  - 539 y  - 1841 y  + 51443 y  + 315133 y
+
+                                                        + 376999 y + 125253
+          (%i3) resolvante: lineaire$
+          (%i4) resolvante (x^4 - 1, x, x1 + 2*x2 + 3*x3, [x1, x2, x3]);
+
+          " resolvante lineaire "
+                 24       20         16            12             8
+          (%o4) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
+
+                                                              4
+                                                 + 344489984 y  + 655360000
+          (%i5) resolvante: general$
+          (%i6) resolvante (x^4 - 1, x, x1 + 2*x2 + 3*x3, [x1, x2, x3]);
+
+          " resolvante generale "
+                 24       20         16            12             8
+          (%o6) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
+
+                                                              4
+                                                 + 344489984 y  + 655360000
+          (%i7) resolvante (x^4 - 1, x, x1 + 2*x2 + 3*x3, [x1, x2, x3, x4]);
+
+          " resolvante generale "
+                 24       20         16            12             8
+          (%o7) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
+
+                                                              4
+                                                 + 344489984 y  + 655360000
+          (%i8) direct ([x^4 - 1], x, x1 + 2*x2 + 3*x3, [[x1, x2, x3]]);
+                 24       20         16            12             8
+          (%o8) y   + 80 y   + 7520 y   + 1107200 y   + 49475840 y
+
+                                                              4
+                                                 + 344489984 y  + 655360000
+          (%i9) resolvante :lineaire$
+          (%i10) resolvante (x^4 - 1, x, x1 + x2 + x3, [x1, x2, x3]);
+
+          " resolvante lineaire "
+                                        4
+          (%o10)                       y  - 1
+          (%i11) resolvante: symetrique$
+          (%i12) resolvante (x^4 - 1, x, x1 + x2 + x3, [x1, x2, x3]);
+
+          " resolvante symetrique "
+                                        4
+          (%o12)                       y  - 1
+          (%i13) resolvante (x^4 + x + 1, x, x1 - x2, [x1, x2]);
+
+          " resolvante symetrique "
+                                     6      2
+          (%o13)                    y  - 4 y  - 1
+          (%i14) resolvante: alternee$
+          (%i15) resolvante (x^4 + x + 1, x, x1 - x2, [x1, x2]);
+
+          " resolvante alternee "
+                      12      8       6        4        2
+          (%o15)     y   + 8 y  + 26 y  - 112 y  + 216 y  + 229
+          (%i16) resolvante: produit$
+          (%i17) resolvante (x^7 - 7*x + 3, x, x1*x2*x3, [x1, x2, x3]);
+
+          " resolvante produit "
+                  35      33         29        28         27        26
+          (%o17) y   - 7 y   - 1029 y   + 135 y   + 7203 y   - 756 y
+
+                   24           23          22            21           20
+           + 1323 y   + 352947 y   - 46305 y   - 2463339 y   + 324135 y
+
+                    19           18             17              15
+           - 30618 y   - 453789 y   - 40246444 y   + 282225202 y
+
+                       14              12             11            10
+           - 44274492 y   + 155098503 y   + 12252303 y   + 2893401 y
+
+                        9            8            7             6
+           - 171532242 y  + 6751269 y  + 2657205 y  - 94517766 y
+
+                      5             3
+           - 3720087 y  + 26040609 y  + 14348907
+          (%i18) resolvante: symetrique$
+          (%i19) resolvante (x^7 - 7*x + 3, x, x1*x2*x3, [x1, x2, x3]);
+
+          " resolvante symetrique "
+                  35      33         29        28         27        26
+          (%o19) y   - 7 y   - 1029 y   + 135 y   + 7203 y   - 756 y
+
+                   24           23          22            21           20
+           + 1323 y   + 352947 y   - 46305 y   - 2463339 y   + 324135 y
+
+                    19           18             17              15
+           - 30618 y   - 453789 y   - 40246444 y   + 282225202 y
+
+                       14              12             11            10
+           - 44274492 y   + 155098503 y   + 12252303 y   + 2893401 y
+
+                        9            8            7             6
+           - 171532242 y  + 6751269 y  + 2657205 y  - 94517766 y
+
+                      5             3
+           - 3720087 y  + 26040609 y  + 14348907
+          (%i20) resolvante: cayley$
+          (%i21) resolvante (x^5 - 4*x^2 + x + 1, x, a, []);
+
+          " resolvante de Cayley "
+                  6       5         4          3            2
+          (%o21) x  - 40 x  + 4080 x  - 92928 x  + 3772160 x  + 37880832 x
+
+                                                                 + 93392896
+
+     Para la resolvente de Cayley, los dos últimos argumentos son neutro
+     y el polinomio dado en el argumento debe ser necesariamente de
+     grado 5.
+
+     Véanse también: `resolvante_bipartite', `resolvante_produit_sym',
+     `resolvante_unitaire', `resolvante_alternee1', `resolvante_klein',
+     `resolvante_klein3', `resolvante_vierer' y `resolvante_diedrale'.
+
+
+ -- Función: resolvante_alternee1 (<P>, <x>)
+     Calcula la transformación de `<P>(<x>)' de grado <n> por la
+     función $\prod_{1\leq i<j\leq n-1} (x_i-x_j)$.
+
+     Véanse también: `resolvante_produit_sym', `resolvante_unitaire',
+     `resolvante', `resolvante_klein', `resolvante_klein3',
+     `resolvante_vierer', `resolvante_diedrale' y
+     `resolvante_bipartite'.
+
+
+ -- Función: resolvante_bipartite (<P>, <x>)
+     Calcula la transformación de `<P>(<x>)' de grado <n> (<n> par) por
+     la función $x_1x_2\ldots x_{n/2}+x_{n/2+1}\ldotsx_n$
+
+          (%i1) resolvante_bipartite (x^6 + 108, x);
+                        10        8           6             4
+          (%o1)        y   - 972 y  + 314928 y  - 34012224 y
+
+     Véanse también: `resolvante_produit_sym', `resolvante_unitaire',
+     `resolvante', `resolvante_klein', `resolvante_klein3',
+     `resolvante_vierer', `resolvante_diedrale' y
+     `resolvante_alternee1'.
+
+
+ -- Función: resolvante_diedrale (<P>, <x>)
+     Calcula la transformación de `<P>(<x>)' por la función `<x_1>
+     <x_2> + <x_3> <x_4>'.
+
+          (%i1) resolvante_diedrale (x^5 - 3*x^4 + 1, x);
+                 15       12       11       10        9         8         7
+          (%o1) x   - 21 x   - 81 x   - 21 x   + 207 x  + 1134 x  + 2331 x
+
+                  6         5          4          3          2
+           - 945 x  - 4970 x  - 18333 x  - 29079 x  - 20745 x  - 25326 x
+
+           - 697
+
+     Véanse también: `resolvante_produit_sym', `resolvante_unitaire',
+     `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
+     `resolvante_vierer' y `resolvante'.
+
+
+ -- Función: resolvante_klein (<P>, <x>)
+     Calcula la transformación de `<P>(<x>)' por la función `<x_1>
+     <x_2> <x_4> + <x_4>'.
+
+     Véanse también: `resolvante_produit_sym', `resolvante_unitaire',
+     `resolvante_alternee1', `resolvante', `resolvante_klein3',
+     `resolvante_vierer' y `resolvante_diedrale'.
+
+
+ -- Función: resolvante_klein3 (<P>, <x>)
+     Calcula la transformación de `<P>(<x>)' por la función `<x_1>
+     <x_2> <x_4> + <x_4>'.
+
+     Véanse también: `resolvante_produit_sym', `resolvante_unitaire',
+     `resolvante_alternee1', `resolvante_klein', `resolvante',
+     `resolvante_vierer' y `resolvante_diedrale'.
+
+
+ -- Función: resolvante_produit_sym (<P>, <x>)
+     Calcula la lista de todas las resolventes producto del polinomio
+     `<P>(<x>)'.
+
+          (%i1) resolvante_produit_sym (x^5 + 3*x^4 + 2*x - 1, x);
+                  5      4             10      8       7       6       5
+          (%o1) [y  + 3 y  + 2 y - 1, y   - 2 y  - 21 y  - 31 y  - 14 y
+
+              4       3      2       10      8       7    6       5       4
+           - y  + 14 y  + 3 y  + 1, y   + 3 y  + 14 y  - y  - 14 y  - 31 y
+
+                 3      2       5      4
+           - 21 y  - 2 y  + 1, y  - 2 y  - 3 y - 1, y - 1]
+          (%i2) resolvante: produit$
+          (%i3) resolvante (x^5 + 3*x^4 + 2*x - 1, x, a*b*c, [a, b, c]);
+
+          " resolvante produit "
+                 10      8       7    6        5       4       3     2
+          (%o3) y   + 3 y  + 14 y  - y  - 14 y  - 31 y  - 21 y  - 2 y  + 1
+
+     Véanse también: `resolvante', `resolvante_unitaire',
+     `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
+     `resolvante_vierer' y `resolvante_diedrale'.
+
+
+ -- Función: resolvante_unitaire (<P>, <Q>, <x>)
+     Calcula la resolvente del polinomio `<P>(<x>)' por el polinomio
+     `<Q>(<x>)'.
+
+     Véanse también: `resolvante_produit_sym', `resolvante',
+     `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
+     `resolvante_vierer' y `resolvante_diedrale'.
+
+
+ -- Función: resolvante_vierer (<P>, <x>)
+     Calcula la transformación de `<P>(<x>)' por la función `<x_1>
+     <x_2> - <x_3> <x_4>'.
+
+     Véanse también: `resolvante_produit_sym', `resolvante_unitaire',
+     `resolvante_alternee1', `resolvante_klein', `resolvante_klein3',
+     `resolvante' y `resolvante_diedrale'.
+
+
+ -- Función: schur2comp (<P>, <l_var>)
+     <P> es un polinomio de variables contenidas en la lista <l_var>.
+     Cada una de las variables de <l_var> representa una función
+     simétrica completa.  La <i>-ésima función simétrica completa de
+     <l_var> se representa como la concatenación de la letra `h' con el
+     entero <i>: `h<i>'.  La función `schur2comp' devuelve la expresión
+     de <P> en función de las funciones de Schur.
+
+          (%i1) schur2comp (h1*h2 - h3, [h1, h2, h3]);
+          (%o1)                         s
+                                         1, 2
+          (%i2) schur2comp (a*h3, [h3]);
+          (%o2)                         s  a
+                                         3
+
+
+ -- Función: somrac (<l>, <k>)
+     Si la lista <l> contiene las funciones simétricas elementales de
+     un polinomio <P>, la función `somrac' calcula el polinomio cuyas
+     raíces son las sumas <k> a <k> de las raíces de <P>.
+
+     Véase también `prodrac'.
+
+
+ -- Función: tcontract (<pol>, <lvar>)
+     Comprueba si el polinomio <pol> es simétrico en las variable
+     contenidas en la lista <lvar>. En caso afirmativo, devuelve una
+     forma contraída tal como lo hace la función `contract'.
+
+     Otras funciones para efectuar cambios de representación son:
+     `contract', `cont2part', `explose', `part2cont', `partpol' y
+     `tpartpol'.
+
+
+ -- Función: tpartpol (<pol>, <lvar>)
+     Comprueba si el polinomio <pol> es simétrico en las variable
+     contenidas en la lista <lvar>. En caso afirmativo, devuelve una
+     forma particionada tal como lo hace la función `partpol'.
+
+     Otras funciones para efectuar cambios de representación son:
+     `contract', `cont2part', `explose', `part2cont', `partpol' y
+     `tcontract'.
+
+
+ -- Función: treillis (<n>)
+     Devuelve todas las particiones de pesos <n>.
+
+          (%i1) treillis (4);
+          (%o1)    [[4], [3, 1], [2, 2], [2, 1, 1], [1, 1, 1, 1]]
+
+     Véanse también `lgtreillis', `ltreillis' y `treinat'.
+
+
+ -- Función: treinat (<part>)
+     Devuelve la lista de las particiones inferiores de la partición
+     <part> en su orden natural.
+
+          (%i1) treinat ([5]);
+          (%o1)                         [[5]]
+          (%i2) treinat ([1, 1, 1, 1, 1]);
+          (%o2) [[5], [4, 1], [3, 2], [3, 1, 1], [2, 2, 1], [2, 1, 1, 1],
+
+                                                           [1, 1, 1, 1, 1]]
+          (%i3) treinat ([3, 2]);
+          (%o3)                 [[5], [4, 1], [3, 2]]
+
+     Véanse también `lgtreillis', `ltreillis' y `treillis'.
+
+
+
+File: maxima.info,  Node: Grupos,  Next: Entorno de Ejecución,  Prev: Simetrías,  Up: Top
+
+31 Grupos
+*********
+
+* Menu:
+
+* Funciones y variables para grupos::
+
+
+File: maxima.info,  Node: Funciones y variables para grupos,  Prev: Grupos,  Up: Grupos
+
+31.1 Funciones y variables para grupos
+======================================
+
+ -- Función: todd_coxeter (<relaciones>, <subgrupo>)
+ -- Función: todd_coxeter (<relaciones>)
+     Busca el orden de G/H donde G es el módulo del Grupo Libre de
+     <relations>, y H es el subgrupo de G generado por `subgrupo'.
+     `subgrupo' es un argumento opcional, cuyo valor por defecto es [].
+
+     En este proceso se obtiene una tabla de multiplicación para la
+     acción correcta de G sobre G/H, donde los co-cojuntos son
+     enumerados [H,Hg2,Hg3,...]. Esto puede ser observado internamente
+     en el `todd_coxeter_state'.
+
+     Ejemplo:
+
+          (%i1) symet(n):=create_list(
+                  if (j - i) = 1 then (p(i,j))^^3 else
+                      if (not i = j) then (p(i,j))^^2 else
+                          p(i,i) , j, 1, n-1, i, 1, j);
+                                                                 <3>
+          (%o1) symet(n) := create_list(if j - i = 1 then p(i, j)
+
+                                          <2>
+           else (if not i = j then p(i, j)    else p(i, i)), j, 1, n - 1,
+
+          i, 1, j)
+          (%i2) p(i,j) := concat(x,i).concat(x,j);
+          (%o2)        p(i, j) := concat(x, i) . concat(x, j)
+          (%i3) symet(5);
+                   <2>           <3>    <2>           <2>           <3>
+          (%o3) [x1   , (x1 . x2)   , x2   , (x1 . x3)   , (x2 . x3)   ,
+
+                      <2>           <2>           <2>           <3>    <2>
+                    x3   , (x1 . x4)   , (x2 . x4)   , (x3 . x4)   , x4   ]
+          (%i4) todd_coxeter(%o3);
+
+          Rows tried 426
+          (%o4)                          120
+          (%i5) todd_coxeter(%o3,[x1]);
+
+          Rows tried 213
+          (%o5)                          60
+          (%i6) todd_coxeter(%o3,[x1,x2]);
+
+          Rows tried 71
+          (%o6)                          20
+
+
+
+File: maxima.info,  Node: Entorno de Ejecución,  Next: Miscelánea de opciones,  Prev: Grupos,  Up: Top
+
+32 Entorno de Ejecución
+***********************
+
+* Menu:
+
+* Introducción al entorno de ejecución::
+* Interrupciones::
+* Funciones y variables para el entorno de ejecución::
+
+
+File: maxima.info,  Node: Introducción al entorno de ejecución,  Next: Interrupciones,  Prev: Entorno de Ejecución,  Up: Entorno de Ejecución
+
+32.1 Introducción al entorno de ejecución
+=========================================
+
+El fichero `maxima-init.mac' se carga automáticamente cada vez que se
+empieza a ejecutar Maxima.  Se puede utilizar `maxima-init.mac' para
+personalizar el entorno de Maxima. Si existe, `maxima-init.mac' se
+almacena normalmente en el directorio indicado por `maxima_userdir',
+aunque puede estar alojado en cualquier otro directorio que esté al
+alcance de la función  `file_search'.
+
+   He aquí un ejemplo de fichero `maxima-init.mac':
+
+     setup_autoload ("specfun.mac", ultraspherical, assoc_legendre_p);
+     showtime:all;
+
+   En este ejemplo, `setup_autoload' le dice a Maxima que cargue en
+memoria el fichero `specfun.mac' si cualquiera de las funciones
+`ultraspherical' o `assoc_legendre_p' es invocada pero todavía no está
+definida. De esta manera, no es necesario recordar cargar el fichero
+antes de llamar a las funciones.
+
+   La sentencia  `showtime: all' le dice a Maxima que haga una
+asignación a la variable `showtime'.  El fichero  `maxima-init.mac'
+puede contener cualesquiera otras asignaciones o sentencias de Maxima.
+
+
+File: maxima.info,  Node: Interrupciones,  Next: Funciones y variables para el entorno de ejecución,  Prev: Introducción al entorno de ejecución,  Up: Entorno de Ejecución
+
+32.2 Interrupciones
+===================
+
+El usuario puede detener un cómputo que esté consumiendo recursos
+excesivos con el carácter ^C (control-C). La acción que se sigue por
+defecto es la detención del cómputo y la impresión de otro prompt. En
+este caso, no será posible reiniciar la tarea interrumpida.
+
+   Si a la variable Lisp `*debugger-hook*' se le asigna `nil' haciendo
+
+     :lisp (setq *debugger-hook* nil)
+
+entonces tras recibir ^C, Maxima entra en el depurador de Lisp y el
+usuario podrá utilizar el depurador para inspeccionar el entorno Lisp.
+La tarea que haya sido interrumpida podrá reiniciarse escribiendo
+`continue' en el depurado de Lisp. La forma de volver a Maxima desde el
+depurador de Lisp, que no sea la de permitir la computación hasta la
+terminación de la tarea, dependerá de la versión de Lisp.
+
+   En sistemas Unix el carácter ^Z (control-Z) hace que Maxima deje de
+ejecutarse devolviendo el control al terminal del sistema. El comando
+`fg' hace que la ejecución de Maxima se reanude en el punto que lo dejó.
+
+
+File: maxima.info,  Node: Funciones y variables para el entorno de ejecución,  Prev: Interrupciones,  Up: Entorno de Ejecución
+
+32.3 Funciones y variables para el entorno de ejecución
+=======================================================
+
+ -- Declaración: feature
+     Maxima trata con dos tipos diferentes de características, las del
+     sistema y las correspondientes a expresiones matemáticas. Véase
+     también `status' para información sobre características del
+     sistema. Véanse asimismo `features' y `featurep' para información
+     sobre características matemáticas.
+
+     `feature' no es el nombre de una función ni de una variable.
+
+
+ -- Función: featurep (<a>, <f>)
+     Intenta determinar si el objeto <a> tiene la característica <f> en
+     base a la información en la base de datos actual. De ser así,
+     devuelve `true', en caso contrario `false'.
+
+     Nótese que `featurep' devuelve `false' cuando ni <f> ni la
+     negación <f> puedan determinarse.
+
+     La función `featurep' evalúa sus argumentos.
+
+     Véanse también `declare' y `features'.
+
+          (%i1) declare (j, even)$
+          (%i2) featurep (j, integer);
+          (%o2)                           true
+
+
+ -- Variable del sistema: maxima_tempdir
+     La variable `maxima_tempdir' almacena la ruta del directorio en el
+     que Maxima crea ciertos ficheros temporales.  En particular, los
+     ficheros temporales para la realización de gráficos se guardan en
+     `maxima_tempdir'.
+
+     El valor que inicialmente toma esta variable es el directorio de
+     inicio del usuario, si Maxima es capaz de localizarlo; en caso
+     contrario, Maxima intenta encontrar un directorio que sea
+     aceptable.
+
+     A la variable `maxima_tempdir' se le puede asignar una cadena de
+     caracteres con la ruta del directorio.
+
+ -- Variable del sistema: maxima_userdir
+     La variable `maxima_userdir' almacena la ruta del directorio en el
+     que Maxima buscará ficheros Lisp y de Maxima. Maxima también busca
+     en otros directorios, guardando las variables `file_search_maxima'
+     y `file_search_lisp' la lista completa de búsqueda.
+
+     El valor que inicialmente toma esta variable es el de un
+     subdirectorio del directorio de inicio del usuario, si Maxima es
+     capaz de localizarlo; en caso contrario, Maxima intenta encontrar
+     un directorio que sea aceptable.
+
+     A la variable `maxima_userdir' se le puede asignar una cadena de
+     caracteres con la ruta del directorio.  Sin embargo, cambiando el
+     valor de la variable `maxima_userdir' no se alteran
+     `file_search_maxima' ni `file_search_lisp', cuyos contenidos se
+     modifican mediante otro sistema.
+
+ -- Función: room ()
+ -- Función: room (true)
+ -- Función: room (false)
+     Presenta una descrpción del estado de almacenamiento y gestión de
+     la pila en Maxima. La llamada `room' invoca a la función Lisp
+     homónima.
+
+        * `room ()' prints out a moderate description.
+
+        * `room (true)' prints out a verbose description.
+
+        * `room (false)' prints out a terse description.
+
+
+ -- Función: sstatus (<keyword>, <item>)
+     Si <keyword> es el símbolo `feature', <item> será colocado en la
+     lista de propiedades del sistema. Una vez ejecutado `sstatus
+     (keyword, item)', `status (feature, item)' devuelve `true'. Si
+     <keyword> es el símbolo `nofeature', <item> se borrará de la lista
+     de propiedades del sistema.  Esto puede ser de utilidad para los
+     autores de paquetes, permitiendo mantener el control sobre las
+     propiedades que se han ido estableciendo.
+
+     Véase también `status'.
+
+
+ -- Función: status (`feature')
+ -- Función: status (`feature', <item>)
+     Devuelve información sobre la presencia o ausencia de ciertas
+     propiedades dependientes del sistema.
+
+        * `status (feature)' devuelve una lista con características del
+          sistema. Éstas incluyen la versión de Lisp, tipo de sistema
+          operativo, etc. La lista puede variar de un Lisp a otro.
+
+        * `status (feature, item)' devuelve `true' si <item> está en la
+          lista de elementos retornados por `status (feature)' y
+          `false' en otro caso.  La función `status' no evalúa el
+          argumento <item>. El operador de doble comilla simple, `''',
+          permite la evaluación. Una propiedad cuyo nombre contenga un
+          carácter especial debe ser suministrada como un argumento del
+          tipo cadena. Por ejemplo, `status (feature, "ansi-cl")'.
+
+     Véase también `sstatus'.
+
+     La variable `features' contiene una lista de propiedades que se
+     aplican a expresiones matemáticas. Véanse `features' y `featurep'
+     para más información.
+
+
+ -- Función: system (<command>)
+     Ejecuta la instrucción <command> como un proceso independiente de
+     Maxima.  La instrucción se le pasa a la consola del sistema para
+     su ejecución.  La función `system' no está soportada por todos los
+     sistemas operativos, pero suele estarlo en todos los entornos
+     Unix y similares.
+
+     Suponiendo que `_hist.out' es una lista de frecuencias que se
+     quieren representar en un diagrama de barras utilizando el
+     programa `xgraph',
+
+          (%i1) (with_stdout("_hist.out",
+                     for i:1 thru length(hist) do (
+                       print(i,hist[i]))),
+                 system("xgraph -bar -brw .7 -nl < _hist.out"));
+
+     A fin de hacer el diagrama y eliminar el archivo temporal
+     posteriormente, hágase:
+
+          system("(xgraph -bar -brw .7 -nl < _hist.out;  rm -f _hist.out)&")
+
+
+ -- Función: time (%o1, %o2, %o3, ...)
+     Devuelve una lista de los tiempos, en segundos, que fueron
+     necesarios para calcular los resultados de las salidas `%o1',
+     `%o2', `%o3', .... Los tiempos devueltos son estimaciones hechas
+     por Maxima del tiempo interno de computación. La función `time'
+     sólo puede utilizarse para variables correspondientes a líneas de
+     salida; para cualquier otro tipo de variables, `time' devuelve
+     `unknown'.
+
+     Hágase `showtime: true' para que Maxima devuelva el tiempo de
+     ejecución de cada línea de salida.
+
+
+ -- Función: timedate ()
+ -- Función: timedate (<T>)
+     Sin argumento, `timedate' devuelve una cadena que representa la
+     hora y fecha actuales. La cadena tiene el formato `YYYY-MM-DD
+     HH:MM:SS[+|-]ZZ:ZZ', donde los campos indicados son: año, mes, día,
+     horas, minutos, segundos y número de horas de diferencia con
+     respecto a la hora GMT.
+
+     Con argumento, `timedate(<T>)' devuelve la hora <T> como una
+     cadena con formato `YYYY-MM-DD HH:MM:SS[+|-]ZZ:ZZ'.  <T> se
+     interpreta como el número de segundos transcurridos desde la
+     medianoche del uno de enero de 1900, tal como lo devuelve
+     `absolute_real_time'.
+
+     Ejemplos:
+
+     `timedate' sin argumento devuelve una cadena con la hora y fecha
+     actuales.
+
+          (%i1) d : timedate ();
+          (%o1)                      2010-06-08 04:08:09+01:00
+          (%i2) print ("timedate reports current time", d) $
+          timedate reports current time 2010-06-08 04:08:09+01:00
+
+     `timedate' con argumento devuelve una cadena que representa al
+     propio argumento.
+
+          (%i1) timedate (0);
+          (%o1)                      1900-01-01 01:00:00+01:00
+          (%i2) timedate (absolute_real_time () - 7*24*3600);
+          (%o2)                      2010-06-01 04:19:51+01:00
+
+ -- Función: absolute_real_time ()
+     Devuelve el número de segundos transcurridos desde la medianoche
+     del 1 de enero de 1900 UTC. Este valor es un número entero
+     positivo.
+
+     Véanse también `elapsed_real_time' y `elapsed_run_time'.
+
+     Ejemplo:
+
+          (%i1) absolute_real_time ();
+          (%o1)                      3385045277
+          (%i2) 1900 + absolute_real_time () / (365.25 * 24 * 3600);
+          (%o2)                   2007.265612087104
+
+
+ -- Función: elapsed_real_time ()
+     Devuelve los segundos (incluyendo fracciones de segundo)
+     transcurridos desde que Maxima se inició (o reinició) la sesión de
+     Maxima. Este valor es un decimal en coma flotante.
+
+     Véanse también `absolute_real_time' y `elapsed_run_time'.
+
+     Ejemplo:
+
+          (%i1) elapsed_real_time ();
+          (%o1)                       2.559324
+          (%i2) expand ((a + b)^500)$
+          (%i3) elapsed_real_time ();
+          (%o3)                       7.552087
+
+
+ -- Función: elapsed_run_time ()
+     Devuelve una estimación en segundos (incluyendo fracciones de
+     segundo) durante los cuales Maxima ha estado realizando cálculos
+     desde que se inició (o reinició) la sesión actual.  Este valor es
+     un decimal en coma flotante.
+
+     Véanse también `absolute_real_time' y `elapsed_real_time'.
+
+     Ejemplo:
+
+          (%i1) elapsed_run_time ();
+          (%o1)                         0.04
+          (%i2) expand ((a + b)^500)$
+          (%i3) elapsed_run_time ();
+          (%o3)                         1.26
+
+
+
+File: maxima.info,  Node: Miscelánea de opciones,  Next: Reglas y patrones,  Prev: Entorno de Ejecución,  Up: Top
+
+33 Miscelánea de opciones
+*************************
+
+* Menu:
+
+* Introducción a la miscelánea de opciones::
+* Share::
+* Funciones y variables para la miscelánea de opciones::
+
+
+File: maxima.info,  Node: Introducción a la miscelánea de opciones,  Next: Share,  Prev: Miscelánea de opciones,  Up: Miscelánea de opciones
+
+33.1 Introducción a la miscelánea de opciones
+=============================================
+
+En esta sección se comentan varias opciones que tienen un efecto global
+sobre le comportamiento de Maxima. También se comentan varias listas,
+como la de las funciones definidas por el usuario.
+
+
+File: maxima.info,  Node: Share,  Next: Funciones y variables para la miscelánea de opciones,  Prev: Introducción a la miscelánea de opciones,  Up: Miscelánea de opciones
+
+33.2 Share
+==========
+
+El directorio "share" de Maxima contiene programas y ficheros de
+interés para los usuarios de Maxima, pero no forman parte del núcleo de
+Maxima. Estos programas se cargan en memoria con llamadas a las
+funciones `load' o `setup_autoload'.
+
+   El código `:lisp *maxima-sharedir*' muestra la localización del
+directorio "share" dentro del sistema de ficheros del usuario.
+
+   El código `printfile ("share.usg")' muestra una lista actualizada de
+paquetes en "share". Los usuarios pueden encontrar más información
+accediendo directamente a los contenidos del directorio "share".
+
+
+File: maxima.info,  Node: Funciones y variables para la miscelánea de opciones,  Prev: Share,  Up: Miscelánea de opciones
+
+33.3 Funciones y variables para la miscelánea de opciones
+=========================================================
+
+ -- Declaración: alphabetic
+     `alphabetic' es una declaración de tipo reconocida por `declare'.
+     La expresión `declare(<s>, alphabetic)' indica a Maxima que
+     reconozca como alfabéticos todos los caracteres de <s>, que debe
+     ser una cadena alfanumérica.
+
+     Ejemplo:
+
+          (%i1) xx\~yy\`\@ : 1729;
+          (%o1)                         1729
+          (%i2) declare ("~`@", alphabetic);
+          (%o2)                         done
+          (%i3) xx~yy`@ + @yy`xx + `xx@@yy~;
+          (%o3)               `xx@@yy~ + @yy`xx + 1729
+          (%i4) listofvars (%);
+          (%o4)                  [@yy`xx, `xx@@yy~]
+
+
+ -- Variable optativa: genindex
+     Valor por defecto: `i'
+
+     La variable `genindex' es el prefijo alfabético utilizado para
+     generar la siguiente variable de sumación en caso de necesidad.
+
+
+ -- Variable optativa: gensumnum
+     Valor por defecto: 0
+
+     La variable `gensumnum' es el sufijo numérico utilizado para
+     generar la siguiente variable de sumación. Si vale  `false'
+     entonces el índice consistirá solamente de  `genindex', sin sufijo
+     numérico.
+
+ -- Función: gensym ()
+ -- Función: gensym (<x>)
+     `gensym()' crea y devuelve una nueva símbolo o variable sin valor
+     asignado.
+
+     El nombre del nuevo símbolo está formado por la concatenación de
+     un prefijo, cuyo valor por defecto es "g", y de un sufijo, el cual
+     es la representación decimal de un número que coincide, por
+     defecto, con el valor de un contador interno de Lisp.
+
+     En caso de suministrar el argumento <x>, siendo este una cadena,
+     se utilizará como prefijo en lugar de "g", lo cual tendrá efecto
+     sólo para esta llamada a `gensym'Â·
+
+     En caso de suministrar el argumento <x>, siendo este un número
+     entero, se utilizará como sufijo en lugar del contador interno de
+     Lisp, lo cual tendrá efecto sólo para esta llamada a `gensym'Â·
+
+     Si no se suministra el sufijo en forma explícita, y sólo en este
+     caso, el contador interno sufrirá un incremento después de haber
+     sido utilizado.
+
+     Ejemplos:
+
+          (%i1) gensym();
+          (%o1)                         g887
+          (%i2) gensym("new");
+          (%o2)                        new888
+          (%i3) gensym(123);
+          (%o3)                         g123
+
+ -- Función: properties (<a>)
+     Devuelve una lista con los nombres de propiedades asociadas con el
+     átomo <a>.
+
+
+ -- Símbolo especial: props
+     `props' son átomos que tienen cualquier propiedad diferente de las
+     mencionadas explícitamente en `infolists', tales como las
+     especificadas por `atvalues', `matchdeclares', etc., así como las
+     propiedades especificadas mediante la función `declare'.
+
+
+ -- Función: propvars (<prop>)
+     Devuelve una lista con aquellos átomos de la lista `props' que
+     tienen la propiedad indicada por <prop>.
+
+
+ -- Función: put (<átomo>, <valor>, <indicador>)
+     Asigna el <valor> a la propiedad  (especificada por <indicador>)
+     de <átomo>; <indicador> puede ser el nombre de cualquier propiedad
+     y no solamente de aquellas definidas por el sistema.
+
+     `rem' deshace la asignación realizada por `put'.
+
+     La función `put' evalúa sus argumentos y devuelve <valor>.
+
+     Ejemplos:
+
+          (%i1) put (foo, (a+b)^5, expr);
+                                             5
+          (%o1)                       (b + a)
+          (%i2) put (foo, "Hello", str);
+          (%o2)                         Hello
+          (%i3) properties (foo);
+          (%o3)            [[user properties, str, expr]]
+          (%i4) get (foo, expr);
+                                             5
+          (%o4)                       (b + a)
+          (%i5) get (foo, str);
+          (%o5)                         Hello
+
+
+ -- Función: qput (<átomo>, <valor>, <indicador>)
+     Asigna <valor> a la propiedad de <átomo> que especifique
+     <indicador>. Actúa del mismo modeo que `put', excepto que sus
+     argumentos no son evaluados.
+
+     Ejemplo:
+
+          (%i1) foo: aa$
+          (%i2) bar: bb$
+          (%i3) baz: cc$
+          (%i4) put (foo, bar, baz);
+          (%o4)                          bb
+          (%i5) properties (aa);
+          (%o5)                [[user properties, cc]]
+          (%i6) get (aa, cc);
+          (%o6)                          bb
+          (%i7) qput (foo, bar, baz);
+          (%o7)                          bar
+          (%i8) properties (foo);
+          (%o8)            [value, [user properties, baz]]
+          (%i9) get ('foo, 'baz);
+          (%o9)                          bar
+
+
+ -- Función: rem (<átomo>, <indicador>)
+     Elimina del <átomo> la propiedad indicada por <indicador>.  `rem'
+     deshace la asignación realizada por `put'.
+
+     `rem' devuelve `done' si <átomo> tenía la propiedad <indicador>
+     cuando `rem' fue invocado, devolviendo `false' si carecía tal
+     propiedad.
+
+
+ -- Función: remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)
+ -- Función: remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)
+ -- Función: remove ("<a>", operator)
+ -- Función: remove (<a>, transfun)
+ -- Función: remove (all, <p>)
+     Elimina propiedades asociadas con átomos.
+
+     La llamada `remove (<a_1>, <p_1>, ..., <a_n>, <p_n>)' elimina la
+     propiedad `p_k' del átomo `a_k'.
+
+     La llamada `remove ([<a_1>, ..., <a_m>], [<p_1>, ..., <p_n>], ...)'
+     elimina las propiedades `<p_1>, ..., <p_n>' de los átomos <a_1>,
+     ..., <a_m>. Puede tener más de un par de listas.
+
+     La llamada `remove (all, <p>)' elimina la propiedad <p> de todos
+     los átomos que la tengan.
+
+     Las propiedades eliminadas pueden ser de las que define el
+     sistema, como `function', `macro' o `mode_declare'; `remove' no
+     elimina las propiedades definidas por `put'.
+
+     La llamada `remove ("<a>", operator)' o su equivalente `remove
+     ("<a>", op)' elimina de  <a> las propiedades de operador
+     declaradas por `prefix', `infix', `nary', `postfix', `matchfix' o
+     `nofix'. Nótese que el nombre del operador debe escribirse como
+     cadena precedida de apóstrofo.
+
+     La función `remove' devuelve siempre `done' independientemente que
+     haya algún átomo con la propiedad especificada.
+
+     La función `remove' no evalúa sus argumentos.
+
+
+ -- Función: remvalue (<nombre_1>, ..., <nombre_n>)
+ -- Función: remvalue (all)
+     Elimina del sistema los valores de las variable de usuario
+     <nombre_1>, ..., <nombre_n> (incluso las que tienen subíndices).
+
+     La llamada `remvalue (all)' elimina los valores de todas las
+     variables en `values', la lista de todas las variables a las que
+     el usuario a dado algún nombre, pero no de aquéllas a las que
+     Maxima asigna automáticamente un valor.
+
+     Véase también `values'.
+
+
+ -- Función: rncombine (<expr>)
+     Transforma <expr> combinando todos los términos de <expr> que
+     tengan denominadores idénticos o que difieran unos de otros por
+     factores numéricos. Su comportamiento es diferente al de la
+     función `combine', que combina términos con iguales denominadores.
+
+     Haciendo `pfeformat: true' y utilizando `combine' se consiguen
+     resultados similares a aquéllos que se pueden obtener con
+     `rncombine', pero `rncombine' realiza el paso adicional de
+     multiplicar denominadores numéricos. Esto da como resultado
+     expresiones en las que se pueden reconocer algunas cancelaciones.
+
+     Antes de utilizar esta función ejecútese `load(rncomb)'.
+
+ -- Función: scalarp (<expr>)
+     Devuelve `true' si <expr> es un número, constante  o variable
+     declarada como `scalar' con `declare', o compuesta completamente
+     de tales números, constantes o variables, pero que no contengan
+     matrices ni listas.
+
+
+ -- Función: setup_autoload (<nombre_fichero>, <función_1>, ...,
+          <función_n>)
+     Especifica que si alguna de las funciones <function_1>, ...,
+     <function_n> es referenciada pero todavía no ha sido definida, se
+     cargará <nombre_fichero> mediante una llamada a `load'. El
+     <nombre_fichero> normalmente contendrá las definiciones de las
+     funciones especificadas, aunque esto no es imperativo.
+
+     La función `setup_autoload' no opera con arreglos de funciones.
+
+     La función `setup_autoload' no evalúa sus argumentos.
+
+     Ejemplo:
+
+          (%i1) legendre_p (1, %pi);
+          (%o1)                  legendre_p(1, %pi)
+          (%i2) setup_autoload ("specfun.mac", legendre_p, ultraspherical);
+          (%o2)                         done
+          (%i3) ultraspherical (2, 1/2, %pi);
+          Warning - you are redefining the Macsyma function ultraspherical
+          Warning - you are redefining the Macsyma function legendre_p
+                                      2
+                           3 (%pi - 1)
+          (%o3)            ------------ + 3 (%pi - 1) + 1
+                                2
+          (%i4) legendre_p (1, %pi);
+          (%o4)                          %pi
+          (%i5) legendre_q (1, %pi);
+                                        %pi + 1
+                                %pi log(-------)
+                                        1 - %pi
+          (%o5)                 ---------------- - 1
+                                       2
+
+
+
+File: maxima.info,  Node: Reglas y patrones,  Next: Conjuntos,  Prev: Miscelánea de opciones,  Up: Top
+
+34 Reglas y patrones
+********************
+
+* Menu:
+
+* Introducción a reglas y patrones::
+* Funciones y variables sobre reglas y patrones::
+
+
+File: maxima.info,  Node: Introducción a reglas y patrones,  Next: Funciones y variables sobre reglas y patrones,  Prev: Reglas y patrones,  Up: Reglas y patrones
+
+34.1 Introducción a reglas y patrones
+=====================================
+
+Esta sección describe las reglas de simplificación y los patrones de
+comparación definidos por el usuario. Hay dos grupos de funciones que
+implementan diferentes esquemas de comparación de patrones. En un grupo
+están `tellsimp', `tellsimpafter', `defmatch', `defrule', `apply1',
+`applyb1' y `apply2'. En el otro, se encuentran `let' y `letsimp'.
+Ambos esquemas definen patrones en términos de variables de patrones
+declaradas mediante  `matchdeclare'.
+
+   Las reglas de comparación de patrones definidas por `tellsimp' y
+`tellsimpafter' se aplican automáticamente por el simplificador de
+Maxima. Las reglas definidas por `defmatch', `defrule' y `let' se
+aplican previa llamada a una función.
+
+   Hay otros mecanismos para las reglas; las relativas a polinomios se
+controlan mediante `tellrat' y las del álgebra conmutativa y no
+conmutativa se definen en el paquete `affine'.
+
+
 File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: Introducción a reglas y patrones,  Up: Reglas y patrones
 
-36.2 Funciones y variables sobre reglas y patrones
+34.2 Funciones y variables sobre reglas y patrones
 ==================================================
 
  -- Función: apply1 (<expr>, <regla_1>, ..., <regla_n>)
@@ -516,107 +2119,18 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
           (%o5)    [all atoms = 8, all nonatoms = (b + a) sin(x)]
 
 
- -- Función: matchfix (<ldelimiter>, <rdelimiter>)
- -- Función: matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>, <pos>)
-     Declara un operador "matchfix" con delimitadores a la izquierda y
-     derecha, <ldelimiter> y <rdelimiter>, respectivamente. Los
-     delimitadores son cadenas alfanuméricas.
+ -- Variable opcional: maxapplydepth
+     Valor por defecto: 10000
 
-     Un operador "matchfix" es una función con un número arbitrario de
-     argumentos, de manera que los argumentos se presentan entre los
-     delimitadores de la izquierda y derecha. Los delimitadores pueden
-     ser cualquier tipo de cadena, en tanto que el analizador
-     sintáctico pueda distinguirlos de los operandos y de expresiones
-     con operadores. En la práctica esto excluye delimitadores como
-     `%', `,', `$' y `;',  necesitando aislar los delimitadores con
-     espacios en blanco. El delimitador de la derecha puede ser igual o
-     diferente del de la izquierda.
+     La variable `maxapplydepth' es la máxima profundidad a la que van
+     a introducirse `apply1' y  `apply2'.
 
-     Un delimitador de la izquierda sólo puede asociarse con un único
-     delimitador de la derecha; dos operadores "matchfix" diferentes no
-     pueden tener el mismo delimitador por la izquierda.
 
-     Un operador ya existente puede declararse como operador "matchfix"
-     sin necesidad de que cambie el resto de propiedades. En
-     particular, los operadores de Maxima tales como la suma `+' pueden
-     ser declarados como "matchfix".
+ -- Variable opcional: maxapplyheight
+     Valor por defecto: 10000
 
-     La llamada `matchfix (<ldelimiter>, <rdelimiter>, <arg_pos>,
-     <pos>)' declara el argumento <arg_pos> y el resultado <pos>, así
-     como los delimitadores  <ldelimiter> y <rdelimiter>.
-
-     Los argumentos <arg_pos> y <pos> son tipos de funciones,
-     reconociéndose como tales: `expr', `clause' y `any', los cuales
-     hacen referencia a una expresión algebraica, booleana o de
-     cualquier otro tipo, respectivamente.  Maxima puede detectar
-     ciertos errores sintácticos comparando el tipo de expresión
-     declarado con el de la expresión actual.
-
-     La función que ejecutará una operación "matchfix" será una típica
-     función definida por el usuario. La función de operador se define
-     por el método habitual con  `:=' o `define'. Los argumentos pueden
-     escribirse entre los delimitadores, o con el delimitador izquierdo
-     como una cadena precedida de apóstrofo y seguidamente los
-     argumentos entre paréntesis. La llamada `dispfun (<ldelimiter>)'
-     muestra la definición de la función.
-
-     El único operador "matchfix" de Maxima es el constructor de listas
-     `[ ]'. Los paréntesis  `( )' y las comillas dobles  `" "'  actúan
-     como operadores "matchfix", pero son tratados como operadores
-     "matchfix" por el analizador sintáctico de Maxima.
-
-     Ejemplos:
-
-        * Los delimitadores pueden ser practicamente cualquier cadena.
-
-          (%i1) matchfix ("@@", "~");
-          (%o1)                          @@
-          (%i2) @@ a, b, c ~;
-          (%o2)                      @@a, b, c~
-          (%i3) matchfix (">>", "<<");
-          (%o3)                          >>
-          (%i4) >> a, b, c <<;
-          (%o4)                      >>a, b, c<<
-          (%i5) matchfix ("foo", "oof");
-          (%o5)                          foo
-          (%i6) foo a, b, c oof;
-          (%o6)                     fooa, b, coof
-          (%i7) >> w + foo x, y oof + z << / @@ p, q ~;
-                               >>z + foox, yoof + w<<
-          (%o7)                ----------------------
-                                      @@p, q~
-
-        * Los operadores "matchfix" son funciones definidas por el
-          usuario.
-
-          (%i1) matchfix ("!-", "-!");
-          (%o1)                         "!-"
-          (%i2) !- x, y -! := x/y - y/x;
-                                              x   y
-          (%o2)                   !-x, y-! := - - -
-                                              y   x
-          (%i3) define (!-x, y-!, x/y - y/x);
-                                              x   y
-          (%o3)                   !-x, y-! := - - -
-                                              y   x
-          (%i4) define ("!-" (x, y), x/y - y/x);
-                                              x   y
-          (%o4)                   !-x, y-! := - - -
-                                              y   x
-          (%i5) dispfun ("!-");
-                                              x   y
-          (%t5)                   !-x, y-! := - - -
-                                              y   x
-
-          (%o5)                         done
-          (%i6) !-3, 5-!;
-                                          16
-          (%o6)                         - --
-                                          15
-          (%i7) "!-" (3, 5);
-                                          16
-          (%o7)                         - --
-                                          15
+     La variable `maxapplyheight' es la m2'axima altura a la que
+     escalará `applyb1' antes de detenerse.
 
 
  -- Función: remlet (<prod>, <nombre>)
@@ -823,7 +2337,7 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
      La regla construida por  `tellsimpafter' es una típica función de
      Lisp. Si el nombre de la regla es `$foorule1', la sentencia `:lisp
      (trace $foorule1)' hace una traza de la función y  `:lisp
-     (symbol-function '$foorule1' muestra su definición.
+     (symbol-function '$foorule1)' muestra su definición.
 
      La función `tellsimpafter' no evalúa sus argumentos y devuelve la
      lista de reglas para el operador principal de  <patrón>, incluida
@@ -962,495 +2476,9 @@ File: maxima.info,  Node: Funciones y variables sobre reglas y patrones,  Prev: 
 
 
 
-File: maxima.info,  Node: Listas,  Next: Conjuntos,  Prev: Reglas y patrones,  Up: Top
+File: maxima.info,  Node: Conjuntos,  Next: Definición de Funciones,  Prev: Reglas y patrones,  Up: Top
 
-37 Listas
-*********
-
-* Menu:
-
-* Introducción a las listas::
-* Funciones y variables para listas::
-
-
-File: maxima.info,  Node: Introducción a las listas,  Next: Funciones y variables para listas,  Prev: Listas,  Up: Listas
-
-37.1 Introducción a las listas
-==============================
-
-Las listas son bloques de construcción básica para Maxima y Lisp. Todos
-los tipos de datos diferentes a los arreglos, tablas mixtas o números
-son representados como listas Lisp, estas listas Lisp tienen la forma
-
-     ((MPLUS) $A 2)
-
-para indicar la expresión `a+2'. Al nivel de Maxima se observará la
-notación infija `a+2'. Maxima también tiene listas con el formato
-
-     [1, 2, 7, x+y]
-
-para una lista de 4 elementos. Internamente esto se corresponde con una
-lista Lisp de la forma
-
-     ((MLIST) 1  2  7  ((MPLUS)  $X $Y ))
-
-El elemento que denota el tipo de expresión en Maxima es también una
-lista, la cual tras ser analizada y simplificada tomará la forma
-
-     ((MLIST SIMP) 1 2 7 ((MPLUS SIMP) $X $Y))
-
-
-File: maxima.info,  Node: Funciones y variables para listas,  Prev: Introducción a las listas,  Up: Listas
-
-37.2 Funciones y variables para listas
-======================================
-
- -- Función: append (<lista_1>, ..., <lista_n>)
-     Devuelve una lista cuyos elementos son los de la lista <lista_1>
-     seguidos de los de <lista_2>, ...  La función `append' también
-     opera con expresiones generales, como la llamada `append (f(a,b),
-     f(c,d,e));', de la que se obtiene `f(a,b,c,d,e)'.
-
-     Tecléese `example(append);' para ver un ejemplo.
-
-
- -- Función: assoc (<clave>, <lista>, <valor_por_defecto>)
- -- Function: assoc (<clave>, <lista>)
-     Esta función busca la <clave> en el lado derecho de la  <lista>,
-     la cual es de la forma `[x,y,z,...]', donde cada elemento  es una
-     expresión formada por un operador binario y dos elementos. Por
-     ejemplo, `x=1', `2^3', `[a,b]' etc.  La <clave> se compara con el
-     primer operando. La función `assoc' devuelve el segundo operando
-     si se encuentra con que la `clave' coincide.  Si la `clave' no
-     coincide entonces devuelve el valor <valor_por_defecto>. El
-     argumento <valor_por_defecto> es opcional; en caso de no estar
-     presente, se devolverá `false'.
-
-
- -- Función: atom (<expr>)
-     Devuelve `true' si <expr> es un átomo (número, nombre o cadena
-     alfanumérica) y `false' en caso contario. Así, `atom(5)' devolverá
-     `true', mientras que `atom(a[1])' y `atom(sin(x))' darán como
-     resultado `false' (dando por hecho que tanto `a[1]' como `x' no
-     tienen valores asignados).
-
-
- -- Función: cons (<expr>, <lista>)
-     Devuelve una nueva lista en la que el elemento <expr> ocupa la
-     primera posición, seguido de los elementos de <lista>. La función
-     `cons' también opera con otro tipo de expresiones, como  `cons(x,
-     f(a,b,c));'  ->  `f(x,a,b,c)'.
-
-
- -- Función: copylist (<lista>)
-     Devuelve una copia de la <lista>.
-
-
- -- Función: create_list (<form>, <x_1>, <list_1>, ..., <x_n>, <list_n>)
-     Crea una lista mediante la evaluación de <form> con <x_1> tomando
-     cada uno de los valores de <list_1>, para cada uno de estos
-     valores liga <x_2> con cada elemento de <list_2>, .... El número
-     de elementos en el resultado será el producto del número de
-     elementos en cada lista. Cada variable <x_i> debe ser un símbolo y
-     no será evaluado. La lista de argumentos será evaluada una vez al
-     comienzo de la iteración.
-
-     Por ejemplo:
-          (%i1) create_list(x^i,i,[1,3,7]);
-                           3   7
-          (%o1)       [x, x , x ]
-
-     Con una doble iteración:
-
-          (%i1) create_list([i,j],i,[a,b],j,[e,f,h]);
-          (%o1) [[a, e], [a, f], [a, h], [b, e], [b, f], [b, h]]
-
-     En lugar de <list_i> se pueden suministrar dos argumentos cada uno
-     de los cuales debería poder evaluarse a un número, los cuales
-     serán los límites inferior y superior, ambos inclusive, para cada
-     iteración.
-
-     Por ejemplo:
-          (%i1) create_list([i,j],i,[1,2,3],j,1,i);
-          (%o1) [[1, 1], [2, 1], [2, 2], [3, 1], [3, 2], [3, 3]]
-
-     Nótese que los límites o lista para la variable `j' pueden depender
-     del valor actual de `i'.
-
- -- Función: delete (<expr_1>, <expr_2>)
- -- Función: delete (<expr_1>, <expr_2>, <n>)
-     `delete(<expr_1>, <expr_2>)' elimina de <expr_2> cualesquiera
-     argumentos del operador del nivel superior que sean iguales a
-     <expr_1>.  Nótese que los argumentos de las subexpresiones no se
-     ven afectados por esta función.
-
-     <expr_1> puede ser un átomo o una expresión no atómica. <expr_2>
-     puede ser cualquier expresión no atómica. La función `delete'
-     devuelve una nueva expresión sin modificar <expr_2>.
-
-     `delete(<expr_1>, <expr_2>, <n>)' elimina de <expr_2> los primeros
-     <n> argumentos del operador del nivel superior que sean iguales a
-     <expr_1>.  Si hay menos de <n> argumentos iguales, entonces se
-     eliminan todos ellos.
-
-     Ejemplos:
-
-     Eliminando elementos de una lista.
-
-          (%i1) delete (y, [w, x, y, z, z, y, x, w]);
-          (%o1)                  [w, x, z, z, x, w]
-
-     Eliminando términos de una suma.
-
-          (%i1) delete (sin(x), x + sin(x) + y);
-          (%o1)                         y + x
-
-     Eliminando factores de un producto.
-
-          (%i1) delete (u - x, (u - w)*(u - x)*(u - y)*(u - z));
-          (%o1)                (u - w) (u - y) (u - z)
-
-     Eliminando argumentos de una expresión arbitraria.
-
-          (%i1) delete (a, foo (a, b, c, d, a));
-          (%o1)                     foo(b, c, d)
-
-     Limitando el número de argumentos a eliminar.
-
-          (%i1) delete (a, foo (a, b, a, c, d, a), 2);
-          (%o1)                    foo(b, c, d, a)
-
-     Los argumentos se comparan respecto de "=".  Aquellos argumentos
-     que verifiquen la condición `equal', pero no "=" no serán
-     eliminados.
-
-          (%i1) [is (equal (0, 0)), is (equal (0, 0.0)), is (equal (0, 0b0))];
-
-          `rat' replaced 0.0 by 0/1 = 0.0
-          `rat' replaced 0.0B0 by 0/1 = 0.0B0
-          (%o1)                  [true, true, true]
-          (%i2) [is (0 = 0), is (0 = 0.0), is (0 = 0b0)];
-          (%o2)                 [true, false, false]
-          (%i3) delete (0, [0, 0.0, 0b0]);
-          (%o3)                     [0.0, 0.0b0]
-          (%i4) is (equal ((x + y)*(x - y), x^2 - y^2));
-          (%o4)                         true
-          (%i5) is ((x + y)*(x - y) = x^2 - y^2);
-          (%o5)                         false
-          (%i6) delete ((x + y)*(x - y), [(x + y)*(x - y), x^2 - y^2]);
-                                        2    2
-          (%o6)                       [x  - y ]
-
- -- Función: eighth (<expr>)
-     Devuelve el octavo elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: endcons (<expr>, <lista>)
-     Devuelve una nueva lista formada por los elementos de `lista'
-     seguidos de los de <expr>. La función `endcons' también opera con
-     expresiones generales, por ejemplo `endcons(x, f(a,b,c));'  ->
-     `f(a,b,c,x)'.
-
-
- -- Función: fifth (<expr>)
-     Devuelve el quinto elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: first (<expr>)
-     Devuelve la primera parte de <expr>, que puede consistir en el
-     primer elemento de una lista, la primera fila de una matriz, el
-     primer término de una suma, etc. Nótese que tanto `first' como sus
-     funciones relacionadas, `rest' y `last', operan sobre la forma en
-     la que <expr> es mostrada por Maxima, no sobre la forma en la que
-     es introducida la expresión. Sin embargo, cuando la variable
-     `inflag' toma el valor `true' estas funciones tendrán en cuenta el
-     formato interno de <expr>. Téngase en cuenta que el simplificador
-     reordena las expresiones.  Así, `first(x+y)' devolverá `x' si
-     `inflag' vale `true' y `y' cuando `inflag' tome el valor `false'
-     (`first(y+x)' devuelve el mismo resultado). Las funciones `second'
-     ... `tenth' devuelven desde el segundo hasta el décimo elemento
-     del argumento de entrada.
-
-
- -- Función: fourth (<expr>)
-     Devuelve el cuarto elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: get (<a>, <i>)
-     Recupera la propiedad de usuario indicada por <i> asociada al
-     átomo <a> o devuelve `false' si <a> no tiene la propiedad <i>.
-
-     La función `get' evalúa sus argumentos.
-
-          (%i1) put (%e, 'transcendental, 'type);
-          (%o1)                    transcendental
-          (%i2) put (%pi, 'transcendental, 'type)$
-          (%i3) put (%i, 'algebraic, 'type)$
-          (%i4) typeof (expr) := block ([q],
-                  if numberp (expr)
-                  then return ('algebraic),
-                  if not atom (expr)
-                  then return (maplist ('typeof, expr)),
-                  q: get (expr, 'type),
-                  if q=false
-                  then errcatch (error(expr,"is not numeric.")) else q)$
-          (%i5) typeof (2*%e + x*%pi);
-          x is not numeric.
-          (%o5)  [[transcendental, []], [algebraic, transcendental]]
-          (%i6) typeof (2*%e + %pi);
-          (%o6)     [transcendental, [algebraic, transcendental]]
-
-
- -- Función: join (<l>, <m>)
-     Crea una nueva lista con los elementos de las listas <l> y <m>
-     alternados.  El resultado tiene como elementos `[<l>[1], <m>[1],
-     <l>[2], <m>[2], ...]'.  Las listas <l> y <m> pueden contener
-     cualquier tipo de elementos.
-
-     Si las listas son de diferente longitud, `join' ignora los
-     elementos sobrantes de la lista más larga.
-
-     Maxima da error si o bien <l> o <m> no son listas.
-
-     Ejemplos:
-
-          (%i1) L1: [a, sin(b), c!, d - 1];
-          (%o1)                [a, sin(b), c!, d - 1]
-          (%i2) join (L1, [1, 2, 3, 4]);
-          (%o2)          [a, 1, sin(b), 2, c!, 3, d - 1, 4]
-          (%i3) join (L1, [aa, bb, cc, dd, ee, ff]);
-          (%o3)        [a, aa, sin(b), bb, c!, cc, d - 1, dd]
-
-
- -- Función: last (<expr>)
-     Devuelve la última parte (término, fila, elemento, etc.) de <expr>.
-
-
- -- Función: length (<expr>)
-     Devuelve (por defecto) el número de partes de que consta <expr> en
-     la versión correspondiente a la que muestra.  En el caso de
-     listas, se devuelve el número de elementos, si se trata de
-     matrices el número de filas y se se trata de sumas el número de
-     términos o sumandos (véase `dispform').
-
-     La función `length' se ve afectada por el valor de la variable
-     `inflag'.  Así, `length(a/(b*c));' devuelve 2 si `inflag' vale
-     `false' (dando por hecho que `exptdispflag' vale `true'), pero
-     devuelve 3 si `inflag' vale `true' (ya que la representación
-     interna es `a*b^-1*c^-1').
-
-
- -- Variable opcional: listarith
-     Valor por defecto: `true'
-
-     Cuando vale `false' provoca que no se realicen operaciones
-     aritméticas con listas;  cuando vale `true', las operaciones con
-     listas y matrices son contagiosas, en el sentido de que las listas
-     se transforman en matrices, retornando resultados de este último
-     tipo. Sin embargo, operaciones que involucren listas con listas
-     devolverán también listas.
-
-
- -- Función: listp (<expr>)
-     Devuelve el valor `true' si <expr> es una lista, y `false' en caso
-     contrario.
-
-
- -- Función: makelist (<expr>, <i>, <i_0>, <i_1>)
- -- Función: makelist (<expr>, <x>, <list>)
-     Construye y devuelve una lista, siendo cada uno de sus elementos
-     generados por <expr>.
-
-     La llamada `makelist (<expr>, <i>, <i_0>, <i_1>)' devuelve una
-     lista cuyo `j'-ésimo elemento es igual a `ev (<expr>, <i>=j)',
-     tomando  `j' los valores enteros entre  <i_0> y <i_1>.
-
-     La llamada `makelist (<expr>, <x>, <list>)' devuelve una lista
-     cuyo `j'-ésimo elemento es igual a `ev (<expr>, <x>=<list>[j])',
-     tomando  `j' los valores enteros entre  1 through `length
-     (<list>)'.
-
-     Ejemplos:
-
-          (%i1) makelist(concat(x,i),i,1,6);
-          (%o1)               [x1, x2, x3, x4, x5, x6]
-          (%i2) makelist(x=y,y,[a,b,c]);
-          (%o2)                 [x = a, x = b, x = c]
-
-
- -- Función: member (<expr_1>, <expr_2>)
-     Devuelve `true' si `is(<expr_1> = <a>)' para algún elemento <a> de
-     `args(<expr_2>)', en caso contrario devuelve `false'.
-
-     Normalmente, `expr_2' será una lista, en cuyo caso `args(<expr_2>)
-     = <expr_2>', y la comprobación será si `is(<expr_1> = <a>)' para
-     algún elemento <a> de `expr_2'.
-
-     La función `member' no inspecciona las partes de los argumentos de
-     `expr_2', por lo que puede devolver `false' si `expr_1' es parte
-     de alguno de los argumentos de `expr_2'.
-
-     Véase también `elementp'.
-
-     Ejemplos:
-
-          (%i1) member (8, [8, 8.0, 8b0]);
-          (%o1)                         true
-          (%i2) member (8, [8.0, 8b0]);
-          (%o2)                         false
-          (%i3) member (b, [a, b, c]);
-          (%o3)                         true
-          (%i4) member (b, [[a, b], [b, c]]);
-          (%o4)                         false
-          (%i5) member ([b, c], [[a, b], [b, c]]);
-          (%o5)                         true
-          (%i6) F (1, 1/2, 1/4, 1/8);
-                                         1  1  1
-          (%o6)                     F(1, -, -, -)
-                                         2  4  8
-          (%i7) member (1/8, %);
-          (%o7)                         true
-          (%i8) member ("ab", ["aa", "ab", sin(1), a + b]);
-          (%o8)                         true
-
- -- Función: ninth (<expr>)
-     Devuelve el noveno elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
- -- Función: pop (<list>)
-     Borra el primer elemento de la lista <list> y devuelve este mismo
-     elemento.
-
-     Si el argumento <list> es una lista vacía, o simplemente no es una
-     lista, Maxima devuelve un mensaje de error.
-
-     Véase `push' para los ejemplos.
-
-     Ejecútese `load(basic)' antes de utilizar esta función.
-
- -- Función: push (<item>, <list>)
-     Añade al comienzo de la lista <list> el elemento <item>,
-     devolviendo este mismo elemento. El argumento <list> debe ser
-     necesariamente una lista, mientras que <item> puede ser cualquier
-     símbolo o expresión.
-
-     Si el argumento <list> no es una lista, Maxima devuelve un mensaje
-     de error.
-
-     Véase `pop' para eliminar el primer elemento de una lista.
-
-     Ejecútese `load(basic)' antes de utilizar esta función.
-
-     Ejemplos:
-
-          (%i1) ll:[];
-          (%o1)                          []
-          (%i2) push(x,ll);
-          (%o2)                          [x]
-          (%i3) push(x^2+y,ll);
-                                           2
-          (%o3)                      [y + x , x]
-          (%i4) a:push("string",ll);
-                                               2
-          (%o4)                  [string, y + x , x]
-          (%i5) pop(ll);
-          (%o5)                        string
-          (%i6) pop(ll);
-                                            2
-          (%o6)                        y + x
-          (%i7) pop(ll);
-          (%o7)                           x
-          (%i8) ll;
-          (%o8)                          []
-          (%i9) a;
-                                               2
-          (%o9)                  [string, y + x , x]
-
- -- Función: unique (<L>)
-     Devuelve la lista <L> sin redundancias, es decir, sin elementos
-     repetidos
-
-     Cuando ninguno de los elementos de <L> está repetido, `unique'
-     devuelve una réplica de <L>, no la propia <L>.
-
-     Si <L> no es una lista, `unique' devuelve <L>.
-
-     Ejemplo:
-
-          (%i1) unique ([1, %pi, a + b, 2, 1, %e, %pi, a + b, [1]]);
-          (%o1)              [1, 2, %e, %pi, [1], b + a]
-
- -- Función: rest (<expr>, <n>)
- -- Función: rest (<expr>)
-     Devuelve <expr> sin sus primeros <n> elementos si <n> es positivo,
-     o sus últimos `- <n>' elementos si <n> es negativo. En caso de que
-     <n> tome el valor 1 puede ser omitido. La expresión  <expr> puede
-     ser una lista, una matriz o cualquier otra expresión.
-
-
- -- Función: reverse (<lista>)
-     Invierte el orden de los elementos de la <lista> (no los propios
-     elementos). La función `reverse' también opera sobre expresiones
-     generales, como en  `reverse(a=b);' gives `b=a'.
-
-
- -- Función: second (<expr>)
-     Devuelve el segundo elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: seventh (<expr>)
-     Devuelve el séptimo elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: sixth (<expr>)
-     Devuelve el sexto elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: sublist_indices (<L>, <P>)
-     Devuelve los índices de los elementos `x' de la lista <L> para la
-     cual el predicado `maybe(<P>(x))' devuelve `true', lo que excluye
-     a `unknown' y a `false'.  <P> puede ser el nombre de una función o
-     de una expresión lambda.  <L> debe ser una lista literal.
-
-     Ejemplos:
-
-          (%i1) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b],
-                              lambda ([x], x='b));
-          (%o1)                     [2, 3, 7, 9]
-          (%i2) sublist_indices ('[a, b, b, c, 1, 2, b, 3, b],
-                              symbolp);
-          (%o2)                  [1, 2, 3, 4, 7, 9]
-          (%i3) sublist_indices ([1 > 0, 1 < 0, 2 < 1, 2 > 1, 2 > 0],
-                              identity);
-          (%o3)                       [1, 4, 5]
-          (%i4) assume (x < -1);
-          (%o4)                       [x < - 1]
-          (%i5) map (maybe, [x > 0, x < 0, x < -2]);
-          (%o5)                [false, true, unknown]
-          (%i6) sublist_indices ([x > 0, x < 0, x < -2], identity);
-          (%o6)                          [2]
-
-
- -- Función: tenth (<expr>)
-     Devuelve el décimo elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
- -- Función: third (<expr>)
-     Devuelve el tercer elemento de la lista o expresión <expr>. Véase
-     `first' para más detalles.
-
-
-
-File: maxima.info,  Node: Conjuntos,  Next: Definición de Funciones,  Prev: Listas,  Up: Top
-
-38 Conjuntos
+35 Conjuntos
 ************
 
 * Menu:
@@ -1461,7 +2489,7 @@ File: maxima.info,  Node: Conjuntos,  Next: Definición de Funciones,  Prev: List
 
 File: maxima.info,  Node: Introducción a los conjuntos,  Next: Funciones y variables para los conjuntos,  Prev: Conjuntos,  Up: Conjuntos
 
-38.1 Introducción a los conjuntos
+35.1 Introducción a los conjuntos
 =================================
 
 Maxima dispone de funciones para realizar operaciones con conjuntos,
@@ -1476,7 +2504,7 @@ números de Stirling de primera y segunda especie, números de Bell,
 coeficientes multinomiales, particiones de enteros no negativos y
 algunos otros. Maxima también define la función delta de Kronecker.
 
-38.1.1 Utilización
+35.1.1 Utilización
 ------------------
 
 Para construir un conjunto cuyos elementos sean `a_1, ..., a_n', se
@@ -1623,7 +2651,7 @@ dado que no dependan de la variable `z', se hará
    La sección `Funciones y variables para los conjuntos' incluye una
 lista completa de funciones para operar con conjuntos en  Maxima.
 
-38.1.2 Iteraciones con elementos
+35.1.2 Iteraciones con elementos
 --------------------------------
 
 Hay dos formas para operar iterativamente sobre los elementos de un
@@ -1652,7 +2680,7 @@ conjuntos. En próximas versiones de las funciones para operar con
 conjuntos es posible que `first' y `rest' trabajen de modo diferente o
 que ya no lo hagan en absoluto.
 
-38.1.3 Fallos
+35.1.3 Fallos
 -------------
 
 Las funciones para operar con conjuntos utilizan la función `orderlessp'
@@ -1735,7 +2763,7 @@ la instrucción `unorder'.
 funciones para conjuntos que lo comunique en la base de datos de
 Maxima. Véase `bug_report'.
 
-38.1.4 Autores
+35.1.4 Autores
 --------------
 
 Stavros Macrakis de Cambridge, Massachusetts y Barton Willis de la
@@ -1744,7 +2772,7 @@ University of Nebraska at Kearney (UNK).
 
 File: maxima.info,  Node: Funciones y variables para los conjuntos,  Prev: Introducción a los conjuntos,  Up: Conjuntos
 
-38.2 Funciones y variables para los conjuntos
+35.2 Funciones y variables para los conjuntos
 =============================================
 
  -- Función: adjoin (<x>, <a>)
@@ -2240,106 +3268,28 @@ File: maxima.info,  Node: Funciones y variables para los conjuntos,  Prev: Intro
           (%i8) intersection (S_1, S_2, S_3, S_4);
           (%o8)                          {}
 
- -- Función: kron_delta (<x>, <y>)
+ -- Función: kron_delta (<x1>, <y1>, ..., <xp>, <yp>)
      Es la función delta de Kronecker.
 
-     La función `kron_delta' devuelve 1 cuando <x> e <y> son idénticos
-     o equivalentes, devolviendo 0 si <x> e <y> no son idénticos.
-     Cuando no está claro si ambas expresiones son equivalentes,
-     `kron_delta' devuelve una forma nominal. Si la diferencia `<x> -
-     <y>' es un número decimal en coma flotante, `kron_delta' dará como
-     resultado una expresión nominal, aún cuando <x> e <y> sean
-     aparentemente equivalentes.
-
-     Concretando, `kron_delta(<x>, <y>)' devuelve 1 si `is(x = y)'
-     retorna `true'; `kron_delta' también devuelve 1 si `sign(abs(<x> -
-     <y>))' retorna `zero' y `<x> - <y>' no es un decimal en coma
-     flotante (ni ordinario ni bigfloat); `kron_delta' devuelve 0 si
-     `sign(abs(<x> - <y>))' retorna `pos'.
-
-     Cuando `sign(abs(<x> - <y>))' es cualquier otra cosa diferente a
-     `pos' o `zero', o si es `zero' siendo `<x> - <y>' un decimal en
-     coma flotante, entonces `kron_delta' devuelve una expresión
-     nominal.
-
-     La función `kron_delta' está declarada como simétrica, esto es,
-     `kron_delta(<x>, <y>)' es igual a `kron_delta(<y>, <x>)'.
+     La función `kron_delta' devuelve 1 cuando <xi> y <yi> son iguales
+     para todos los pares, devolviendo 0 si existe un par en el que
+     <xi> y <yi> no sean iguales. La igualdad se determina utilizando
+     `is(equal(xi,xj))' y la desigualdad con `is(notequal(xi,xj))'. En
+     caso de un solo argumento, `kron_delta' devuelve un mensaje de
+     error.
 
      Ejemplos:
 
-     Si los argumentos de `kron_delta' son idénticos, `kron_delta'
-     devuelve 1,
-
-          (%i1) kron_delta (a, a);
-          (%o1)                           1
-          (%i2) kron_delta (x^2 - y^2, x^2 - y^2);
-          (%o2)                           1
-          (%i3) float (kron_delta (1/10, 0.1));
-          (%o3)                           1
-
-     Si los argumentos de `kron_delta' son equivalentes y su diferencia
-     no es un decimal en coma flotante, `kron_delta' devuelve 1,
-
-          (%i1) assume (equal (x, y));
-          (%o1)                     [equal(x, y)]
-          (%i2) kron_delta (x, y);
-          (%o2)                           1
-
-     Si los argumentos de `kron_delta' no son equivalentes,
-     `kron_delta' devuelve 0,
-
-          (%i1) kron_delta (a + 1, a);
-          (%o1)                           0
-          (%i2) assume (a > b)$
-          (%i3) kron_delta (a, b);
-          (%o3)                           0
-          (%i4) kron_delta (1/5, 0.7);
-          (%o4)                           0
-
-     Si no es posible determinar la equivalencia de los argumentos de
-     `kron_delta', ésta devuelve una forma nominal,
-
-          (%i1) kron_delta (a, b);
-          (%o1)                   kron_delta(a, b)
-          (%i2) assume(x >= y)$
-          (%i3) kron_delta (x, y);
-          (%o3)                   kron_delta(x, y)
-
-     Si los argumentos de `kron_delta' son equivalentes, pero su
-     diferencia es un decimal en coma flotante, `kron_delta' devuelve
-     forma nominal,
-
-          (%i1) 1/4 - 0.25;
-          (%o1)                          0.0
-          (%i2) 1/10 - 0.1;
-          (%o2)                          0.0
-          (%i3) 0.25 - 0.25b0;
-          Warning:  Float to bigfloat conversion of 0.25
-          (%o3)                         0.0b0
-          (%i4) kron_delta (1/4, 0.25);
-                                            1
-          (%o4)                  kron_delta(-, 0.25)
-                                            4
-          (%i5) kron_delta (1/10, 0.1);
-                                            1
-          (%o5)                  kron_delta(--, 0.1)
-                                            10
-          (%i6) kron_delta (0.25, 0.25b0);
-          Warning:  Float to bigfloat conversion of 0.25
-          (%o6)               kron_delta(0.25, 2.5b-1)
-
-     La función `kron_delta' es simétrica.
-
-          (%i1) kron_delta (x, y);
-          (%o1)                   kron_delta(x, y)
-          (%i2) kron_delta (y, x);
-          (%o2)                   kron_delta(x, y)
-          (%i3) kron_delta (x, y) - kron_delta (y, x);
-          (%o3)                           0
-          (%i4) is (equal (kron_delta (x, y), kron_delta (y, x)));
-          (%o4)                         true
-          (%i5) is (kron_delta (x, y) = kron_delta (y, x));
-          (%o5)                         true
+          (%i1) kron_delta(a,a);
+          (%o1)                                  1
+          (%i2) kron_delta(a,b,a,b);
+          (%o2)                          kron_delta(a, b)
+          (%i3) kron_delta(a,a,b,a+1);
+          (%o3)                                  0
+          (%i4) assume(equal(x,y));
+          (%o4)                            [equal(x, y)]
+          (%i5) kron_delta(x,y);
+          (%o5)                                  1
 
  -- Función: listify (<a>)
      Si <a> es un conjunto, devuelve una lista con los elementos de <a>;
@@ -3174,7 +4124,7 @@ File: maxima.info,  Node: Funciones y variables para los conjuntos,  Prev: Intro
 
 File: maxima.info,  Node: Definición de Funciones,  Next: Programación,  Prev: Conjuntos,  Up: Top
 
-39 Definición de Funciones
+36 Definición de Funciones
 **************************
 
 * Menu:
@@ -3187,16 +4137,16 @@ File: maxima.info,  Node: Definición de Funciones,  Next: Programación,  Prev: C
 
 File: maxima.info,  Node: Introducción a la definición de funciones,  Next: Funciones,  Prev: Definición de Funciones,  Up: Definición de Funciones
 
-39.1 Introducción a la definición de funciones
+36.1 Introducción a la definición de funciones
 ==============================================
 
 
 File: maxima.info,  Node: Funciones,  Next: Macros,  Prev: Introducción a la definición de funciones,  Up: Definición de Funciones
 
-39.2 Funciones
+36.2 Funciones
 ==============
 
-39.2.1 Funciones ordinarias
+36.2.1 Funciones ordinarias
 ---------------------------
 
 Para definir una función en Maxima es necesario utilizar el operador
@@ -3291,7 +4241,7 @@ expresiones como si se hubiera hecho
 deba ser evaluado será útil hacer uso de `define' y posiblemente de
 `buildq'.
 
-39.2.2 Funciones array
+36.2.2 Funciones array
 ----------------------
 
 Una función array almacena el valor de la función la primera vez que es
@@ -3328,7 +4278,7 @@ borra también la definición de la propia función.
 
 File: maxima.info,  Node: Macros,  Next: Funciones y variables para la definición de funciones,  Prev: Funciones,  Up: Definición de Funciones
 
-39.3 Macros
+36.3 Macros
 ===========
 
  -- Función: buildq (<L>, <expr>)
@@ -3544,7 +4494,7 @@ File: maxima.info,  Node: Macros,  Next: Funciones y variables para la definició
 
 File: maxima.info,  Node: Funciones y variables para la definición de funciones,  Prev: Macros,  Up: Definición de Funciones
 
-39.4 Funciones y variables para la definición de funciones
+36.4 Funciones y variables para la definición de funciones
 ==========================================================
 
  -- Función: apply (<F>, [<x_1>, ..., <x_n>])
@@ -3999,6 +4949,33 @@ File: maxima.info,  Node: Funciones y variables para la definición de funciones,
                   h (y) := x   , h (y) := --, h  (y) := ---, i (y) := 8   ]
                    x              5        y   10         y   8
                                           5             10
+
+
+ -- Función: fullmap (<f>, <expr_1>, ...)
+     Similar a `map', pero conservará el mapeado descendente de todas
+     las subexpresiones hasta que los operadores principales ya no sean
+     los mismos.
+
+     La función `fullmap' es utilizada por el simplificador de Maxima
+     en algunas transformaciones matriciales, por lo que Maxima
+     generará en algunas ocasiones mensajes de error relacionados con
+     `fullmap' aunque el usuario no haya invocado explícitamente esta
+     función.
+
+          (%i1) a + b * c;
+          (%o1)                        b c + a
+          (%i2) fullmap (g, %);
+          (%o2)                   g(b) g(c) + g(a)
+          (%i3) map (g, %th(2));
+          (%o3)                     g(b c) + g(a)
+
+
+ -- Función: fullmapl (<f>, <list_1>, ...)
+     Similar a `fullmap', pero `fullmapl' sólo hace mapeo sobre listas
+     y matrices.
+
+          (%i1) fullmapl ("+", [3, [4, 5]], [[a, 1], [0, -1.5]]);
+          (%o1)                [[a + 3, 4], [4, 3.5]]
 
 
  -- Variable del sistema: functions
@@ -4523,6 +5500,39 @@ File: maxima.info,  Node: Funciones y variables para la definición de funciones,
      declarar, por ejemplo, una lista de listas de números.
 
 
+ -- Función: remfunction (<f_1>, ..., <f_n>)
+ -- Función: remfunction (all)
+     Desliga las definiciones de función de sus símbolos <f_1>, ...,
+     <f_n>.  Los argumentos pueden ser nombres de funciones ordinarias
+     (creadas con `:=' o `define') o de funciones macro (creadas con
+     `::=').
+
+     La instrucción `remfunction (all)' desliga todas las definiciones
+     de funciones.
+
+     La función `remfunction' no evalúa sus argumentos.
+
+     La función `remfunction' devuelve una lista con los símbolos para
+     los que la definición de función fue desligada. Devuelve `false'
+     en el lugar de cualquier símbolo para el que no hay función
+     definida.
+
+     La función `remfunction' no se puede aplicar a arrays de funciones
+     ni a funciones subindicadas. Sí es aplicable en tales casos la
+     función `remarray'.
+
+ -- Variable opcional: savedef
+     Valor por defecto: `true'
+
+     Si `savedef' vale `true', se mantiene la versión Maxima de una
+     función definida por el usuario cuando ésta se traduce, lo que
+     permite mostrar su código con `dispfun' y que la función pueda ser
+     editada.
+
+     Si `savedef' vale `false', los nombres de las funciones traducidas
+     se eliminan de la lista `functions'.
+
+
  -- Variable opcional: transcompile
      Valor por defecto: `true'
 
@@ -4640,7 +5650,7 @@ File: maxima.info,  Node: Funciones y variables para la definición de funciones,
      `tr_numer', `tr_optimize_max_loop', `tr_semicompile',
      `tr_state_vars', `tr_warnings_get', `tr_warn_bad_function_calls',
      `tr_warn_fexpr', `tr_warn_meval', `tr_warn_mode',
-     `tr_warn_undeclared', `tr_warn_undefined_variable', y `tr_windy'.
+     `tr_warn_undeclared', y `tr_warn_undefined_variable'.
 
 
  -- Variable opcional: transrun
@@ -4791,12 +5801,6 @@ File: maxima.info,  Node: Funciones y variables para la definición de funciones,
      definidas.
 
 
- -- Variable opcional: tr_windy
-     Valor por defecto: `true'
-
-     Genera comentarios de ayuda y consejos sobre programación.
-
-
  -- Función: compile_file (<nombre_fich>)
  -- Función: compile_file (<nombre_fich>, <nombre_fich_compilado>)
  -- Función: compile_file (<nombre_fich>, <nombre_fich_compilado>,
@@ -4839,18 +5843,143 @@ File: maxima.info,  Node: Funciones y variables para la definición de funciones,
 
 File: maxima.info,  Node: Programación,  Next: Depurado,  Prev: Definición de Funciones,  Up: Top
 
-40 Programación
+37 Programación
 ***************
 
 * Menu:
 
+* Lisp y Maxima::
+* Recolector de basura::
 * Introducción a la programación::
 * Funciones y variables para la programación::
 
 
-File: maxima.info,  Node: Introducción a la programación,  Next: Funciones y variables para la programación,  Prev: Programación,  Up: Programación
+File: maxima.info,  Node: Lisp y Maxima,  Next: Recolector de basura,  Prev: Programación,  Up: Programación
 
-40.1 Introducción a la programación
+37.1 Lisp y Maxima
+==================
+
+Maxima fue escrito en Lisp, y es muy fácil tener acceso a funciones y
+variables Lisp desde Maxima y viceversa.  Los símbolos Lisp y los
+símblos Maxima están claramente diferenciados por medio de una
+convención de nombres.  Un símblo Lisp el cual comienza con un signo
+pesos `$' corresponde a un símbolo Maxima sin el signo pesos.  Un
+símbolo Maxima el cual comienza con un signo de cierre de interrogación
+`?' corresponde a un símbolo Lisp sin dicho signo.  Por ejemplo, el
+símbolo Maxima `foo' corresponde a el símbolo Lisp `$FOO', mientras que
+el símbolo Maxima `?foo' corresponde a el símbolo Lisp `FOO', tenga en
+cuenta que `?foo' esta escrito sin espacio entre `?' y `foo'; de otra
+manera se estaría invocando a `describe ("foo")'.
+
+   El guión `-', asterisco `*', u otros carácteres especiales en
+símbolos Lisp deben ser escritos mediante un backslash `\' si aparecen
+en código Maxima.  Por ejemplo, el identificador Lisp `*foo-bar*' se
+debe escribir `?\*foo\-bar\*' en Maxima.
+
+   Se puede ejecutar código Lisp desde una sesión de Maxima.  Una línea
+Lisp (que contenga una o más formas) puede ser ejecutada por medio de
+un comando especial `:lisp'. Por ejemplo,
+
+     (%i1) :lisp (foo $x $y)
+
+se llama a la función Lisp `foo' con variables Maxima `x' y `y' como
+argumentos.  La instrucción `:lisp' puede aparecer en el prompt
+interactivo o en un archivo que sea procesado por `batch' o `demo',
+pero no en un archivo que sea procesado por `load', `batchload',
+`translate_file' o `compile_file'.
+
+   La función `to_lisp()' abre una sesión interactiva con el interprete
+Lisp.  Escribiendo `(to-maxima)' se cierra la sesión con Lisp y se
+retorna a Maxima.
+
+   Las funciones y variables Lisp las cuales esten para ser visibles en
+Maxima como funciones y variables con nombres oridinarios (sin una
+puntuación especial), deben tener nombres tipo Lisp que comiencen con
+el signo pesos `$'.
+
+   Maxima distingue entre letras minúsculas y mayúsculas en
+identificadores.  Existen algunas reglas que gobiernan la traducción de
+nombres entre Lisp y Maxima.
+
+  1. Un identificador Lisp que no se encuentra encerrado en barras
+     verticales corresponde a un identificador Maxima en minúscula.
+     Que el idenficador Lisp esté en mayúscula, minúscula o una
+     combinación de ambas, no afecta en nada.  Por ejemplo, los
+     identificadores Lisp `$foo', `$FOO', y `$Foo', todos corresponden
+     al identificador Maxima `foo'. Esto es así porque `$foo', `$FOO' y
+     `$Foo' se convierten por defecto al símbolo `$FOO' de Lisp.
+
+  2. Un identificador Lisp el cual se encuentre todo en mayúscula o
+     todo en minúscula y encerrado entre barras verticales corresponde
+     a un identicador Maxima con el caso contrario.  Esto es, de
+     mayúsculas cambia a minúsculas y de minúsculas cambia a mayúsculas.
+     E.g., el identificador Lisp `|$FOO|' y `|$foo|' corresponden los
+     identificadores Maxima `foo' y `FOO', respectivamente.
+
+  3. Un identificador Lisp el cual esta escrito mezclando letras
+     mayúsculas y minúsculas y se encuentra entre barras verticales
+     corresponde a un identificador Maxima con la misma escritura.
+     E.g., el identificador Lisp `|$Foo|' corresponde a el
+     identificador Maxima `Foo'.
+
+   La macro Lisp `#$' permite el uso de expresiones Maxima dentro de
+código Lisp. `#$<expr>$' extiende a una expresión Lisp equivalente a la
+expresión Maxima <expr>.
+
+     (msetq $foo #$[x, y]$)
+
+Esto tiene el mismo efecto que:
+
+     (%i1) foo: [x, y];
+
+La función Lisp `displa' imprime una expresión en formato Maxima.
+
+     (%i1) :lisp #$[x, y, z]$
+     ((MLIST SIMP) $X $Y $Z)
+     (%i1) :lisp (displa '((MLIST SIMP) $X $Y $Z))
+     [x, y, z]
+     NIL
+
+   Las funciones definidas en Maxima no son funciones Lisp ordinarias.
+La función Lisp `mfuncall' llama a una función Maxima.  Por ejemplo:
+
+     (%i1) foo(x,y) := x*y$
+     (%i2) :lisp (mfuncall '$foo 'a 'b)
+     ((MTIMES SIMP) A B)
+
+   Algunas funciones Lisp son compartidas en el paquete Maxima, las
+cuales se listan a continuación:
+
+   `complement', `continue', `//', `float', `functionp', `array', `exp',
+`listen', `signum', `atan', `asin', `acos', `asinh', `acosh', `atanh',
+`tanh', `cosh', `sinh', `tan', `break', y `gcd'.
+
+
+File: maxima.info,  Node: Recolector de basura,  Next: Introducción a la programación,  Prev: Lisp y Maxima,  Up: Programación
+
+37.2 Recolector de basura
+=========================
+
+La computación simbólica tiende a crear una buena cantidad de basura
+(resultados temporales que ya no serán utilizados), y un manejo
+efectivo de esto puede ser crucial para el término exitoso de algunos
+programas.
+
+   Bajo GCL (GNU Common Lisp), en aquellos sistemas UNIX donde la
+llamada al sistema mprotect está disponible (incluyendo SUN OS 4.0 y
+algunas variantes de BSD) se dispone de un recolector de basura
+estratificado. Véase la documentación de GCL para ALLOCATE y GBC. A
+nivel Lisp, ejecutando (setq si::*notify-gbc* t) pemitirá determinar
+qué áreas necesitan más espacio.
+
+   En cuanto al resto de Lisps bajo los que funciona Maxima, se remite
+al lector a la documentación correspondiente para controlar la
+recolección de basura.
+
+
+File: maxima.info,  Node: Introducción a la programación,  Next: Funciones y variables para la programación,  Prev: Recolector de basura,  Up: Programación
+
+37.3 Introducción a la programación
 ===================================
 
 Maxima dispone de los bucles `do' para hacer iteraciones, así como
@@ -4859,7 +5988,7 @@ estructuras más primitivas del estilo de `go'.
 
 File: maxima.info,  Node: Funciones y variables para la programación,  Prev: Introducción a la programación,  Up: Programación
 
-40.2 Funciones y variables para la programación
+37.4 Funciones y variables para la programación
 ===============================================
 
  -- Función: backtrace ()
@@ -5120,6 +6249,68 @@ File: maxima.info,  Node: Funciones y variables para la programación,  Prev: Int
 
      La llamada a `errormsg()' formatea e imprime `error'. Se reimprime
      así el mensaje de error más reciente.
+
+
+ -- Variable opcional: error_size
+     Valor por defecto: 10
+
+     La variable `error_size' modifica los mensajes de error de acuerdo
+     con el tamaño de las expresiones que aparecen en él. Si el tamaño
+     de una expresión (tal como lo determina la función Lisp
+     `ERROR-SIZE') es mayor que `error_size', la expresión se reemplaza
+     en el mensaje por un símbolo, asignándole a éste una expresión.
+     Los símbolos se toman de la lista `error_syms'.
+
+     En caso contrario, si la expresión es menor que `error_size', la
+     expresión se muestra en el propio mensaje.
+
+     Véanse también `error' y `error_syms'.
+
+     Ejemplo:
+
+     El tamaño de `U', tal como lo determina `ERROR-SIZE', es 24.
+
+          (%i1) U: (C^D^E + B + A)/(cos(X-1) + 1)$
+
+          (%i2) error_size: 20$
+
+          (%i3) error ("Example expression is", U);
+
+          Example expression is errexp1
+           -- an error.  Quitting.  To debug this try debugmode(true);
+          (%i4) errexp1;
+                                      E
+                                     D
+                                    C   + B + A
+          (%o4)                    --------------
+                                   cos(X - 1) + 1
+          (%i5) error_size: 30$
+
+          (%i6) error ("Example expression is", U);
+
+                                   E
+                                  D
+                                 C   + B + A
+          Example expression is --------------
+                                cos(X - 1) + 1
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+
+ -- Variable opcional: error_syms
+     Valor por defecto: `[errexp1, errexp2, errexp3]'
+
+     En los mensajes de error, las expresiones mayores que `error_size'
+     son reemplazadas por símbolos a los cuales se les asignas estas
+     expresiones.  Los símbolos se toman de la lista `error_syms'. La
+     primera expresión que resulte ser demasiado larga se reemplaza por
+     `error_syms[1]', la segunda por `error_syms[2]' y así
+     sucesivamente.
+
+     Si hay más expresiones largas que elementos en `error_syms', los
+     símbolos se construyen automáticamente, siendo el <n>-ésimo
+     símbolo equivalente a `concat ('errexp, <n>)'.
+
+     Véanse también `error' y `error_size'.
 
 
  -- Función: errormsg ()
@@ -5515,7 +6706,7 @@ File: maxima.info,  Node: Funciones y variables para la programación,  Prev: Int
 
 File: maxima.info,  Node: Depurado,  Next: augmented_lagrangian,  Prev: Programación,  Up: Top
 
-41 Depurado
+38 Depurado
 ***********
 
 * Menu:
@@ -5527,7 +6718,7 @@ File: maxima.info,  Node: Depurado,  Next: augmented_lagrangian,  Prev: Programa
 
 File: maxima.info,  Node: Depuración del código fuente,  Next: Claves de depuración,  Up: Depurado
 
-41.1 Depuración del código fuente
+38.1 Depuración del código fuente
 =================================
 
 Maxima es capaz de dar asistencia en la depuración del código fuente.
@@ -5638,7 +6829,7 @@ evaluar la función dentro de Maxima tecleando `Alt-Control-x'.
 
 File: maxima.info,  Node: Claves de depuración,  Next: Funciones y variables para depurado,  Prev: Depuración del código fuente,  Up: Depurado
 
-41.2 Claves de depuración
+38.2 Claves de depuración
 =========================
 
 Las claves de depuración son palabras que no son interpretadas como
@@ -5721,8 +6912,20 @@ sería suficiente para `:break'.
 
 File: maxima.info,  Node: Funciones y variables para depurado,  Prev: Claves de depuración,  Up: Depurado
 
-41.3 Funciones y variables para depurado
+38.3 Funciones y variables para depurado
 ========================================
+
+ -- Variable opcional: debugmode
+     Valor por defecto: `false'
+
+     Cuando en Maxima ocurre un error, Maxima inicializará el depurador
+     si `debugmode' tiene el valor `true'.  El usuario puede ingresar
+     comandos para examinar la pila de llamadas, los puntos de
+     interrupción; en pocas palabras ir a través del código de Maxima.
+     Vea `debugging' para una lista de los comandos del depurador.
+
+     Habilitando `debugmode' no se capturarán los errores tipo Lisp.
+
 
  -- Variable opcional: refcheck
      Valor por defecto: `false'
@@ -5980,9 +7183,9 @@ File: maxima.info,  Node: Funciones y variables para depurado,  Prev: Claves de 
 
 
 
-File: maxima.info,  Node: augmented_lagrangian,  Next: bode,  Prev: Depurado,  Up: Top
+File: maxima.info,  Node: augmented_lagrangian,  Next: Bernstein,  Prev: Depurado,  Up: Top
 
-42 augmented_lagrangian
+39 augmented_lagrangian
 ***********************
 
 * Menu:
@@ -5992,7 +7195,7 @@ File: maxima.info,  Node: augmented_lagrangian,  Next: bode,  Prev: Depurado,  U
 
 File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
 
-42.1 Funciones y variables para augmented_lagrangian
+39.1 Funciones y variables para augmented_lagrangian
 ====================================================
 
  -- Función: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
@@ -6094,993 +7297,14 @@ File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev
                                            %lambda = [- 1.333337940892543]]
 
 
-File: maxima.info,  Node: bode,  Next: cobyla,  Prev: augmented_lagrangian,  Up: Top
+File: maxima.info,  Node: Bernstein,  Next: bode,  Prev: augmented_lagrangian,  Up: Top
 
-43 bode
-*******
-
-* Menu:
-
-* Funciones y variables para bode::
-
-
-File: maxima.info,  Node: Funciones y variables para bode,  Prev: bode,  Up: bode
-
-43.1 Funciones y variables para bode
-====================================
-
- -- Función: bode_gain (<H>, <range>, ...<plot_opts>...)
-     Función para dibujar el gráfico de ganancia de Bode.
-
-     Ejemplos (1 a 7 de
-          `http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html',
-     8 de Ron Crummett):
-          (%i1) load("bode")$
-
-          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
-
-          (%i3) bode_gain (H1 (s), [w, 1/1000, 1000])$
-
-          (%i4) H2 (s) := 1 / (1 + s/omega0)$
-
-          (%i5) bode_gain (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
-
-          (%i7) bode_gain (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i8) H4 (s) := 1 + s/omega0$
-
-          (%i9) bode_gain (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i10) H5 (s) := 1/s$
-
-          (%i11) bode_gain (H5 (s), [w, 1/1000, 1000])$
-
-          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
-
-          (%i13) bode_gain (H6 (s), [w, 1/1000, 1000]),
-                            omega0 = 10, zeta = 1/10$
-
-          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
-
-          (%i15) bode_gain (H7 (s), [w, 1/1000, 1000]),
-                            omega0 = 10, zeta = 1/10$
-
-          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
-
-          (%i17) bode_gain (H8 (s), [w, 1/1000, 1000])$
-
-     Antes de hacer uso de esta función ejecútese  `load("bode")'.
-     Véase también `bode_phase'.
-
- -- Función: bode_phase (<H>, <range>, ...<plot_opts>...)
-     Función para dibujar el gráfico de fase de Bode.
-
-     Ejemplos (1 a 7 de
-          `http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html',
-     8 de Ron Crummett):
-          (%i1) load("bode")$
-
-          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
-
-          (%i3) bode_phase (H1 (s), [w, 1/1000, 1000])$
-
-          (%i4) H2 (s) := 1 / (1 + s/omega0)$
-
-          (%i5) bode_phase (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
-
-          (%i7) bode_phase (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i8) H4 (s) := 1 + s/omega0$
-
-          (%i9) bode_phase (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
-
-          (%i10) H5 (s) := 1/s$
-
-          (%i11) bode_phase (H5 (s), [w, 1/1000, 1000])$
-
-          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
-
-          (%i13) bode_phase (H6 (s), [w, 1/1000, 1000]),
-                             omega0 = 10, zeta = 1/10$
-
-          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
-
-          (%i15) bode_phase (H7 (s), [w, 1/1000, 1000]),
-                             omega0 = 10, zeta = 1/10$
-
-          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
-
-          (%i17) bode_phase (H8 (s), [w, 1/1000, 1000])$
-
-          (%i18) block ([bode_phase_unwrap : false],
-                        bode_phase (H8 (s), [w, 1/1000, 1000]));
-
-          (%i19) block ([bode_phase_unwrap : true],
-                        bode_phase (H8 (s), [w, 1/1000, 1000]));
-
-     Antes de hacer uso de esta función ejecútese  `load("bode")'.
-     Véase también `bode_gain'.
-
-
-File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
-
-44 cobyla
-*********
+40 Bernstein
+************
 
 * Menu:
 
-* Introducción a cobyla::
-* Funciones y variables para cobyla::
-* Ejemplos para cobyla::
-
-
-File: maxima.info,  Node: Introducción a cobyla,  Next: Funciones y variables para cobyla,  Prev: cobyla,  Up: cobyla
-
-44.1 Introducción a cobyla
-==========================
-
-`fmin_cobyla' es una traducción a Common Lisp hecha con el programa
-`f2cl' de la rutina Fortran COBYLA, (Powell, [1][2][3]), para
-optimización con restricciones.
-
-   COBYLA minimiza una función objetivo F(X) sujeta a M restricciones
-con desigualdades de la forma g(X) >= 0 sobre X, siendo X un vector de
-variables de N componentes.
-
-   Las restricciones en forma de igualdades se pueden implementar por
-pares de desigualdades de la forma g(X)>=0 y -g(X)>= 0. El interfaz
-Maxima para COBYLA admite restricciones de igualdad, transformándolas
-luego internamente a pares de desigualdades.
-
-   El algoritmo hace uso de aproximaciones lineales, tanto de la función
-objetivo como de las funciones de restricción; tales aproximaciones se
-hacen mediante interpolación lineal de N+1 puntos en el espacio de
-variables. Los puntos de interpolación se consideran vértices de un
-simplejo o símplex. El parámetro RHO controla el tamaño del simplejo y
-se reduce automáticamente de RHOBEG a RHOEND. Para cada RHO la
-subrutina intenta alcanzar un buen vector de variables para el tamaño
-actual, reduciéndose entonces RHO hasta alcanzar el valor de RHOEND.
-Por eso, tanto a RHOBEG como a RHOEND se les deben asignar valores
-razonables, lo que requiere cierto trabajo empírico previo.  La rutina
-trata cada restricción individualmente cuando se calcula un en las
-variables. El nombre de la rutina se deriva de la frase Constrained
-Optimization BY Linear Approximations.
-
-   Referecias:
-
-   [1] Cd'igo Fortran procede de
-`http://plato.asu.edu/sub/nlores.html#general'
-
-   [2] M. J. D. Powell, "A direct search optimization method that
-models the objective and constraint functions by linear interpolation,"
-en Advances in Optimization and Numerical Analysis, eds. S. Gomez and
-J.-P. Hennart (Kluwer Academic: Dordrecht, 1994), p. 51-67.
-
-   [3] M. J. D. Powell, "Direct search algorithms for optimization
-calculations," Acta Numerica 7, 287-336 (1998).  Also available as
-University of Cambridge, Department of Applied Mathematics and
-Theoretical Physics,  Numerical Analysis Group, Report NA1998/04 from
-`http://www.damtp.cam.ac.uk/user/na/reports.html'
-
-
-File: maxima.info,  Node: Funciones y variables para cobyla,  Next: Ejemplos para cobyla,  Prev: Introducción a cobyla,  Up: cobyla
-
-44.2 Funciones y variables para cobyla
-======================================
-
- -- Función: fmin_cobyla (<F>, <X>, <Y>)
- -- Función: fmin_cobyla (<F>, <X>, <Y>, optional_args)
-     Devuelve una aproximación del valor mínimo de la expresión <F>
-     respecto de las variables <X>, sujeta a un conjunto opcional de
-     restricciones. <Y> es una lista que contiene una solución semilla
-     inicial en <X>.
-
-     <F> debe ser una expresión ordinaria, no valen nombres de funciones
-     ni expresiones lambda.
-
-     `optional_args' hace referencia a argumentos adicionales, que se
-     especifican de la forma `<symbol> = <value>'. Los argumentos
-     opcionales que se reconocen son:
-
-    `constraints'
-          Lista de restricciones en forma de desigualdades e igualdades
-          que debe satisfacer <X>. Las desigualdades deben ser de la
-          forma `g(<X>) >= h(<X>)' o `g(<X>) <= h(<X>)'.  Las
-          restricciones de igualdad deben ser de la forma `g(<X>) =
-          h(<X>)'.
-
-    `rhobeg'
-          Valor inicial de la variable interna RHO, que controla el
-          tamaño del simplejo. Su valor por defecto es 1.0.
-
-    `rhoend'
-          El valor final deseado para el parámetro RHO. Es
-          aproximadamente la precisión de las variables. Su valor por
-          defecto es 1d-6.
-
-    `iprint'
-          Nivel de información de salida. Su valor por defecto es 0.
-             * 0 - Sin información de salida
-
-             * 1 - Sumario al final de los cálculos
-
-             * 2 - Se van mostrando los nuevos valores de RHO y SIGMA,
-               incluyendo  el vector de variables.
-
-             * 3 - Como en 2, pero la información se muestra cuando se
-               calcula F(X).
-
-    `maxfun'
-          Número máximo de evaluaciones de la función. Su valor por
-          defecto es 1000.
-
-     El resultado devuelto es un vector:
-       1. Los valores de las variables con las que se alcanza el valor
-          mínimo.  Es una lista de elementos de la forma `<var> =
-          <value>' para cada una de las variables listadas en <X>.
-
-       2. El valor mínimo de la función objetivo.
-
-       3. El número de evaluaciones de la función.
-
-       4. Código de retorno con los siguientes significados:
-            1.  0 - No ha habido errores.
-
-            2.  1 - Alcanzado el máximo número permitido de
-               evaluaciones de la función.
-
-            3.  2 - Errores de redondeo han impedido el avance del
-               proceso.
-
-     El código `load(fmin_cobyla)' carga en memoria esta función..
-
-
- -- Función: bf_fmin_cobyla (<F>, <X>, <Y>)
- -- Función: bf_fmin_cobyla (<F>, <X>, <Y>, optional_args)
-     Esta función es idéntica a `fmin_cobyla', excepto por el hecho de
-     que utiliza aritmética de precisión arbitraria (bigfloat) y que el
-     valor por defecto de <rhoend> es `10^(fpprec/2)'.
-
-     Véase `fmin_cobyla'.
-
-     El código `load(fmin_cobyla)' carga en memoria esta función..
-
-
-
-File: maxima.info,  Node: Ejemplos para cobyla,  Prev: Funciones y variables para cobyla,  Up: cobyla
-
-44.3 Ejemplos para cobyla
-=========================
-
-Minimí x1*x2 bajo la condición 1-x1^2-x2^2 >= 0.  La solución teórica
-es x1 = 1/sqrt(2), x2 = -1/sqrt(2).
-
-     (%i1) load(fmin_cobyla)$
-
-     (%i2) fmin_cobyla(x1*x2, [x1, x2], [1,1], constraints = [x1^2+x2^2<=1], iprint=1);
-
-        Normal return from subroutine COBYLA
-
-        NFVALS =   66   F =-5.000000E-01    MAXCV = 1.999845E-12
-        X = 7.071058E-01  -7.071077E-01
-     (%o2) [[x1 = 0.70710584934848, x2 = - 0.7071077130248], - 0.49999999999926,
-            [[-1.999955756559757e-12],[]], 66]
-
-   Hay más ejemplos en el directorio `share/cobyla/ex'.
-
-
-File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: cobyla,  Up: Top
-
-45 contrib_ode
-**************
-
-* Menu:
-
-* Introducción a contrib_ode::
-* Funciones y variables para contrib_ode::
-* Posibles mejoras a contrib_ode::
-* Pruebas realizadas con contrib_ode::
-* Referencias para contrib_ode::
-
-
-File: maxima.info,  Node: Introducción a contrib_ode,  Next: Funciones y variables para contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
-
-45.1 Introducción a contrib_ode
-===============================
-
-La función `ode2' de Maxima resuelve ecuaciones diferenciales
-ordinarias (EDO) simples de primer y segundo orden. La función
-`contrib_ode' extiende las posibilidades de `ode2' con métodos
-adicionales para ODEs lineales y no lineales de primer orden y
-homogéneas lineales de segundo orden.  El código se encuentra en estado
-de desarrollo y la syntaxis puede cambiar en futuras versiones. Una vez
-el código se haya estabilizado podrá pasar a integrarse dentro de
-Maxima.
-
-   El paquete debe cargarse con la instrucción `load('contrib_ode)'
-antes de utilizarlo.
-
-   La sintaxis de `contrib_ode' es similar a la de `ode2'.  Necesita
-tres argumentos: una EDO (sólo se necesita el miembro izquierdo si el
-derecho es igual cero), la variable dependiente y la independiente. Si
-encuentra la solución, devolverá una lista de resultados.
-
-   La forma de los resultados devueltos es diferente de la utilizada
-por `ode2'.  Puesto que las ecuaciones no lineales pueden tener
-múltiples soluciones, `contrib_ode' devuelve una lista de soluciones.
-Las soluciones pueden tener diferentes formatos:
-   * una función explícita para la variable dependiente,
-
-   * una función implícita para la variable dependiente,
-
-   * una solución paramétrica en términos de la variable `%t' o
-
-   * una transformación en otra EDO de variable `%u'.
-
-
-   `%c' hace referencia a la constante de integración en las ecuaciones
-de primer orden.  `%k1' y `%k2' son las constantes para las ecuaciones
-de segundo orden.  Si por cualquier razón contrib_ode no pudiese
-encontrar una solución, devolverá `false', quizás después de mostrar un
-mensaje de error.
-
-   Ejemplos:
-
-   En ocasiones es necesario devolver una lista de soluciones, pues
-algunas EDOs pueden tener múltiples soluciones:
-
-     (%i1) load('contrib_ode)$
-
-     (%i2) eqn:x*'diff(y,x)^2-(1+x*y)*'diff(y,x)+y=0;
-
-                         dy 2             dy
-     (%o2)            x (--)  - (x y + 1) -- + y = 0
-                         dx               dx
-     (%i3) contrib_ode(eqn,y,x);
-
-                                                  x
-     (%o3)             [y = log(x) + %c, y = %c %e ]
-     (%i4) method;
-
-     (%o4)                        factor
-
-   Las EDOs no lineales pueden tener soluciones singulares sin
-constantes de integración, como en la segunda solución del ejemplo
-siguiente:
-
-     (%i1) load('contrib_ode)$
-
-     (%i2) eqn:'diff(y,x)^2+x*'diff(y,x)-y=0;
-
-                            dy 2     dy
-     (%o2)                 (--)  + x -- - y = 0
-                            dx       dx
-     (%i3) contrib_ode(eqn,y,x);
-
-                                                2
-                                      2        x
-     (%o3)              [y = %c x + %c , y = - --]
-                                               4
-     (%i4) method;
-
-     (%o4)                       clairault
-
-   La siguiente ODE tiene dos soluciones paramétricas en términos de la
-variable `%t'. En este caso, las soluciones paramétricas se pueden
-manipular para dar soluciones explícitas.
-
-     (%i1) load('contrib_ode)$
-
-     (%i2) eqn:'diff(y,x)=(x+y)^2;
-
-                               dy          2
-     (%o2)                     -- = (y + x)
-                               dx
-     (%i3) contrib_ode(eqn,y,x);
-
-     (%o3) [[x = %c - atan(sqrt(%t)), y = - x - sqrt(%t)],
-                          [x = atan(sqrt(%t)) + %c, y = sqrt(%t) - x]]
-     (%i4) method;
-
-     (%o4)                       lagrange
-
-   En el siguiente ejemplo (Kamke 1.112) se obtiene una solución
-implícita.
-
-     (%i1) load('contrib_ode)$
-
-     (%i2) assume(x>0,y>0);
-
-     (%o2)                    [x > 0, y > 0]
-     (%i3) eqn:x*'diff(y,x)-x*sqrt(y^2+x^2)-y;
-
-                          dy           2    2
-     (%o3)              x -- - x sqrt(y  + x ) - y
-                          dx
-     (%i4) contrib_ode(eqn,y,x);
-
-                                       y
-     (%o4)                  [x - asinh(-) = %c]
-                                       x
-     (%i5) method;
-
-     (%o5)                          lie
-
-   La siguiente ecuación de Riccati se transforma en una EDO lineal de
-segundo orden de variable `%u'. Maxima es incapaz de resolver la nueva
-EDO, por lo que la devuelve si resolver:
-
-     (%i1) load('contrib_ode)$
-
-     (%i2) eqn:x^2*'diff(y,x)=a+b*x^n+c*x^2*y^2;
-
-                         2 dy      2  2      n
-     (%o2)              x  -- = c x  y  + b x  + a
-                           dx
-     (%i3) contrib_ode(eqn,y,x);
-
-                    d%u
-                    ---                            2
-                    dx        2     n - 2   a     d %u
-     (%o3)  [[y = - ----, %u c  (b x      + --) + ---- c = 0]]
-                    %u c                     2      2
-                                            x     dx
-     (%i4) method;
-
-     (%o4)                        riccati
-
-   Para EDOs de primer orden, `contrib_ode' llama a `ode2'.  Entonces
-trata de aplicar los siguientes métodos: factorización, Clairault,
-Lagrange, Riccati, Abel y Lie. El método de Lie no se intenta aplicar a
-las ecuaciones de Abel si el propio método de Abel no obtiene solución,
-pero sí se utiliza si el método de Riccati devuelve una EDO de segundo
-orden sin resolver.
-
-   Para EDOs de segundo orden, `contrib_ode' llama a `ode2' y luego a
-`odelin'.
-
-   Se mostrarán mensajes de depurado si se ejecuta la sentencia
-`put('contrib_ode,true,'verbose)'.
-
-
-File: maxima.info,  Node: Funciones y variables para contrib_ode,  Next: Posibles mejoras a contrib_ode,  Prev: Introducción a contrib_ode,  Up: contrib_ode
-
-45.2 Funciones y variables para contrib_ode
-===========================================
-
- -- Función: contrib_ode (<eqn>, <y>, <x>)
-     Devuelve la lista de soluciones de la ecuación diferencia
-     ordinaria (EDO) <eqn> de variable independiente <x> y variable
-     dependiente <y>.
-
-
- -- Función: odelin (<eqn>, <y>, <x>)
-     La función `odelin' resulve EDOs homogéneas lineales de primer y
-     segundo orden con variable independiente <x> y variable
-     dependiente <y>. Devuelve un conjunto fundamental de soluciones de
-     la EDO.
-
-     Para EDOs de segundo orden, `odelin' utiliza un método
-     desarrollado por Bronstein y Lafaille, que busca las soluciones en
-     términos de funciones especiales dadas.
-
-          (%i1) load('contrib_ode);
-
-          (%i2) odelin(x*(x+1)*'diff(y,x,2)+(x+5)*'diff(y,x,1)+(-4)*y,y,x);
-          ...trying factor method
-          ...solving 7 equations in 4 variables
-          ...trying the Bessel solver
-          ...solving 1 equations in 2 variables
-          ...trying the F01 solver
-          ...solving 1 equations in 3 variables
-          ...trying the spherodial wave solver
-          ...solving 1 equations in 4 variables
-          ...trying the square root Bessel solver
-          ...solving 1 equations in 2 variables
-          ...trying the 2F1 solver
-          ...solving 9 equations in 5 variables
-                 gauss_a(- 6, - 2, - 3, - x)  gauss_b(- 6, - 2, - 3, - x)
-          (%o2) {---------------------------, ---------------------------}
-                              4                            4
-                             x                            x
-
-
- -- Función: ode_check (<eqn>, <soln>)
-     Devuelve el valor de la ecuación diferencia ordinaria (EDO) <eqn>
-     después de sustituir una posible solución <soln>. El valor es cero
-     si <soln> es una solución de <eqn>.
-
-          (%i1) load('contrib_ode)$
-
-          (%i2) eqn:'diff(y,x,2)+(a*x+b)*y;
-
-                                   2
-                                  d y
-          (%o2)                   --- + (a x + b) y
-                                    2
-                                  dx
-          (%i3) ans:[y = bessel_y(1/3,2*(a*x+b)^(3/2)/(3*a))*%k2*sqrt(a*x+b)
-                   +bessel_j(1/3,2*(a*x+b)^(3/2)/(3*a))*%k1*sqrt(a*x+b)];
-
-                                            3/2
-                              1  2 (a x + b)
-          (%o3) [y = bessel_y(-, --------------) %k2 sqrt(a x + b)
-                              3       3 a
-                                                    3/2
-                                      1  2 (a x + b)
-                           + bessel_j(-, --------------) %k1 sqrt(a x + b)]
-                                      3       3 a
-          (%i4) ode_check(eqn,ans[1]);
-
-          (%o4)                           0
-
-
- -- Variable opcional: `method'
-     A la variable `method' se le asigna el método aplicado.
-
-
- -- Variable: `%c'
-     `%c' es la constante de integración para EDOs de primer orden.
-
-
- -- Variable: `%k1'
-     `%k1' es la primera constante de integración para EDOs de segundo
-     orden.
-
-
- -- Variable: `%k2'
-     `%k2' es la segunda constante de integración para EDOs de segundo
-     orden.
-
-
- -- Función: gauss_a (<a>, <b>, <c>, <x>)
-     `gauss_a(a,b,c,x)' y `gauss_b(a,b,c,x)' son funciones geométricas
-     2F1 . Representan dos soluciones independientes cualesquiera de la
-     ecuación diferencial hipergeométrica `x(1-x) diff(y,x,2) +
-     [c-(a+b+1)x diff(y,x) - aby = 0' (A&S 15.5.1).
-
-     El único uso que se hace de estas funciones es en las soluciones de
-     EDOs que devuelven `odelin' y `contrib_ode'. La definición y
-     utilización de estas funciones puede cambiar en futuras
-     distribuciones de Maxima.
-
-     Véanse también `gauss_b', `dgauss_a' y `gauss_b'.
-
-
- -- Función: gauss_b (<a>, <b>, <c>, <x>)
-     Véase  también `gauss_a'.
-
- -- Función: dgauss_a (<a>, <b>, <c>, <x>)
-     The derivative with respect to x of `gauss_a(a,b,c,x)'.
-
- -- Función: dgauss_b (<a>, <b>, <c>, <x>)
-     Derivada de `gauss_b(<a>,<b>,<c>,<x>)' respecto de <x>.
-
- -- Función: kummer_m (<a>, <b>, <x>)
-     Función M de Kummer, tal como la definen Abramowitz y Stegun,
-     Handbook of Mathematical Functions, Sección 13.1.2.
-
-     El único uso que se hace de esta función es en las soluciones de
-     EDOs que devuelven `odelin' y `contrib_ode'. La definición y
-     utilización de estas funciones puede cambiar en futuras
-     distribuciones de Maxima.
-
-     Véanse también `kummer_u', `dkummer_m' y `dkummer_u'.
-
- -- Función: kummer_u (<a>, <b>, <x>)
-     Función U de Kummer, tal como la definen Abramowitz y Stegun,
-     Handbook of Mathematical Functions, Sección 13.1.3.
-
-     Véase  también `kummer_m'.
-
- -- Función: dkummer_m (<a>, <b>, <x>)
-     Derivada de `kummer_m(<a>,<b>,<x>)' respecto de <x>.
-
- -- Función: dkummer_u (<a>, <b>, <x>)
-     Derivada de `kummer_u(<a>,<b>,<x>)' respecto de <x>.
-
-
-File: maxima.info,  Node: Posibles mejoras a contrib_ode,  Next: Pruebas realizadas con contrib_ode,  Prev: Funciones y variables para contrib_ode,  Up: contrib_ode
-
-45.3 Posibles mejoras a contrib_ode
-===================================
-
-Este paquete aún se encuentra en fase de desarrollo. Aspectos
-pendientes:
-
-   * Extender el método FACTOR `ode1_factor' para que trabaje con
-     raíces múltiples.
-
-   * Extender el método FACTOR `ode1_factor' para que intente resolver
-     factores de orden superior. En este momento sólo intenta resolver
-     factores lineales.
-
-   * Modificar la rutina LAGRANGE `ode1_lagrange' para que prefiera
-     raíces reales a las complejas.
-
-   * Añadir más métodos para las ecuaciones de RIccati.
-
-   * Mejorar la identificación de las ecuaciones de Abel de segunda
-     especie.  El procedimiento actual no es muy bueno.
-
-   * Trabajar la rutina del grupo simétrico de Lie `ode1_lie'.  Existen
-     algunos problemas: algunas partes no están implementadas, algunos
-     ejemplos no terminan de ejecutarse, otros producen errors, otros
-     devuelven respuestas muy complejas.
-
-   * Hacer más pruebas.
-
-
-
-File: maxima.info,  Node: Pruebas realizadas con contrib_ode,  Next: Referencias para contrib_ode,  Prev: Posibles mejoras a contrib_ode,  Up: contrib_ode
-
-45.4 Pruebas realizadas con contrib_ode
-=======================================
-
-Los procedimientos fueron probados con cerca de mil ecuaciones tomadas
-de Murphy, Kamke, Zwillinger y otros. Éstas se encuentran en el
-directorio de pruebas.
-
-   * La rutina de Clairault `ode1_clairault' encuentra todas las
-     soluciones conocidas, incluídas las singulares, de las ecuaciones
-     de Clairault en Murphy y Kamke.
-
-   * Las otras rutinas a veces devuelven una sola solución cuando
-     existen más.
-
-   * Algunas de las soluciones devueltas por `ode1_lie' son demasiado
-     complejas e imposibles de interpretar.
-
-   * A veces se producen detenciones imprevistas del procedimiento.
-
-
-
-File: maxima.info,  Node: Referencias para contrib_ode,  Prev: Pruebas realizadas con contrib_ode,  Up: contrib_ode
-
-45.5 Referencias para contrib_ode
-=================================
-
-  1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
-     Vol 1,     Geest & Portig, Leipzig, 1961
-
-  2. G. M. Murphy, Ordinary Differential Equations and Their Solutions,
-        Van Nostrand, New York, 1960
-
-  3. D. Zwillinger, Handbook of Differential Equations, 3rd edition,
-     Academic Press, 1998
-
-  4. F. Schwarz, Symmetry Analysis of Abel's Equation, Studies in
-     Applied Mathematics, 100:269-294 (1998)
-
-  5. F. Schwarz, Algorithmic Solution of Abel's Equation,     Computing
-     61, 39-49 (1998)
-
-  6. E. S. Cheb-Terrab, A. D. Roche, Symmetries and First Order     ODE
-     Patterns, Computer Physics Communications 113 (1998), p 239.
-     (`http://lie.uwaterloo.ca/papers/ode_vii.pdf')
-
-  7. E. S. Cheb-Terrab, T. Kolokolnikov,  First Order ODEs,
-     Symmetries and Linear Transformations, European Journal of
-     Applied Mathematics, Vol. 14, No. 2, pp. 231-246 (2003).
-     (`http://arxiv.org/abs/math-ph/0007023')
-     (`http://lie.uwaterloo.ca/papers/ode_iv.pdf')
-
-  8. G. W. Bluman, S. C. Anco, Symmetry and Integration Methods for
-     Differential Equations, Springer, (2002)
-
-  9. M Bronstein, S Lafaille, Solutions of linear ordinary differential
-     equations in terms of special functions, Proceedings of ISSAC
-     2002, Lille, ACM Press, 23-28.
-     (`http://www-sop.inria.fr/cafe/Manuel.Bronstein/publications/issac2002.pdf')
-
-
-File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
-
-46 descriptive
-**************
-
-* Menu:
-
-* Introducción a descriptive::
-* Funciones y variables para el tratamiento de datos::
-* Funciones y variables de parámetros descriptivos::
-* Funciones y variables para gráficos estadísticos::
-
-
-File: maxima.info,  Node: Introducción a descriptive,  Next: Funciones y variables para el tratamiento de datos,  Prev: descriptive,  Up: descriptive
-
-46.1 Introducción a descriptive
-===============================
-
-El paquete `descriptive' contiene funciones para realizar cl'culos y
-gráficos estadísticos descriptivos.  Junto con el código fuente se
-distribuyen tres conjuntos de datos: `pidigits.data', `wind.data' y
-`biomed.data'.
-
-   Cualquier manual de estadística se puede utilizar como referencia al
-paquete `descriptive'.
-
-   Para comentarios, fallos y sugerencias, por favor contactar con
-<'mario AT edu DOT xunta DOT es'>.
-
-   Aquí un sencillo ejemplo sobre cómo operan las funciones de
-`descriptive', dependiendo de la naturaleza de sus argumentos, listas o
-matrices,
-
-     (%i1) load (descriptive)$
-     (%i2) /* muestra univariate */   mean ([a, b, c]);
-                                 c + b + a
-     (%o2)                       ---------
-                                     3
-     (%i3) matrix ([a, b], [c, d], [e, f]);
-                                 [ a  b ]
-                                 [      ]
-     (%o3)                       [ c  d ]
-                                 [      ]
-                                 [ e  f ]
-     (%i4) /* muestra multivariante */ mean (%);
-                           e + c + a  f + d + b
-     (%o4)                [---------, ---------]
-                               3          3
-
-   Nótese que en las muestras multivariantes la media se calcula para
-cada columna.
-
-   En caso de varias muestras de diferente tamaño, la función `map' de
-Maxima puede utilizarse para obtener los resultados deseados para cada
-muestra,
-
-     (%i1) load (descriptive)$
-     (%i2) map (mean, [[a, b, c], [d, e]]);
-                             c + b + a  e + d
-     (%o2)                  [---------, -----]
-                                 3        2
-
-   En este caso, dos muestras de tamaños 3 y 2 han sido almacenadas en
-una lista.
-
-   Muestras univariantes deben guardarse en listas como en
-
-     (%i1) s1 : [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5];
-     (%o1)           [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
-
-   y muestras multivariantes en matrices como las del siguiente ejemplo
-
-     (%i1) s2 : matrix ([13.17, 9.29], [14.71, 16.88], [18.50, 16.88],
-                  [10.58, 6.63], [13.33, 13.25], [13.21,  8.12]);
-                             [ 13.17  9.29  ]
-                             [              ]
-                             [ 14.71  16.88 ]
-                             [              ]
-                             [ 18.5   16.88 ]
-     (%o1)                   [              ]
-                             [ 10.58  6.63  ]
-                             [              ]
-                             [ 13.33  13.25 ]
-                             [              ]
-                             [ 13.21  8.12  ]
-
-   En este caso, el número de columnas es igual al de la dimensión de
-la variable aleatoria y el número de filas coincide con el tamaño
-muestral.
-
-   Los datos pueden suministrarse manualmente, pero las muestras
-grandes se suelen almacenar en ficheros de texto. Por ejemplo, el
-fichero `pidigits.data' contiene los 100 primeros dígitos del número
-`%pi':
-           3
-           1
-           4
-           1
-           5
-           9
-           2
-           6
-           5
-           3 ...
-
-   A fin de leer estos dígitos desde Maxima,
-
-     (%i1) s1 : read_list (file_search ("pidigits.data"))$
-     (%i2) length (s1);
-     (%o2)                          100
-
-   Por otro lado, el archivo `wind.data' contiene los promedios diarios
-de la velocidad del viento en cinco estaciones meteorológicas en
-Irlanda (esta muestra es parte de un conjunto de datos correspondientes
-a 12 estaciones meteorológicas. El fichero original se puede descargar
-libremente del 'StatLib Data Repository' y se analiza en  Haslett, J.,
-Raftery, A. E. (1989) <Space-time Modelling with Long-memory
-Dependence: Assessing Ireland's Wind Power Resource, with Discussion>.
-Applied Statistics 38, 1-50). Así se leen los datos:
-
-     (%i1) s2 : read_matrix (file_search ("wind.data"))$
-     (%i2) length (s2);
-     (%o2)                          100
-     (%i3) s2 [%]; /* last record */
-     (%o3)            [3.58, 6.0, 4.58, 7.62, 11.25]
-
-   Algunas muestras contienen datos no numéricos. Como ejemplo, el
-archivo `biomed.data' (el cual es parte de otro mayor descargado
-también del 'StatLib Data Repository') contiene cuatro mediciones
-sanguíneas tomadas a dos grupos de pacientes, `A' y `B', de diferentes
-edades,
-
-     (%i1) s3 : read_matrix (file_search ("biomed.data"))$
-     (%i2) length (s3);
-     (%o2)                          100
-     (%i3) s3 [1]; /* first record */
-     (%o3)            [A, 30, 167.0, 89.0, 25.6, 364]
-
-   El primer individuo pertenece al grupo `A', tiene 30 años de edad y
-sus medidas sanguíneas fueron 167.0, 89.0, 25.6 y 364.
-
-   Debe tenerse cuidado cuando se trabaje con datos categóricos. En el
-siguiente ejemplo, se asigna al símbolo `a' cierto valor en algún
-momento previo y luego se toma una muestra con el valor categórico `a',
-
-     (%i1) a : 1$
-     (%i2) matrix ([a, 3], [b, 5]);
-                                 [ 1  3 ]
-     (%o2)                       [      ]
-                                 [ b  5 ]
-
-
-File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  Next: Funciones y variables de parámetros descriptivos,  Prev: Introducción a descriptive,  Up: descriptive
-
-46.2 Funciones y variables para el tratamiento de datos
-=======================================================
-
- -- Función: continuous_freq (<list>)
- -- Función: continuous_freq (<list>, <m>)
-     El argumento de `continuous_freq' debe ser una lista de números,
-     los cuales serán luego agrupados en intervalos y hecho el recuento
-     de cuántos hay en cada grupo. Opcionalmente, la función
-     `continuous_freq' admite un segundo argumento para indicar el
-     número de clases a considerar, siendo 10 su valor por defecto.
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) continuous_freq (s1, 5);
-          (%o3) [[0, 1.8, 3.6, 5.4, 7.2, 9.0], [16, 24, 18, 17, 25]]
-
-     La primera lista contiene los extremos de los intervalos y la
-     segunda los resultados de los recuentos: hay 16 dígitos dentro del
-     intervalo  `[0, 1.8]', esto es ceros y unos, 24 dígitos en `(1.8,
-     3.6]', es decir doses y treses, y así sucesivamente.
-
- -- Función: discrete_freq (<list>)
-     Calcula las frecuencias absolutas en muestras discretas, tanto
-     numéricas como categóricas. Su único argumento debe ser una lista.
-
-          (%i1) load (descriptive)$
-          (%i2) s1 : read_list (file_search ("pidigits.data"))$
-          (%i3) discrete_freq (s1);
-          (%o3) [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                                       [8, 8, 12, 12, 10, 8, 9, 8, 12, 13]]
-
-     La primera lista son los valores de la muestra y la segunda sus
-     frecuencias absolutas. Las instrucciones `? col' y `? transpose'
-     pueden ayudar a comprender la última entrada.
-
- -- Función: subsample (<data_matrix>, <predicate_function>)
- -- Función: subsample (<data_matrix>, <predicate_function>, <col_num>,
-          <col_num>, ...)
-     Esta es una variante de la función `submatrix' de Maxima.  El
-     primer argumento es una matriz de datos, el segundo es una función
-     de predicado y el resto de argumentos opcionales son los números
-     de las columnas a tomar en consideración.
-
-     Estos son los registros multivariantes en los que la velocidad del
-     viento en la primera estación meteorológica fue menor de 18 nudos.
-     Véase cómo en la expresión lambda la <i>-ésima componente se la
-     referencia como `v[i]'.
-          (%i1) load (descriptive)$
-          (%i2) s2 : read_matrix (file_search ("wind.data"))$
-          (%i3) subsample (s2, lambda([v], v[1] > 18));
-                        [ 19.38  15.37  15.12  23.09  25.25 ]
-                        [                                   ]
-                        [ 18.29  18.66  19.08  26.08  27.63 ]
-          (%o3)         [                                   ]
-                        [ 20.25  21.46  19.95  27.71  23.38 ]
-                        [                                   ]
-                        [ 18.79  18.96  14.46  26.38  21.84 ]
-
-     En el siguiente ejemplo, se solicitan únicamente la primera,
-     segunda y quinta componentes de aquellos registros con velocidades
-     del viento mayores o iguales que 16 nudos en la estación número 1
-     y menores que 25 nudos en la estación número 4. La muestra sólo
-     contiene los datos referidos a las estaciones 1, 2 y 5. En este
-     caso, la función de predicado se define por medio de una función
-     de Maxima ordinaria.
-          (%i1) load (descriptive)$
-          (%i2) s2 : read_matrix (file_search ("wind.data"))$
-          (%i3) g(x):= x[1] >= 16 and x[4] < 25$
-          (%i4) subsample (s2, g, 1, 2, 5);
-                               [ 19.38  15.37  25.25 ]
-                               [                     ]
-                               [ 17.33  14.67  19.58 ]
-          (%o4)                [                     ]
-                               [ 16.92  13.21  21.21 ]
-                               [                     ]
-                               [ 17.25  18.46  23.87 ]
-
-     He aquí un ejemplo con las variables categóricas de `biomed.data'.
-     Se piden los registros correspondientes a aquellos pacientes del
-     grupo `B' mayores de 38 anños,
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) h(u):= u[1] = B and u[2] > 38 $
-          (%i4) subsample (s3, h);
-                          [ B  39  28.0  102.3  17.1  146 ]
-                          [                               ]
-                          [ B  39  21.0  92.4   10.3  197 ]
-                          [                               ]
-                          [ B  39  23.0  111.5  10.0  133 ]
-                          [                               ]
-                          [ B  39  26.0  92.6   12.3  196 ]
-          (%o4)           [                               ]
-                          [ B  39  25.0  98.7   10.0  174 ]
-                          [                               ]
-                          [ B  39  21.0  93.2   5.9   181 ]
-                          [                               ]
-                          [ B  39  18.0  95.0   11.3  66  ]
-                          [                               ]
-                          [ B  39  39.0  88.5   7.6   168 ]
-
-     Es probable que el análisis estadístico requiera únicamente de las
-     medidas sanguíneas.
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) subsample (s3, lambda([v], v[1] = B and v[2] > 38),
-                     3, 4, 5, 6);
-                             [ 28.0  102.3  17.1  146 ]
-                             [                        ]
-                             [ 21.0  92.4   10.3  197 ]
-                             [                        ]
-                             [ 23.0  111.5  10.0  133 ]
-                             [                        ]
-                             [ 26.0  92.6   12.3  196 ]
-          (%o3)              [                        ]
-                             [ 25.0  98.7   10.0  174 ]
-                             [                        ]
-                             [ 21.0  93.2   5.9   181 ]
-                             [                        ]
-                             [ 18.0  95.0   11.3  66  ]
-                             [                        ]
-                             [ 39.0  88.5   7.6   168 ]
-
-     Esta es la media multivariante de `s3'.
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) mean (s3);
-                 65 B + 35 A  317          6 NA + 8145.0
-          (%o3) [-----------, ---, 87.178, -------------, 18.123,
-                     100      10                100
-                                                              3 NA + 19587
-                                                              ------------]
-                                                                  100
-
-     Aquí la primera componente carece de significado, ya que tanto `A'
-     como `B' son categóricas, la segunda componente es la edad media
-     de los individuos en forma racional, al tiempo que los valores
-     cuarto y quinto muestran cierto comportamiento extraño; lo cual se
-     debe a que el símbolo `NA' se utiliza para indicar datos no
-     disponibles, por lo que ambas medias no tienen sentido. Una
-     posible solución puede ser extraer de la matriz aquellas filas con
-     símbolos `NA', lo que acarrearía cierta pérdida de información.
-          (%i1) load (descriptive)$
-          (%i2) s3 : read_matrix (file_search ("biomed.data"))$
-          (%i3) g(v):= v[4] # NA and v[6] # NA $
-          (%i4) mean (subsample (s3, g, 3, 4, 5, 6));
-          (%o4) [79.4923076923077, 86.2032967032967, 16.93186813186813,
-                                                                      2514
-                                                                      ----]
-                                                                       13
+* Funciones y variables para Bernstein::
 
 
 

@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: OpenMath.tcl,v 1.17 2011/03/15 01:13:22 villate Exp $
+#       $Id: OpenMath.tcl,v 1.17 2011-03-15 01:13:22 villate Exp $
 #
 proc genSample { x n } {
     set sample $x

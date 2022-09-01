@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Send-some.tcl,v 1.9 2011/03/14 20:01:13 villate Exp $
+#       $Id: Send-some.tcl,v 1.9 2011-03-14 20:01:13 villate Exp $
 #
 ###### send-some.tcl ######
 

@@ -1,7 +1,7 @@
 ;;; -*-  Mode: Lisp; Package: Maxima; Syntax: Common-Lisp; Base: 10 -*- 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;                                                                              
-;;;  $Id: grobner.lisp,v 1.6 2009/06/02 07:49:49 andrejv Exp $		 
+;;;  $Id: grobner.lisp,v 1.6 2009-06-02 07:49:49 andrejv Exp $		 
 ;;;  Copyright (C) 1999, 2002 Marek Rychlik <rychlik@u.arizona.edu>		 
 ;;;  		       								 
 ;;;  This program is free software; you can redistribute it and/or modify	 
@@ -28,7 +28,7 @@
     #+gcl (load eval)
     #-gcl (:load-toplevel :execute)
     (format t "~&Loading maxima-grobner ~a ~a~%"
-	    "$Revision: 1.6 $" "$Date: 2009/06/02 07:49:49 $"))
+	    "$Revision: 1.6 $" "$Date: 2009-06-02 07:49:49 $"))
 
 ;; Macros for making lists with iterators - an exammple of GENSYM
 ;; MAKELIST-1 makes a list with one iterator, while MAKELIST accepts an

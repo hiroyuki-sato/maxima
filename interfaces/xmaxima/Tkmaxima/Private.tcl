@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Private.tcl,v 1.3 2006/06/30 15:04:58 villate Exp $
+#       $Id: Private.tcl,v 1.3 2006-06-30 15:04:58 villate Exp $
 #
 ###### private.tcl ######
 ############################################################
