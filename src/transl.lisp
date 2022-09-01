@@ -179,10 +179,6 @@ APPLY means like APPLY.")
 (defmvar $tr_numer nil
   "If `true' numer properties are used for atoms which have them, e.g. %pi")
 
-(defmvar $tr_predicate_brain_damage nil
-  "If TRUE, output possible multiple evaluations in an attempt
-  to interface to the COMPARE package.")
-
 (defvar boolean-object-table
   '(($true . ($boolean . t))
     ($false . ($boolean . nil))
@@ -209,7 +205,7 @@ APPLY means like APPLY.")
   (apply #'tr-format
 	 (nconc (list (intl:gettext "translator: internal error. Message: ~:M~%")) l))
   (cond (*transl-debug*
-	 (break "transl barfo ~S" t))
+	 (break "transl barfo"))
 	(t
 	 (setq tr-abort t)
 	 nil)))
@@ -249,7 +245,7 @@ APPLY means like APPLY.")
   " if in debug mode `warning's signaled go to lisp break loops ")
 
 (defmacro tr-warnbreak ()
-  `(and *transl-debug* *tr-warn-break* (break "transl ~S" t )))
+  `(and *transl-debug* *tr-warn-break* (break "transl")))
 
 (defun tr-warnp (val)
   (and val
@@ -525,7 +521,7 @@ APPLY means like APPLY.")
   (tr-format (intl:gettext "error: failed to translate ~:@M~%") x)
   nil)
 
-(defmfun translate-and-eval-macsyma-expression (form)
+(defun translate-and-eval-macsyma-expression (form)
   ;; this is the hyper-random entry to the transl package!
   ;; it is used by MLISP for TRANSLATE:TRUE ":=".
   (bind-transl-state
@@ -544,7 +540,7 @@ APPLY means like APPLY.")
 ;; specified by ANSI CL.
 (defvar *macexpr-top-level-form-p* nil)
 
-(defmfun translate-macexpr-toplevel (form &aux (*transl-backtrace* nil) tr-abort)
+(defun translate-macexpr-toplevel (form &aux (*transl-backtrace* nil) tr-abort)
   ;; there are very few top-level special cases, I don't
   ;; think it would help the code any to generalize TRANSLATE
   ;; to target levels.
@@ -594,12 +590,8 @@ APPLY means like APPLY.")
 		  `(meval* ',form))
 		 (t trl))))
 	((eq 'mprogn (caar form))
-	 ;; flatten out all PROGN's of course COMPLR needs PROGN 'COMPILE to
-	 ;; tell it to flatten. I don't really see the use of that since one
-	 ;; almost allways wants to. flatten.
 	 ;; note that this ignores the $%% crock.
-	 `(progn 'compile
-		 ,@(mapcar #'translate-macexpr-toplevel (cdr form))))
+	 `(progn ,@(mapcar #'translate-macexpr-toplevel (cdr form))))
 	((eq 'msetq (caar form))
 	 ;; Toplevel msetq's should really be defparameter instead of
 	 ;; setq for Common Lisp.  
@@ -993,7 +985,8 @@ APPLY means like APPLY.")
 			     ,@(mapcan #'(lambda (var val)
 					   (let ((assign (get var 'assign)))
 					     (if assign
-						 (list `(,assign ',var ,val)))))
+					       (let ((assign-fn (if (symbolp assign) (symbol-function assign) (coerce assign 'function))))
+						 (list `(funcall ,assign-fn ',var ,val))))))
 				       arglist temps)
 			     ;; [2] do the binding.
 			     ((lambda ,(tunbinds arglist)
@@ -1004,11 +997,12 @@ APPLY means like APPLY.")
 			,@(mapcan #'(lambda (var)
 				      (let ((assign (get var 'assign)))
 					(if assign
-					    (list `(,assign ',var
+					  (let ((assign-fn (if (symbolp assign) (symbol-function assign) (coerce assign 'function))))
+					    (list `(funcall ,assign-fn ',var
 						    ;; use DTRANSLATE to
 						    ;; catch global
 						    ;; scoping if any.
-						    ,(dtranslate var))))))
+						    ,(dtranslate var)))))))
 				  arglist))))))))
 
 
@@ -1225,7 +1219,12 @@ APPLY means like APPLY.")
 					      (atom (cdar l))) nil)
 					(t (list (cdr (car l))))))
 			    form)))))
-     (return (cons mode (cons 'cond form)))))
+     ;; Wrap (LET (($PREDERROR T)) ...) around translation of MCOND.
+     ;; Nested MCOND expressions (e.g. if x > 0 then if y > 0 then ...)
+     ;; will therefore yield nested (LET (($PREDERROR T)) ... (LET (($PREDERROR T)) ...)).
+     ;; I suppose only the topmost one is needed, but there is very little harm
+     ;; in the redundant ones, so I'll let it stand.
+     (return (cons mode (list 'let '(($prederror t)) (cons 'cond form))))))
 
 
 
@@ -1312,10 +1311,11 @@ APPLY means like APPLY.")
 	       (setq val (dconv val mode)))
 	   (cons mode
 		 (if (setq assign (get var 'assign))
-		     (let ((tn (tr-gensym)))
+		     (let ((tn (tr-gensym))
+		           (assign-fn (if (symbolp assign) (symbol-function assign) (coerce assign 'function))))
 		       (lambda-wrap1 tn val `(let nil
 					      (declare (special ,var ,(teval var)))
-					      (,assign ',var ,tn)
+					      (funcall ,assign-fn ',var ,tn)
 					      (setq ,(teval var) ,tn))))
                      `(let nil (declare (special ,(teval var)))
                         (if (not (boundp ',(teval var)))

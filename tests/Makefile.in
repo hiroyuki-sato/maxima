@@ -80,23 +80,35 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(top_srcdir)/common.mk $(srcdir)/Makefile.in \
-	$(srcdir)/Makefile.am $(top_srcdir)/test-driver
+	$(srcdir)/Makefile.am $(srcdir)/test.sh.in \
+	$(top_srcdir)/test-driver README
 @CLISP_TRUE@am__append_1 = clisp-test.sh
-@CMUCL_TRUE@am__append_2 = cmucl-test.sh
-@SCL_TRUE@am__append_3 = scl-test.sh
-@SBCL_TRUE@am__append_4 = sbcl-test.sh
-@GCL_TRUE@am__append_5 = gcl-test.sh
-@ACL_TRUE@am__append_6 = acl-test.sh
-@OPENMCL_TRUE@am__append_7 = openmcl-test.sh
-@CCL64_TRUE@am__append_8 = ccl64-test.sh
-@ECL_TRUE@am__append_9 = ecl-test.sh
+@CLISP_TRUE@am__append_2 = clisp-test.sh clisp.log clisp_share.log
+@CMUCL_TRUE@am__append_3 = cmucl-test.sh
+@CMUCL_TRUE@am__append_4 = cmucl-test.sh cmucl.log cmucl_share.log
+@SCL_TRUE@am__append_5 = scl-test.sh
+@SCL_TRUE@am__append_6 = scl-test.sh scl.log scl_share.log
+@SBCL_TRUE@am__append_7 = sbcl-test.sh
+@SBCL_TRUE@am__append_8 = sbcl-test.sh sbcl.log sbcl_share.log
+@GCL_TRUE@am__append_9 = gcl-test.sh
+@GCL_TRUE@am__append_10 = gcl-test.sh gcl.log gcl_share.log
+@ACL_TRUE@am__append_11 = acl-test.sh
+@ACL_TRUE@am__append_12 = acl-test.sh acl.log acl_share.log
+@OPENMCL_TRUE@am__append_13 = openmcl-test.sh
+@OPENMCL_TRUE@am__append_14 = openmcl-test.sh openmcl.log openmcl_share.log
+@CCL64_TRUE@am__append_15 = ccl64-test.sh
+@CCL64_TRUE@am__append_16 = ccl64-test.sh ccl64.log ccl64_share.log
+@ECL_TRUE@am__append_17 = ecl-test.sh
+@ECL_TRUE@am__append_18 = ecl-test.sh ecl.log ecl_share.log
+@ABCL_TRUE@am__append_19 = abcl-test.sh
+@ABCL_TRUE@am__append_20 = abcl-test.sh abcl.log abcl_share.log
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = test.sh
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -323,6 +335,7 @@ TEST_LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
 TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ABCL_JAR = @ABCL_JAR@
 ACLOCAL = @ACLOCAL@
 ACL_NAME = @ACL_NAME@
 AMTAR = @AMTAR@
@@ -343,12 +356,14 @@ CMUCL_RUNTIME_PATH = @CMUCL_RUNTIME_PATH@
 CYGPATH_W = @CYGPATH_W@
 DEFAULTLISP = @DEFAULTLISP@
 DEFS = @DEFS@
+DISTCLEAN_EXTRA_SRC_FILES = @DISTCLEAN_EXTRA_SRC_FILES@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 ECL_NAME = @ECL_NAME@
 EGREP = @EGREP@
 EMACS = @EMACS@
+EMACSDIR = @EMACSDIR@
 EMACSLOADPATH = @EMACSLOADPATH@
 EXEEXT = @EXEEXT@
 GCCVER = @GCCVER@
@@ -361,6 +376,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+JRE = @JRE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -382,6 +398,7 @@ PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
 PYTHON_PLATFORM = @PYTHON_PLATFORM@
 PYTHON_PREFIX = @PYTHON_PREFIX@
 PYTHON_VERSION = @PYTHON_VERSION@
+SBCL_EXTRA_ARGS = @SBCL_EXTRA_ARGS@
 SBCL_NAME = @SBCL_NAME@
 SCL_NAME = @SCL_NAME@
 SCL_RUNTIME = @SCL_RUNTIME@
@@ -445,6 +462,7 @@ lang_pt = @lang_pt@
 lang_pt_br = @lang_pt_br@
 libdir = @libdir@
 libexecdir = @libexecdir@
+lisp_only_build = @lisp_only_build@
 lispdir = @lispdir@
 lisps_enabled = @lisps_enabled@
 localedir = @localedir@
@@ -485,15 +503,21 @@ docchmdir = $(docdir)/chm
 dochtmldir = $(docdir)/html
 docsharedir = $(docdir)/share
 demodir = $(verpkgdatadir)/demo
-emacsdir = $(verpkgdatadir)/emacs
+emacsdir = $(EMACSDIR)
 sharedir = $(verpkgdatadir)/share
 instsrcdir = $(verpkgdatadir)/src
 xmaximadir = $(verpkgdatadir)/xmaxima
 insttestsdir = $(verpkgdatadir)/tests
-MAXIMA = @POSIX_SHELL@ $(top_builddir)/maxima-local
-TESTS = $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7) $(am__append_8) $(am__append_9)
+MAXIMA = $(abs_top_builddir)/maxima-local
+MAXIMA_LAYOUT_AUTOTOOLS = true
+TESTS = $(am__append_1) $(am__append_3) $(am__append_5) \
+	$(am__append_7) $(am__append_9) $(am__append_11) \
+	$(am__append_13) $(am__append_15) $(am__append_17) \
+	$(am__append_19)
+CLEANFILES = $(am__append_2) $(am__append_4) $(am__append_6) \
+	$(am__append_8) $(am__append_10) $(am__append_12) \
+	$(am__append_14) $(am__append_16) $(am__append_18) \
+	$(am__append_20)
 genericdir = $(insttestsdir)
 genericdirDATA = $(wildcard $(addprefix $(srcdir)/, README.how-to mcond_display_elseif.out *.mac *.lisp *.wxm wester_problems/*))
 EXTRA_DIST = $(genericdirDATA) test.sh.in
@@ -532,6 +556,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+test.sh: $(top_builddir)/config.status $(srcdir)/test.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 tags TAGS:
 
 ctags CTAGS:
@@ -743,6 +769,13 @@ ecl-test.sh.log: ecl-test.sh
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+abcl-test.sh.log: abcl-test.sh
+	@p='abcl-test.sh'; \
+	b='abcl-test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -818,6 +851,7 @@ mostlyclean-generic:
 	-test -z "$(TEST_SUITE_LOG)" || rm -f $(TEST_SUITE_LOG)
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -826,6 +860,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
 clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-am
@@ -938,72 +974,47 @@ uninstall-datafiles:
 	list='$(genericdirDATA)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(genericdir)/$$p; \
 	done
-@CLISP_TRUE@clisp-test.sh: test.sh.in
-@CLISP_TRUE@	sed <"$<" >"$@"                                          \
-@CLISP_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@CLISP_TRUE@	  -e 's#!LISPNAME!#clisp#'                               \
-@CLISP_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/clisp.log#'   \
-@CLISP_TRUE@	  -e 's#!OUTPUT_SHARE_LOG!#$(top_builddir)/tests/clisp_share.log#'
-@CLISP_TRUE@	chmod a+x "$@"
-@CMUCL_TRUE@cmucl-test.sh: test.sh.in
-@CMUCL_TRUE@	sed <"$<" >"$@"                                          \
-@CMUCL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@CMUCL_TRUE@	  -e 's#!LISPNAME!#cmucl#'                               \
-@CMUCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/cmucl.log#'   \
-@CMUCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/cmucl_share.log#'
-@CMUCL_TRUE@	chmod a+x "$@"
-@SCL_TRUE@scl-test.sh: test.sh.in
-@SCL_TRUE@	sed <"$<" >"$@"                                          \
-@SCL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@SCL_TRUE@	  -e 's#!LISPNAME!#scl#'                                 \
-@SCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/scl.log#'     \
-@SCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/scl_share.log#'
-@SCL_TRUE@	chmod a+x "$@"
-@SBCL_TRUE@sbcl-test.sh: test.sh.in
-@SBCL_TRUE@	sed <"$<" >"$@"                                          \
-@SBCL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@SBCL_TRUE@	  -e 's#!LISPNAME!#sbcl#'                                \
-@SBCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/sbcl.log#'    \
-@SBCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/sbcl_share.log#'
-@SBCL_TRUE@	chmod a+x "$@"
-@GCL_TRUE@gcl-test.sh: test.sh.in
-@GCL_TRUE@	sed <"$<" >"$@"                                          \
-@GCL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@GCL_TRUE@	  -e 's#!LISPNAME!#gcl#'                                 \
-@GCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/gcl.log#'     \
-@GCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/gcl_share.log#'
-@GCL_TRUE@	chmod a+x "$@"
-@ACL_TRUE@acl-test.sh: test.sh.in
-@ACL_TRUE@	sed <"$<" >"$@"                                          \
-@ACL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@ACL_TRUE@	  -e 's#!LISPNAME!#acl#'                                 \
-@ACL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/acl.log#'     \
-@ACL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/acl_share.log#'
-@ACL_TRUE@	chmod a+x "$@"
-@OPENMCL_TRUE@openmcl-test.sh: test.sh.in
-@OPENMCL_TRUE@	sed <"$<" >"$@"                                          \
-@OPENMCL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@OPENMCL_TRUE@	  -e 's#!LISPNAME!#openmcl#'                             \
-@OPENMCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/openmcl.log#' \
-@OPENMCL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/openmcl_share.log#'
-@OPENMCL_TRUE@	chmod a+x "$@"
-@CCL64_TRUE@ccl64-test.sh: test.sh.in
-@CCL64_TRUE@	sed <"$<" >"$@"                                          \
-@CCL64_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@CCL64_TRUE@	  -e 's#!LISPNAME!#ccl64#'                               \
-@CCL64_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/ccl64.log#'   \
-@CCL64_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/ccl64_share.log#'
-@CCL64_TRUE@	chmod a+x "$@"
-@ECL_TRUE@ecl-test.sh: test.sh.in
-@ECL_TRUE@	sed <"$<" >"$@"                                          \
-@ECL_TRUE@	  -e 's#!LOCAL_MAXIMA!#$(MAXIMA)#'                       \
-@ECL_TRUE@	  -e 's#!LISPNAME!#ecl#'                                 \
-@ECL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/ecl.log#'     \
-@ECL_TRUE@	  -e 's#!OUTPUT_LOG!#$(top_builddir)/tests/ecl_share.log#'
-@ECL_TRUE@	chmod a+x "$@"
-
-clean:
-	rm -f ecl-test.sh openmcl-test.sh acl-test.sh gcl-test.sh scl-test.sh sbcl-test.sh cmucl-test.sh clisp-test.sh
+export
+@CLISP_TRUE@clisp-test.sh: test.sh Makefile
+@CLISP_TRUE@	echo "#!/bin/sh" > $@
+@CLISP_TRUE@	echo "./test.sh clisp" >> $@
+@CLISP_TRUE@	chmod +x "$@"
+@CMUCL_TRUE@cmucl-test.sh: test.sh Makefile
+@CMUCL_TRUE@	echo "#!/bin/sh" > $@
+@CMUCL_TRUE@	echo "./test.sh cmucl" >> $@
+@CMUCL_TRUE@	chmod +x "$@"
+@SCL_TRUE@scl-test.sh: test.sh Makefile
+@SCL_TRUE@	echo "#!/bin/sh" > $@
+@SCL_TRUE@	echo "./test.sh scl" >> $@
+@SCL_TRUE@	chmod +x "$@"
+@SBCL_TRUE@sbcl-test.sh: test.sh Makefile
+@SBCL_TRUE@	echo "#!/bin/sh" > $@
+@SBCL_TRUE@	echo "./test.sh sbcl" >> $@
+@SBCL_TRUE@	chmod +x "$@"
+@GCL_TRUE@gcl-test.sh: test.sh Makefile
+@GCL_TRUE@	echo "#!/bin/sh" > $@
+@GCL_TRUE@	echo "./test.sh gcl" >> $@
+@GCL_TRUE@	chmod +x "$@"
+@ACL_TRUE@acl-test.sh: test.sh Makefile
+@ACL_TRUE@	echo "#!/bin/sh" > $@
+@ACL_TRUE@	echo "./test.sh acl" >> $@
+@ACL_TRUE@	chmod +x "$@"
+@OPENMCL_TRUE@openmcl-test.sh: test.sh Makefile
+@OPENMCL_TRUE@	echo "#!/bin/sh" > $@
+@OPENMCL_TRUE@	echo "./test.sh openmcl" >> $@
+@OPENMCL_TRUE@	chmod +x "$@"
+@CCL64_TRUE@ccl64-test.sh: test.sh Makefile
+@CCL64_TRUE@	echo "#!/bin/sh" > $@
+@CCL64_TRUE@	echo "./test.sh ccl64" >> $@
+@CCL64_TRUE@	chmod +x "$@"
+@ECL_TRUE@ecl-test.sh: test.sh Makefile
+@ECL_TRUE@	echo "#!/bin/sh" > $@
+@ECL_TRUE@	echo "./test.sh ecl" >> $@
+@ECL_TRUE@	chmod +x "$@"
+@ABCL_TRUE@abcl-test.sh: test.sh Makefile
+@ABCL_TRUE@	echo "#!/bin/sh" > $@
+@ABCL_TRUE@	echo "./test.sh abcl" >> $@
+@ABCL_TRUE@	chmod +x "$@"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

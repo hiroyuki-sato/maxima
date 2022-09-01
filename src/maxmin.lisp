@@ -181,10 +181,10 @@
 (defun maximin (l op) (simplify `((,op) ,@l)))
  
 (defmfun $lmax (e)
-  (simplify `(($max) ,@(require-list-or-set e "$lmax")))) 
+  (simplify `(($max) ,@(require-list-or-set e '$lmax)))) 
 
 (defmfun $lmin (e)
-  (simplify `(($min) ,@(require-list-or-set e "$lmin"))))
+  (simplify `(($min) ,@(require-list-or-set e '$lmin))))
 
 ;; Return the narrowest comparison operator op (<, <=, =, >, >=) such that
 ;; a op b evaluates to true. Return 'unknown' when either there is no such 
@@ -200,7 +200,7 @@
 ;; I think compare(asin(x), asin(x) + 1) should evaluate to < without
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
-(defun $compare (a b)
+(defmfun $compare (a b)
   ;; Simplify expressions with infinities, indeterminates, or infinitesimals
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) a)
     (setq a ($limit a)))
@@ -234,7 +234,7 @@
 (defun lenient-extended-realp (e)
   (and ($freeof '$infinity '$%i '$und '$ind '$false '$true t nil e) ;; what else?
        (not (mbagp e))
-       (not ($featurep e '$nonscalarp))
+       (not ($featurep e '$nonscalar))
        (not (mrelationp e))
        (not ($member e $arrays))))
 
@@ -243,7 +243,7 @@
 
 ;; Convert all floats and big floats in e to an exact rational representation. 
 
-(defun $rationalize (e)
+(defmfun $rationalize (e)
   (setq e (ratdisrep e))
   (cond ((floatp e) 
 	 (let ((significand) (expon) (sign))

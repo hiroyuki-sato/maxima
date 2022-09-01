@@ -155,8 +155,7 @@
 		     ;; someone is catching an error so it can be
 		     ;; signaled in a way that we can catch.
 		     (cond ((null (setq ret
-					(errset ,(cdr form)
-						lisperrprint)))
+					(errset ,(cdr form))))
 			    (errlfun1 errcatch)))
 		     (cons '(mlist) ret))
 		   (cons bindlist loclist) nil)))
@@ -170,7 +169,7 @@
   (destructuring-let (((mode . body) (translate `((mprogn) . ,(cdr form)))))
     `(,mode . ((lambda ()
 		 ((lambda (mcatch)
-		    (prog2 nil
+		    (prog1
 			(catch
 			    'mcatch ,body)
 		      (errlfun1 mcatch)))

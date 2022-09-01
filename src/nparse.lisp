@@ -19,12 +19,12 @@
          '(#\tab #\space #\linefeed #\return #\page #\newline
            #+(or unicode sb-unicode openmcl-unicode-strings) #\no-break_space))
 
-(defmfun alphabetp (n)
+(defun alphabetp (n)
   (and (characterp n)
        (or (alpha-char-p n) #+gcl(>= (char-code n) 128)
 	   (member n *alphabet*))))
 
-(defmfun ascii-numberp (num)
+(defun ascii-numberp (num)
   (and (characterp num) (char<= num #\9) (char>= num #\0)))
 
 (defvar *parse-window* nil)
@@ -98,7 +98,7 @@
 	       (format t "~%~{~c~}~%~vt^" some (- (length some) 2))
 	       (read-line *parse-stream* nil nil))))
       (terpri)
-      (force-output)
+      (finish-output)
       (throw-macsyma-top))))
 
 (defun tyi-parse-int (stream eof)
@@ -332,7 +332,7 @@
 			 (map nil #'princ x))
 		 (reverse numlist))
 	    (terpri)
-	    (force-output)
+	    (finish-output)
 	    (unless (equalp true fast)
 	      (incf failures)
 	      (format t "NUM:  ~A~%  TRUE: ~S~%  FAST: ~S~%"
@@ -677,7 +677,7 @@
 (defmacro def-nud ((op . lbp-rbp) bvl . body)
   (let (( lbp (nth 0 lbp-rbp))
 	( rbp (nth 1 lbp-rbp)))
-    `(progn 'compile 	  ,(make-parser-fun-def op 'nud bvl body)
+    `(progn ,(make-parser-fun-def op 'nud bvl body)
 	    (set-lbp-and-rbp ',op ',lbp ',rbp))))
 
 (defun set-lbp-and-rbp (op lbp rbp)
@@ -716,8 +716,7 @@
 (defmacro def-led((op . lbp-rbp) bvl . body)
   (let (( lbp (nth 0 lbp-rbp))
 	( rbp (nth 1 lbp-rbp)))
-    `(progn 'compile
-	    ,(make-parser-fun-def  op 'led bvl body)
+    `(progn ,(make-parser-fun-def  op 'led bvl body)
 	    (set-lbp-and-rbp ',op ',lbp ',rbp))))
 
 (defmacro def-collisions (op &rest alist)
@@ -725,7 +724,7 @@
 		   (lis  alist (cdr lis))
 		   (nl ()    (cons (cons (caar lis) i) nl)))
 		  ((null lis) nl))))
-    `(progn 'compile
+    `(progn
        (defprop ,op ,(let nil
 			  (copy-tree keys )) keys)
        ,@(mapcar #'(lambda (data)
@@ -769,7 +768,7 @@
 ;;; (LBP <op>)		 - reads an operator's Left Binding Power
 ;;; (DEF-LBP <op> <val>) - defines an operator's Left Binding Power
 
-(defmfun lbp (lex) (cond ((safe-get lex 'lbp)) (t 200.)))
+(defun lbp (lex) (cond ((safe-get lex 'lbp)) (t 200.)))
 
 (defmacro def-lbp (sym val) `(defprop ,sym ,val lbp))
 
@@ -778,7 +777,7 @@
 ;;; (RBP <op>)		 - reads an operator's Right Binding Power
 ;;; (DEF-RBP <op> <val>) - defines an operator's Right Binding Power
 
-(defmfun rbp (lex) (cond ((safe-get lex 'rbp)) (t 200.)))
+(defun rbp (lex) (cond ((safe-get lex 'rbp)) (t 200.)))
 
 (defmacro def-rbp (sym val) `(defprop ,sym ,val rbp))
 
@@ -817,14 +816,14 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 ;;;; Misplaced definitions
 
 (defmacro def-operatorp ()
-  `(defmfun operatorp (lex)
+  `(defun operatorp (lex)
      (and (symbolp lex) (getl lex '(,@(nud-propl) ,@(led-propl))))))
 
 (def-operatorp)
 
 (defmacro def-operatorp1 ()
   ;Defmfun -- used by SYNEX if not others.
-  `(defmfun operatorp1 (lex)
+  `(defun operatorp1 (lex)
      ;; Referenced outside of package: OP-SETUP, DECLARE1
      ;; Use for truth value only, not for return-value.
      (and (symbolp lex) (getl lex '(lbp rbp ,@(nud-propl) ,@(led-propl))))))
@@ -850,7 +849,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
       (and *parse-window* (setf (car *parse-window*) nil
 				*parse-window* (cdr *parse-window*)))
       (princ *mread-prompt*)
-      (force-output))
+      (finish-output))
     (apply 'mread-raw read-args)))
 
 (defun mread-prompter (stream char)

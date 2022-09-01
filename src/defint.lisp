@@ -129,7 +129,7 @@
 		      *ul1* *ll1* *dflag bptu bptd plm* zn
 		      *updn ul ll exp pe* pl* rl* pl*1 rl*1
 		      loopstop* var nn* nd* dn* p*
-		      ind* factors rlm*
+		      factors rlm*
 		      $trigexpandplus $trigexpandtimes
 		      plogabs *scflag*
 		      *sin-cos-recur* *rad-poly-recur* *dintlog-recur*
@@ -181,7 +181,7 @@ in the interval of integration.")
 ;; KEYHOLE, and POLELIST.
 (defvar *semirat* nil)
 
-(defun $defint (exp var ll ul)
+(defmfun $defint (exp var ll ul)
 
   ;; Distribute $defint over equations, lists, and matrices.
   (cond ((mbagp exp)
@@ -223,7 +223,7 @@ in the interval of integration.")
              (unless (lenient-extended-realp ll)
                (merror (intl:gettext "defint: lower limit of integration must be real; found ~M") ll))
              (unless (lenient-extended-realp ul)
-               (merror (intl:gettext "defint: upper limit of integration must be real; found ~M") ll))
+               (merror (intl:gettext "defint: upper limit of integration must be real; found ~M") ul))
 
 	     (cond ((setq ans (defint exp var ll ul))
 		    (setq ans (subst orig-var var ans))
@@ -302,7 +302,7 @@ in the interval of integration.")
 	  (t (simplify ans)))))
 
 ;; This routine tries to take a limit a couple of ways.
-(defmfun get-limit (exp var val &optional (dir '$plus dir?))
+(defun get-limit (exp var val &optional (dir '$plus dir?))
   (let ((ans (if dir?
 		 (funcall #'limit-no-err exp var val dir)
 		 (funcall #'limit-no-err exp var val))))

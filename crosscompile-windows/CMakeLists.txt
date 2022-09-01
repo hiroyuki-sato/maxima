@@ -6,12 +6,7 @@
 
 set(CMAKE_SYSTEM_NAME Windows)
 
-
 option(BUILD_64BIT "Build a 64 bit installer." NO)
-
-# another option (option() can not be used, it is only boolean...)
-set (WITH_DEFAULT_LISP "clisp" CACHE STRING "Which Lisp should be used by default (clisp/sbcl)?")
-set_property(CACHE WITH_DEFAULT_LISP PROPERTY STRINGS "clisp" "sbcl")
 
 if(BUILD_64BIT)
     set(HOST x86_64-w64-mingw32)
@@ -75,8 +70,31 @@ option(USE_VTK "Use VTK." YES)
 # sets the installation directory to ${WINDOWS_DRIVELETTER}:\maxima-current
 option(BUILD_CURRENT "Build a installer for current Maxima/wxMaxima." NO)
 
+option(WITH_ABCL "Include ABCL in the installer." NO)
 
-
+# another option (option() can not be used, it is only boolean...)
+#
+# SBCL and CLISP have both advantages and disadvantages:
+#  - SBCL is fast, but sometimes runs out of memory in places it really shouldn't
+#    (Loading LAPACK on IA32, for example) and isn't too happy with changing to
+#    non-ascii-non-unicode pathnames (which wxMaxima works around by now, though,
+#    and which Xmaxima doesn't evven try to do)
+#  - CLISP is slow. And version 2.49 only sends valid output over the network
+#    if the front-end is slow enough. Test cases: Running a demo, all commands
+#    with loads of compiler output (load("draw"); for the first time) or just
+#    receiving a batch of new autocompletion symbols. Since the libraries the
+#    front-ends use have evolved in the last years it has become easy to
+#    trigger this => Setting SBCL to be the default.
+if(WITH_ABCL)
+    set(WITH_DEFAULT_LISP "sbcl" CACHE STRING "Which Lisp should be used by default (clisp/sbcl/abcl)?")
+    set_property(CACHE WITH_DEFAULT_LISP PROPERTY STRINGS "clisp" "sbcl" "abcl")
+    set(ABCL_LICENSE_INFORMATION "<li><a href=\"http://www.abcl.org/\">ABCL Website</a>, <a href=\"https://abcl.org/faq.shtml#license\">ABCL license</a></li>")
+    set(ABCL_ENABLED 1)
+else()
+    set(WITH_DEFAULT_LISP "sbcl" CACHE STRING "Which Lisp should be used by default (clisp/sbcl)?")
+    set_property(CACHE WITH_DEFAULT_LISP PROPERTY STRINGS "clisp" "sbcl")
+    set(ABCL_ENABLED 0)
+endif()
 
 # If you want to use a updated version of a program,
 # update the version number and the checksum.
@@ -132,7 +150,6 @@ endif()
 include(ExternalProject)
 
 
-
 # Clisp (already a binary package just extract it...)
 #
 # What is the difference between clisp-2.49-win32-mingw-big.zip and clisp-2.49-win32-mingw-small.zip?
@@ -157,8 +174,13 @@ add_subdirectory("wxwidgets/")
 
 add_subdirectory("wxmaxima/")
 
-add_subdirectory("vtk/")
+if(USE_VTK)
+    add_subdirectory("vtk/")
+endif()
 
+if(WITH_ABCL)
+    add_subdirectory("abcl/")
+endif()
 
 set(CLISPROOT "${CMAKE_BINARY_DIR}/clisp-prefix/src/clisp")
 configure_file("${CMAKE_SOURCE_DIR}/wine-clisp.sh.tmpl" "${CMAKE_BINARY_DIR}/wine-clisp.sh")
@@ -170,7 +192,7 @@ externalproject_add(maxima
   DOWNLOAD_COMMAND rsync -a --exclude=crosscompile-windows/build/ "${CMAKE_SOURCE_DIR}/../"  "${CMAKE_BINARY_DIR}/maxima-prefix/src/maxima"
   DEPENDS clisp sbcl tcl tk
   BUILD_IN_SOURCE 1
-  PATCH_COMMAND sh -c "test \"${BUILD_64BIT}\" != \"OFF\" && patch --binary -p1 < ${CMAKE_SOURCE_DIR}/maxima.bat.in-patch || exit 0"
+  #PATCH_COMMAND sh -c "test \"${BUILD_64BIT}\" != \"OFF\" && patch --binary -p1 < ${CMAKE_SOURCE_DIR}/maxima.bat.in-patch || exit 0"
   CONFIGURE_COMMAND sh -c "test -x ./bootstrap && ./bootstrap || return 0"
             COMMAND ./configure --host=${HOST} --enable-clisp --with-clisp=${CMAKE_BINARY_DIR}/wine-clisp.sh --with-clisp-runtime=${CMAKE_BINARY_DIR}/wine-lisp.sh --enable-sbcl --with-sbcl=${CMAKE_BINARY_DIR}/wine-sbcl.sh --with-default-lisp=${WITH_DEFAULT_LISP} --prefix=${WINDOWS_DRIVELETTER}:/maxima-${MAXIMAVERSION}
   # clisp-depends.mk is generated with "\" as path seperator, not "/" - correct that...
@@ -199,7 +221,8 @@ install(FILES "${CMAKE_BINARY_DIR}/maxima_longnames.exe" DESTINATION bin/ COMPON
 install(DIRECTORY ${CMAKE_BINARY_DIR}/maxima-installroot/${WINDOWS_DRIVELETTER}:/maxima-${MAXIMAVERSION}/ DESTINATION . COMPONENT Maxima)
 install(FILES "${CMAKE_SOURCE_DIR}/xmaxima.bat" DESTINATION bin/ COMPONENT Maxima)
 install(FILES "${CMAKE_BINARY_DIR}/maxima-prefix/src/maxima/doc/info/maxima.pdf" DESTINATION share/doc/ COMPONENT Maxima)
-install(FILES "${CMAKE_SOURCE_DIR}/lispselector.tcl" DESTINATION bin/ COMPONENT Maxima)
+configure_file("${CMAKE_SOURCE_DIR}/lispselector.tcl" "${CMAKE_BINARY_DIR}/lispselector.tcl")
+install(FILES "${CMAKE_BINARY_DIR}/lispselector.tcl" DESTINATION bin/ COMPONENT Maxima)
 install(FILES "${CMAKE_SOURCE_DIR}/lispselector.bat" DESTINATION bin/ COMPONENT Maxima)
 
 
@@ -208,7 +231,8 @@ install(FILES "${CMAKE_SOURCE_DIR}/lispselector.bat" DESTINATION bin/ COMPONENT 
 install(FILES "${MINGW_LIBSTDCPP}" "${MINGW_LIBGCC}" DESTINATION wxMaxima/ COMPONENT wxMaxima)
 install(FILES "${MINGW_LIBSTDCPP}" "${MINGW_LIBGCC}" DESTINATION bin/ COMPONENT Maxima)
 
-install(FILES "licenses.html" DESTINATION share/doc/ COMPONENT Maxima)
+configure_file("${CMAKE_SOURCE_DIR}/licenses.html" "${CMAKE_BINARY_DIR}/licenses.html")
+install(FILES "${CMAKE_BINARY_DIR}/licenses.html" DESTINATION share/doc/ COMPONENT Maxima)
 
 
 set(CPACK_GENERATOR "NSIS;ZIP")
@@ -253,14 +277,16 @@ cpack_add_component(Maxima
                     DESCRIPTION "The Maxima computer algebra system.\nRequired."
                     REQUIRED)
 
-cpack_add_component(VTK
-                    DESCRIPTION "VTK is an advanced graphic toolkit for draw().")
+if(USE_VTK)
+    cpack_add_component(VTK
+                        DESCRIPTION "VTK is an advanced graphic toolkit for draw().\nOptional.")
+endif()
 
 cpack_add_component(Gnuplot
                     DESCRIPTION "Gnuplot is the main graphic toolkit.\nInstallation is strongly recommended.")
 
 cpack_add_component(wxMaxima
-                    DESCRIPTION "wxMaxima is an advanced GUI for Maxima.\nInstallation is strongly recommended.")
+                    DESCRIPTION "wxMaxima is an advanced GUI for Maxima based on wxWidgets.\nInstallation is strongly recommended.")
 
 cpack_add_component(Clisp
                     DESCRIPTION "The CLISP Lisp compiler.\nRequired."
@@ -269,3 +295,12 @@ cpack_add_component(Clisp
 cpack_add_component(SBCL
                     DESCRIPTION "The SBCL Lisp compiler.\nRequired."
                     REQUIRED)
+
+cpack_add_component(TclTk
+                    DISPLAY_NAME "Tcl/Tk"
+                    DESCRIPTION "The TCL/TK scripting language.\nRequired."
+                    REQUIRED)
+if(WITH_ABCL)
+    cpack_add_component(ABCL
+                        DESCRIPTION "The ABCL Lisp compiler.\nA Java installation is required.\nOptional.")
+endif()

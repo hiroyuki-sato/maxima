@@ -12,7 +12,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.42.1 Manual
+Maxima 5.43.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -116,6 +116,7 @@ Additional packages
 * minpack-pkg::                     MINPACK functions for minimization and roots
 * mnewton-pkg::                     Newton's method.
 * numericalio-pkg::                 Reading and writing files.
+* odepack-pkg::                     Numerical ODE solver
 * operatingsystem-pkg::             Common operating system tasks (create/remove dirs+files,...).
 * opsubst-pkg::                     Substitutions utility.
 * orthopoly-pkg::                   Orthogonal polynomials.
@@ -471,6 +472,10 @@ numericalio
 * Introduction to numericalio::
 * Functions and Variables for plain-text input and output::
 * Functions and Variables for binary input and output::
+
+odepack
+* Introduction to ODEPACK::
+* Functions and Variables for odepack::  
 
 operatingsystem
 * Introduction to operatingsystem::
@@ -848,6 +853,10 @@ File: maxima.info,  Node: Functions and Variables for Bug Detection and Reportin
      the checkout is 331 commits after the latest GIT tag (usually a
      Maxima (major) release (5.37 in our example)) and the abbreviated
      commit hash of the last commit was "8322940".
+
+     Front-ends for maxima can add information about currently being
+     used by setting the variables 'maxima_frontend' and
+     'maxima_frontend_version' accordingly.
 
 
 File: maxima.info,  Node: Help,  Next: Command Line,  Prev: Bug Detection and Reporting,  Up: Top
@@ -1445,6 +1454,7 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
      'kill' always returns 'done', even if an argument has no binding.
 
  -- Function: labels (<symbol>)
+
      Returns the list of input, output, or intermediate expression
      labels which begin with <symbol>.  Typically <symbol> is the value
      of 'inchar', 'outchar', or 'linechar'.  If no labels begin with
@@ -1698,7 +1708,7 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
      Define a function and enter the Lisp system under Maxima.  The
      definition is inspected on the property list, then the function
      definition is extracted, factored and stored in the variable
-     $result.  The variable can be used in Maxima after returning to
+     '$result'.  The variable can be used in Maxima after returning to
      Maxima.
 
           (%i1) f(x):=x^2+x;
@@ -2579,6 +2589,7 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
 
      Examples:
 
+     e, irrational, f, real, g, imaginary, h, complex);
           (%i1) numberp (42);
           (%o1)                         true
           (%i2) numberp (-13/19);
@@ -2778,7 +2789,9 @@ File: maxima.info,  Node: Functions and Variables for Strings,  Prev: Introducti
      'concat' evaluates its arguments.  The single quote ''' prevents
      evaluation.
 
-     See also 'sconcat' and 'eval_string'.
+     See also 'sconcat', that works on non-atoms, too, 'simplode',
+     'string' and 'eval_string'.  For complex string conversions see
+     also 'printf'.
 
           (%i1) y: 7$
           (%i2) z: 88$
@@ -2815,8 +2828,8 @@ File: maxima.info,  Node: Functions and Variables for Strings,  Prev: Introducti
      Concatenates its arguments into a string.  Unlike 'concat', the
      arguments do not need to be atoms.
 
-     See also 'concat', and 'eval_string'.  For complex string
-     conversions see also 'printf'.
+     See also 'concat', 'simplode', 'string' and 'eval_string'.  For
+     complex string conversions see also 'printf'.
 
           (%i1) sconcat ("xx[", 3, "]:", expand ((x+y)^3));
           (%o1)             xx[3]:y^3+3*x*y^2+3*x^2*y+x^3
@@ -2835,6 +2848,8 @@ File: maxima.info,  Node: Functions and Variables for Strings,  Prev: Introducti
 
      The return value of 'string' is a string, and thus it cannot be
      used in a computation.
+
+     See also 'concat', 'sconcat', 'simplode' and 'eval_string'.
 
  -- Option variable: stringdisp
      Default value: 'false'
@@ -3077,7 +3092,7 @@ File: maxima.info,  Node: Functions and Variables for Lists,  Next: Performance 
 
      Note that if an element of a subscripted variable is written to
      before a list or an array of this name is declared a 'hashed array'
-     *Note Arrays::.)  is created, not a list.
+     (*note Arrays::) is created, not a list.
 
      Examples:
 
@@ -8327,7 +8342,7 @@ without disturbing existing code.
    We note that in addition to this general simplifier operating on
 algebraic expression trees, there are several other representations of
 expressions in Maxima which have separate methods and simplifiers.  For
-example, the 'rat()' function converts polynomials to vectors of
+example, the 'rat' function converts polynomials to vectors of
 coefficients to assist in rapid manipulation of such forms.  Other
 representations include Taylor series and the (rarely used) Poisson
 series.
@@ -10217,15 +10232,18 @@ File: maxima.info,  Node: Root Exponential and Logarithmic Functions,  Next: Tri
      used, because here "evaluation" of the indefinite integral at the
      endpoints is often needed.
 
- -- Option variable: logarc
  -- Function: logarc (<expr>)
+
+     The function 'logarc(<expr>)' carries out the replacement of
+     inverse circular and hyperbolic functions with equivalent
+     logarithmic functions for an expression <expr> without setting the
+     global variable 'logarc'.
+
+ -- Option variable: logarc
 
      When the global variable 'logarc' is 'true', inverse circular and
      hyperbolic functions are replaced by equivalent logarithmic
      functions.  The default value of 'logarc' is 'false'.
-
-     The function 'logarc(<expr>)' carries out that replacement for an
-     expression <expr> without setting the global variable 'logarc'.
 
  -- Option variable: logconcoeffp
      Default value: 'false'
@@ -10514,10 +10532,14 @@ File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Intr
 
      - Arc Tangent.
 
+     See also 'atan2'.
+
  -- Function: atan2 (<y>, <x>)
 
      - yields the value of 'atan(<y>/<x>)' in the interval '-%pi' to
      '%pi'.
+
+     See also 'atan'.
 
  -- Function: atanh (<x>)
 
@@ -12182,7 +12204,7 @@ file selected.
    The 'maxout_xxx.format' and 'maxplot.extension' files are created in
 the directory specified by the system variable 'maxima_tempdir'.  That
 location can be changed by assigning to that variable (or to the
-environment variable MAXIMA_TEMPDIR) a string that represents a valid
+environment variable 'MAXIMA_TEMPDIR') a string that represents a valid
 directory where Maxima can create new files.  The output of the Maxima
 plotting command will be a list with the names of the file(s) created,
 including their complete path.
@@ -14366,46 +14388,53 @@ File: maxima.info,  Node: Introduction to Polynomials,  Next: Functions and Vari
 
 Polynomials are stored in Maxima either in General Form or as Canonical
 Rational Expressions (CRE) form.  The latter is a standard form, and is
-used internally by operations such as factor, ratsimp, and so on.
+used internally by operations such as 'factor', 'ratsimp', and so on.
 
    Canonical Rational Expressions constitute a kind of representation
 which is especially suitable for expanded polynomials and rational
 functions (as well as for partially factored polynomials and rational
-functions when RATFAC is set to 'true').  In this CRE form an ordering
+functions when 'ratfac' is set to 'true').  In this CRE form an ordering
 of variables (from most to least main) is assumed for each expression.
-Polynomials are represented recursively by a list consisting of the main
-variable followed by a series of pairs of expressions, one for each term
-of the polynomial.  The first member of each pair is the exponent of the
-main variable in that term and the second member is the coefficient of
-that term which could be a number or a polynomial in another variable
-again represented in this form.  Thus the principal part of the CRE form
-of 3*X^2-1 is (X 2 3 0 -1) and that of 2*X*Y+X-3 is (Y 1 (X 1 2) 0 (X 1
-1 0 -3)) assuming Y is the main variable, and is (X 1 (Y 1 2 0 1) 0 -3)
-assuming X is the main variable.  "Main"-ness is usually determined by
-reverse alphabetical order.  The "variables" of a CRE expression needn't
-be atomic.  In fact any subexpression whose main operator is not + - * /
-or ^ with integer power will be considered a "variable" of the
-expression (in CRE form) in which it occurs.  For example the CRE
-variables of the expression X+SIN(X+1)+2*SQRT(X)+1 are X, SQRT(X), and
-SIN(X+1).  If the user does not specify an ordering of variables by
-using the RATVARS function Maxima will choose an alphabetic one.  In
-general, CRE's represent rational expressions, that is, ratios of
+
+   Polynomials are represented recursively by a list consisting of the
+main variable followed by a series of pairs of expressions, one for each
+term of the polynomial.  The first member of each pair is the exponent
+of the main variable in that term and the second member is the
+coefficient of that term which could be a number or a polynomial in
+another variable again represented in this form.  Thus the principal
+part of the CRE form of '3*x^2-1' is '(X 2 3 0 -1)' and that of
+'2*x*y+x-3' is '(Y 1 (X 1 2) 0 (X 1 1 0 -3))' assuming 'y' is the main
+variable, and is '(X 1 (Y 1 2 0 1) 0 -3)' assuming 'x' is the main
+variable.  "Main"-ness is usually determined by reverse alphabetical
+order.
+
+   The "variables" of a CRE expression needn't be atomic.  In fact any
+subexpression whose main operator is not '+', '-', '*', '/' or '^' with
+integer power will be considered a "variable" of the expression (in CRE
+form) in which it occurs.  For example the CRE variables of the
+expression 'x+sin(x+1)+2*sqrt(x)+1' are 'x', 'sqrt(X)', and 'sin(x+1)'.
+If the user does not specify an ordering of variables by using the
+'ratvars' function Maxima will choose an alphabetic one.
+
+   In general, CRE's represent rational expressions, that is, ratios of
 polynomials, where the numerator and denominator have no common factors,
 and the denominator is positive.  The internal form is essentially a
 pair of polynomials (the numerator and denominator) preceded by the
 variable ordering list.  If an expression to be displayed is in CRE form
-or if it contains any subexpressions in CRE form, the symbol /R/ will
-follow the line label.  See the RAT function for converting an
-expression to CRE form.  An extended CRE form is used for the
-representation of Taylor series.  The notion of a rational expression is
-extended so that the exponents of the variables can be positive or
-negative rational numbers rather than just positive integers and the
-coefficients can themselves be rational expressions as described above
-rather than just polynomials.  These are represented internally by a
-recursive polynomial form which is similar to and is a generalization of
-CRE form, but carries additional information such as the degree of
-truncation.  As with CRE form, the symbol /T/ follows the line label of
-such expressions.
+or if it contains any subexpressions in CRE form, the symbol '/R/' will
+follow the line label.
+
+   See the 'rat' function for converting an expression to CRE form.
+
+   An extended CRE form is used for the representation of Taylor series.
+The notion of a rational expression is extended so that the exponents of
+the variables can be positive or negative rational numbers rather than
+just positive integers and the coefficients can themselves be rational
+expressions as described above rather than just polynomials.  These are
+represented internally by a recursive polynomial form which is similar
+to and is a generalization of CRE form, but carries additional
+information such as the degree of truncation.  As with CRE form, the
+symbol '/T/' follows the line label of such expressions.
 
 
 File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introduction to Polynomials,  Up: Polynomials
@@ -17329,6 +17358,9 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
 
      Compute the Laplace transform of <expr> with respect to the
      variable <t>.  The integrand <expr> may contain special functions.
+     The parameter <s> maybe be named something else; it is determined
+     automatically, as the examples below show where <p> is used in some
+     places.
 
      The following special functions are handled by 'specint':
      incomplete gamma function, error functions (but not the error
@@ -18372,12 +18404,6 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      When 'diff' is present as an 'evflag' in call to 'ev', all
      differentiations indicated in 'expr' are carried out.
 
- -- Function: dscalar (<f>)
-
-     Applies the scalar d'Alembertian to the scalar function <f>.
-
-     'load ("ctensor")' loads this function.
-
  -- Function: express (<expr>)
 
      Expands differential operator nouns into expressions in terms of
@@ -18527,7 +18553,7 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      That is, if <f> depends on <x> and <y>, 'f (x, y)' must appear in
      <expr>.
 
-     See also 'ilt',, the inverse Laplace transform.
+     See also 'ilt', the inverse Laplace transform.
 
      Examples:
 
@@ -18982,6 +19008,7 @@ File: maxima.info,  Node: Functions and Variables for Integration,  Next: Introd
           integral to be evaluated, and the result becomes the body of
           'f_2'.
 
+          f_2 (a) := "(integrate (x^3, x, 1, a));
                (%i1) f_1 (a) := integrate (x^3, x, 1, a);
                                                     3
                (%o1)           f_1(a) := integrate(x , x, 1, a)
@@ -19560,6 +19587,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
+     'epsrel=1d-7); x, 0, 5);
           (%i1) quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5,
                            'epsrel=1d-7);
           (%o1)    [- 3.130120337415925, 1.306830140249558E-8, 495, 0]
@@ -19730,6 +19758,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
+     x, 0, inf));
           (%i1) quad_qawo (x^(-1/2)*exp(-2^(-2)*x), x, 1d-8, 20*2^2, 1, cos);
           (%o1)     [1.376043389877692, 4.72710759424899E-11, 765, 0]
           (%i2) rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x),
@@ -19808,6 +19837,7 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
 
      Examples:
 
+     'epsabs=1d-9);
           (%i1) quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1,
                            'epsabs=1d-9);
           (%o1)     [8.750097361672832, 1.24321522715422E-10, 170, 0]
@@ -20261,7 +20291,7 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
 
      If set to 'false' within a 'block' will inhibit the display of
      output generated by the solve functions called from within the
-     'block'.  Termination of the 'block' with a dollar sign, $, sets
+     'block'.  Termination of the 'block' with a dollar sign, '$', sets
      'dispflag' to 'false'.
 
  -- Function: funcsolve (<eqn>, <g>(<t>))
@@ -24595,7 +24625,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
      when present, causes the function to stop after the first
      successful substitution in a product expression.  The
      'simpmetderiv' function also makes use of the global variable
-     <flipflag> which determines how to apply a "canonical" ordering to
+     'flipflag' which determines how to apply a "canonical" ordering to
      the product indices.
 
      Put together, these capabilities can be used to achieve powerful
