@@ -136,7 +136,7 @@ When one changes, the other does too."
 	  (setq libdir     (combine-path maxima-prefix-env "lib"))
 	  (setq libexecdir (combine-path maxima-prefix-env "libexec"))
 	  (setq datadir    (combine-path maxima-prefix-env "share"))
-	  (setq infodir    (combine-path maxima-prefix-env "info")))
+	  (setq infodir    (combine-path maxima-prefix-env #+(or windows win32) "share" "info")))
 	(progn
 	  (setq libdir     (maxima-parse-dirstring *autoconf-libdir*))
 	  (setq libexecdir (maxima-parse-dirstring *autoconf-libexecdir*))
@@ -509,7 +509,8 @@ When one changes, the other does too."
 			   :argument "<port>"
 			   :action #'(lambda (port-string)
 				       (start-client (parse-integer
-						      port-string)))
+						      port-string))
+                                       (setf input-stream *standard-input*))
 			   :help-string "Connect Maxima to server on <port>.")
 	   (make-cl-option :names '("-u" "--use-version")
 			   :argument "<version>"
@@ -586,7 +587,8 @@ When one changes, the other does too."
   (set-locale-subdir)
   (adjust-character-encoding)
   (set-pathnames)
-  (cl-info::load-primary-index)   
+  (catch 'return-from-debugger
+    (cl-info::load-primary-index))
   (when (boundp '*maxima-prefix*)
     (push (pathname (concatenate 'string *maxima-prefix*
                                  (if *maxima-layout-autotools*
@@ -683,5 +685,7 @@ When one changes, the other does too."
 ;; usable *LOAD-PATHNAME*, but it does have SYS:*LOAD-PATHNAME*.
 (defun maxima-load-pathname-directory ()
   "Return the directory part of *load-pathname*."
-  (make-pathname :directory (pathname-directory #-gcl *load-pathname*
-						#+gcl sys:*load-pathname*)))
+  (let ((path #-gcl *load-pathname*
+              #+gcl sys:*load-pathname*))
+    (make-pathname :directory (pathname-directory path)
+                   :device (pathname-device path))))

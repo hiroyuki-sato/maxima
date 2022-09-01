@@ -334,7 +334,7 @@
 		  (format out (intl:gettext "~%Time:  ~,3F sec (~,3F elapsed)")
 			  (float (/ (- test-end-run-time test-start-run-time)
 				    internal-time-units-per-second))
-			  (float (/ (- test-end-run-time test-start-run-time)
+			  (float (/ (- test-end-real-time test-start-real-time)
 				    internal-time-units-per-second)))))
 	      (cond ((and correct expected-error)
 		     (format t (intl:gettext "~%... Which was correct, but was expected to be wrong due to a known bug in~% Maxima.~%")))
@@ -408,14 +408,25 @@
 	   (member (char (symbol-name name) 0) '(#\$)))
       (setq name (subseq (print-invert-case name) 1)))
   (if (symbolp name)  (setf name (string name)))
-  (if (probe-file name) (return-from $file_search name))
+  (if (file-exists-p name) (return-from $file_search name))
   (or paths (setq paths ($append $file_search_lisp  $file_search_maxima
 				 $file_search_demo)))
   (atomchk paths '$file_search t)
   (new-file-search (string name) (cdr paths)))
 
+;; Returns T if NAME exists and it does not appear to be a directory.
+;; Note that Clisp throws an error from PROBE-FILE if NAME exists
+;; and is a directory; hence the use of IGNORE-ERRORS.
+
+(defun file-exists-p (name)
+  (let ((foo (ignore-errors (probe-file name))))
+    (if foo (not (apparently-a-directory-p foo)))))
+
+(defun apparently-a-directory-p (path)
+  (eq (pathname-name path) nil))
+
 (defun new-file-search (name template)
-  (cond ((probe-file name))
+  (cond ((file-exists-p name))
 	((atom template)
 	 (let ((lis (loop for w in (split-string template "{}")
 			  when (null (position #\, w))
@@ -432,7 +443,7 @@
 (defun new-file-search1 (name begin lis)
   (cond ((null lis)
 	 (let ((file (namestring ($filename_merge begin name))))
-	   (if (probe-file file) file nil)))
+	   (if (file-exists-p file) file nil)))
 	((atom (car lis))
 	 (new-file-search1 name
 			   (if begin
@@ -617,7 +628,6 @@
   ;; Convert to a new list that looks like (:opt1 val1 :opt2 val2 ...)
   ;;
   (unless (listp options)
-    ;; UNREACHABLE MESSAGE: OPTIONS IS A &REST ARGUMENT TO $RUN_TESTSUITE SO IT MUST PASS LISTP
     (merror "Invalid Maxima keyword options: ~M" options))
   (when (every #'(lambda (o)
 		   ;; Make sure every option has the right form.

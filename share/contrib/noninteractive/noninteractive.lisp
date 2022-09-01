@@ -8,11 +8,15 @@
 (defmspec $assuming (e)
   (let*
     ((args (margs e))
-     (assumptions (mapcar #'meval (rest (first args)))))
+     (assumptions (mapcar #'meval (extract-assumptions (first args))))
+     (my-context (mfuncall '$supcontext)))
     (meval `(($assume) ,@assumptions))
     (unwind-protect
       (first (last (mapcar #'(lambda (e) (mfuncall '|$meval1| e)) (rest args))))
-      (meval `(($forget) ,@assumptions)))))
+      (mfuncall '$killcontext my-context))))
+
+(defun extract-assumptions (x)
+  (if ($listp x) (rest x) (list x)))
 
 ;; Remove functions and variables defined at Maxima level
 ;; so that kill does not affect noninteractive.

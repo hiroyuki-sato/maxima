@@ -315,6 +315,26 @@ true;
 stringp (timedate (100*365*24*3600));
 true;
 
+/* date parsing */
+
+parse_timedate (timedate (86400));
+86400;
+
+parse_timedate (timedate (86401));
+86401;
+
+parse_timedate (timedate (87400));
+87400;
+
+parse_timedate (timedate (1000000));
+1000000;
+
+parse_timedate (timedate (1000000000));
+1000000000;
+
+parse_timedate (timedate (10000000000));
+10000000000;
+
 /* Do the right thing when listarray and arrayinfo are called within
  * a function and the name of the formal argument coincides with the
  * name of the actual argument. (Was a bug in ARRAYINFO-AUX.)
@@ -456,6 +476,41 @@ zor (zand (a, c), zand (b, c));
 
 zand (a, zor (b, c));
 zor (zand (a, b), zand (a, c));
+
+/* another lassociative/rassociative bug, tickled by rule which returns an atom
+ * reported to mailing list 2015-03-16: "Requesting advice on simplification rules for user-defined operators"
+ */
+
+kill (a, b, c, d, e, f, z);
+done;
+
+(kill ("wedge"),
+ nary ("wedge"),
+ declare ("wedge", [commutative, lassociative]),
+ matchdeclare (var, true),
+ 0);
+0;
+
+(tellsimpafter (0 wedge var, 0),
+ 0);
+0;
+
+ev (a wedge (b wedge (c wedge (0 wedge d))) wedge (e wedge f), infeval);
+0;
+
+(kill ("wedge"),
+ nary ("wedge"),
+ declare ("wedge", [commutative, rassociative]),
+ matchdeclare (var, true),
+ 0);
+0;
+
+(tellsimpafter (var wedge z, z),
+ 0);
+0;
+
+ev (a wedge (b wedge (c wedge (z wedge d))) wedge (e wedge f), infeval);
+z;
 
 /* some tests for partition */
 

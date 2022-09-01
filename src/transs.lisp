@@ -54,22 +54,6 @@
 
 (defvar declares nil)
 
-(defmacro with-maxima-io-syntax (&rest forms)
-  `(let ((*readtable* (copy-readtable nil))
-        (*print-circle* nil) (*print-level* nil) (*print-length* nil) (*print-base* 10.) (*print-radix* t)
-	#-gcl (*print-pprint-dispatch* (copy-pprint-dispatch)))
-    #-gcl
-    (progn
-      #-(or scl allegro)
-      (setf (readtable-case *readtable*) :invert)
-      #+(or scl allegro)
-      (unless #+scl (eq ext:*case-mode* :lower)
-	      #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
-	(setf (readtable-case *readtable*) :invert))
-      (set-pprint-dispatch '(cons (member maxima::defmtrfun))
-			   #'pprint-defmtrfun))
-    ,@forms))
-
 (defmspec $compfile (forms)
     (setq forms (cdr forms))
     (if (eq 1 (length forms))
@@ -353,16 +337,6 @@ translated."
 		  (tr-format (intl:gettext "error: 'translate' argument must be an atom; found: ~M~%") (car l))))))))
 
 (defmspec $compile (form)
-  (let ((l (meval `(($translate),@(cdr form)))))
-    (let ((forms-to-compile-queue ()))
-      (mapc #'(lambda (x) (if (fboundp x) (compile x))) (cdr l))
-      (do ()
-	  ((null forms-to-compile-queue) l)
-	(mapc #'(lambda (form)
-		  (eval form)
-		  (and (consp form)
-		       (eq (car form) 'defun)
-		       (symbolp (cadr form))
-		       (compile (cadr form))))
-	      (prog1 forms-to-compile-queue
-		(setq forms-to-compile-queue nil)))))))
+  (let ((l (meval `(($translate) ,@(cdr form)))))
+    (mapc #'(lambda (x) (if (fboundp x) (compile x))) (cdr l))
+    l))
