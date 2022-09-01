@@ -14,7 +14,7 @@ DEFSYSTEMTESTLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxi
 
 if CLISP
 EXECUTECLISP = $(CLISP_NAME) -norc -q -x
-all-local: binary-clisp/maxima.mem
+all-local: sharefiles.mk  binary-clisp/maxima.mem
 install-exec-local: install-clisp
 uninstall-hook: uninstall-clisp
 clean: clean-clisp
@@ -45,6 +45,18 @@ clisp-depends.mk: maxima.system
 include clisp-depends.mk
 endif
 
+if CMUCL_EXEC
+CMU_MAXIMA = binary-cmucl/maxima
+CMU_BUILD = (echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima" :executable t :init-function '\''cl-user::run))' | $(EXECUTECMUCL))
+CMU_INST_BIN = true
+CMU_INST_MAXIMA = $(INSTALL_PROGRAM) $(CMU_MAXIMA) "$(DESTDIR)$(verpkglibdir)/$(CMU_MAXIMA)"
+else
+CMU_MAXIMA = binary-cmucl/maxima.core
+CMU_BUILD = (echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima.core"))' | $(EXECUTECMUCL))
+CMU_INST_BIN = $(INSTALL_PROGRAM) lisp "$(DESTDIR)$(verpkglibdir)/binary-cmucl/lisp"
+CMU_INST_MAXIMA = $(INSTALL_DATA) $(CMU_MAXIMA) "$(DESTDIR)$(verpkglibdir)/$(CMU_MAXIMA)"
+endif
+
 if CMUCL
 EXECUTECMUCL = $(CMUCL_NAME) -noinit -batch
 # Newer versions of CMUCL have an INTL package that is compatible with
@@ -52,35 +64,35 @@ EXECUTECMUCL = $(CMUCL_NAME) -noinit -batch
 # compile the files, we will get appropriate translations.  (Otherwise
 # we have to put (intl:textdomain "maxima") in each Lisp file.
 INITINTL = (when (find-package "INTL") (set (find-symbol "*DEFAULT-DOMAIN*" "INTL") "maxima"))
-all-local: binary-cmucl/maxima.core
+all-local: sharefiles.mk  $(CMU_MAXIMA)
 install-exec-local: install-cmucl
 uninstall-hook: uninstall-cmucl
 clean: clean-cmucl
 distclean: clean-cmucl
 
-cmucl: binary-cmucl/maxima.core
+cmucl: $(CMU_MAXIMA)
 
-binary-cmucl/maxima.core:
+$(CMU_MAXIMA):
 	test -d binary-cmucl || mkdir binary-cmucl
 	test -d binary-cmucl/numerical || mkdir binary-cmucl/numerical
 	test -d binary-cmucl/numerical/slatec || mkdir binary-cmucl/numerical/slatec
 	(echo '(progn $(INITINTL) $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE))' | $(EXECUTECMUCL)) && \
-	(echo '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMLOAD) (ext:save-lisp "binary-cmucl/maxima.core"))' | $(EXECUTECMUCL))
+	$(CMU_BUILD)
 
 install-cmucl:
 	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-cmucl"
-	$(INSTALL_DATA) binary-cmucl/maxima.core "$(DESTDIR)$(verpkglibdir)/binary-cmucl/maxima.core"
-	$(INSTALL_PROGRAM) lisp "$(DESTDIR)$(verpkglibdir)/binary-cmucl/@CMUCL_RUNTIME@"
+	$(CMU_INST_MAXIMA)
+	$(CMU_INST_BIN)
 
 uninstall-cmucl:
-	rm -f "$(DESTDIR)$(verpkglibdir)/binary-cmucl/maxima.core"
+	rm -f "$(DESTDIR)$(verpkglibdir)/$(CMU_MAXIMA)"
 	rm -f "$(DESTDIR)$(verpkglibdir)/binary-cmucl/@CMUCL_RUNTIME@"
 
 clean-cmucl:
 	rm -rf binary-cmucl
 cmucl-depends.mk: maxima.system
 	test -d binary-cmucl || mkdir binary-cmucl
-	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-cmucl/maxima.core" "cmucl-depends.mk"))' | $(EXECUTECMUCL)
+	echo '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "$(CMU_MAXIMA)" "cmucl-depends.mk"))' | $(EXECUTECMUCL)
 
 include cmucl-depends.mk
 endif
@@ -88,7 +100,7 @@ endif
 
 if SCL
 EXECUTESCL = $(SCL_NAME) -noinit -batch
-all-local: binary-scl/maxima.core
+all-local: sharefiles.mk  binary-scl/maxima.core
 install-exec-local: install-scl
 uninstall-hook: uninstall-scl
 clean: clean-scl
@@ -124,7 +136,7 @@ endif
 
 if ACL
 EXECUTEACL = $(ACL_NAME) -batch
-all-local: binary-acl/maxima.dxl
+all-local: sharefiles.mk  binary-acl/maxima.dxl
 install-exec-local: install-acl
 uninstall-hook: uninstall-acl
 clean: clean-acl
@@ -157,7 +169,7 @@ endif
 
 if SBCL
 EXECUTESBCL = $(SBCL_NAME) --noinform --noprint --eval
-all-local: binary-sbcl/maxima.core
+all-local: sharefiles.mk  binary-sbcl/maxima.core
 install-exec-local: install-sbcl
 uninstall-hook: uninstall-sbcl
 clean: clean-sbcl
@@ -190,7 +202,7 @@ endif
 
 if GCL
 EXECUTEGCL = $(GCL_NAME) -batch -eval
-all-local: binary-gcl/maxima
+all-local: sharefiles.mk  binary-gcl/maxima
 install-exec-local: install-gcl
 uninstall-hook: uninstall-gcl
 clean: clean-gcl
@@ -242,7 +254,7 @@ endif
 
 if OPENMCL
 EXECUTEOPENMCL = $(OPENMCL_NAME) -e
-all-local: binary-openmcl/maxima.image
+all-local: sharefiles.mk  binary-openmcl/maxima.image
 install-exec-local: install-openmcl
 uninstall-hook: uninstall-openmcl
 clean: clean-openmcl
@@ -271,7 +283,7 @@ endif
 
 if ECL
 EXECUTEECL = $(ECL_NAME) -norc
-all-local: binary-ecl/maxima
+all-local: sharefiles.mk  binary-ecl/maxima
 install-exec-local: install-ecl
 uninstall-hook: uninstall-ecl
 clean: clean-ecl
@@ -302,6 +314,18 @@ endif
 echo_%:
 	@echo "$(subst echo_,,$@)=$($(subst echo_,,$@))"
 	@echo "origin $(subst echo_,,$@) returns $(origin $(subst echo_,,$@))"
+
+# Create the list of files that will be installed.  If there is no
+# difference between what make_share_list computes and the original
+# file, do nothing.  Otherwise, update the original with the new
+# output of make_share_list.  The update will cause share/Makefile to
+# be rebuilt, and thus have the correct list of files to be installed.
+
+sharefiles.mk : FORCE
+	../admin/make_share_list
+
+# Should we use GNU make .PHONY instead?
+FORCE :
 
 genericdir = $(instsrcdir)
 real_lisp_sources = acall.lisp \
@@ -417,13 +441,11 @@ optimize.lisp \
 option.lisp \
 outmis.lisp \
 pade.lisp \
-parse-body.lisp \
 plot.lisp \
 plasma.lisp \
 pois2.lisp \
 pois3.lisp \
 polyrz.lisp \
-procs.lisp \
 psolve.lisp \
 rand-mt19937.lisp \
 rat3a.lisp \
@@ -438,7 +460,6 @@ residu.lisp \
 result.lisp \
 risch.lisp \
 rpart.lisp \
-runtim.lisp \
 rzmac.lisp \
 schatc.lisp \
 scs.lisp \
@@ -614,4 +635,4 @@ numerical/slatec/zwrsk.lisp
 
 genericdirDATA = $(real_lisp_sources) autoconf-variables.lisp
 
-EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs lisp
+EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs lisp sharefiles.mk

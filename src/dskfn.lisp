@@ -12,46 +12,17 @@
 
 (macsyma-module dskfn)
 
-(declare-top (special $filename $device $direc $storenum $filenum $dskall
-		      filelist opers $packagefile
+(declare-top (special opers $packagefile
 		      fasdumpfl fasdeqlist fasdnoneqlist savenohack
-		      dsksavep aaaaa errset lessorder greatorder indlist
+		      aaaaa errset lessorder greatorder indlist
 		      $labels $aliases varlist *mopl* $props defaultf
 		      $infolists $features featurel savefile $gradefs
 		      $values $functions $arrays prinlength prinlevel
 		      $contexts context $activecontexts))
 
-
-(setq filelist nil $packagefile nil
+(setq $packagefile nil
       indlist '(evfun evflag bindtest nonarray sp2 sp2subs opers
 		 special autoload assign mode))
-
-(defmfun i-$unstore (x)
-  (do ((x x (cdr x))
-       (list (ncons '(mlist simp)))
-       (prop)
-       (fl nil nil))
-      ((null x) list)
-    (setq x (infolstchk x))
-    (when (and (boundp (car x)) (mfilep (setq prop (symbol-value (car x)))))
-      (setq fl t)
-      (set (car x) (eval (dskget (cadr prop) (caddr prop) 'value nil))))
-    (do ((props (cdr (or (safe-get (car x) 'mprops) '(nil))) (cddr props))) ((null props))
-      (cond ((mfilep (cadr props))
-	     (setq fl t)
-	     (cond ((member (car props) '(hashar array) :test #'eq)
-		    (let ((aaaaa (gensym)))
-		      (setq prop (dskget (cadadr props)
-					 (caddr (cadr props))
-					 (car props)
-					 t))
-		      (mputprop (car x)
-				(if (eq prop 'aaaaa) aaaaa (car x))
-				(car props))))
-		   (t (setq prop (dskget (cadadr props) (caddr (cadr props))
-					 (car props) nil))
-		      (mputprop (car x) prop (car props)))))))
-    (and fl (nconc list (ncons (car x))))))
 
 (defun infolstchk (x)
   (let ((iteml (cond ((not (and x (or (member (car x) '($all $contexts) :test #'eq)
@@ -70,15 +41,9 @@
 	x
 	(append (or iteml '(nil)) (cdr x)))))
 
-
-(defun filelength (file)
-  (file-length file))
-
 (defmspec $save (form)
-  (dsksetup (cdr form) nil nil '$save))
-
-(defmfun i-$store (x)
-  (dsksetup x t nil '$store))
+  (let ((*print-circle* nil)) ; $save stores Lisp expressions.
+    (dsksetup (cdr form) nil nil '$save)))
 
 (defvar *macsyma-extend-types-saved* nil)
 
@@ -103,7 +68,6 @@
 	    ((listargp u))
 	    ((or (not (eq (caar u) 'mequal)) (not (symbolp (cadr u))))
 	     (improper-arg-err u fn))))
-    (when dsksavep (push file filelist))
     (setq list (ncons (car x))
 	  x (cdr x)
 	  *macsyma-extend-types-saved* nil)
@@ -118,7 +82,7 @@
 	      (setq maxima-error t))
 	  (setq *macsyma-extend-types-saved* nil)))
     (close savefile)
-    (namestring savefile)))
+    (namestring (truename savefile))))
 
 (defun dskstore (x storefl file list)
   (do ((x x (cdr x))
@@ -156,17 +120,19 @@
 			(and (member item '(tellratlist *alphabet* *ratweights) :test #'eq) (null val))
 			(and (eq item '$features) (alike (cdr val) featurel))
 			(and (eq item '$default_let_rule_package)
-			     (eq item val))))
-		(and (mfilep val)
-		     (or dsksavep (not (unstorep item)) (null (setq stfl t)))))
-	    (or (null (setq val (safe-get item 'mprops))) (equal val '(nil))
-		(if (not dsksavep) (not (unstorep item))))
+                             (eq item val)))))
+            (or ;; This clause has been reformulated to cut out a test with
+                ;; dsksavep and unstorep, but to respect the side effects.
+                (null (setq val (safe-get item 'mprops)))
+                (equal val '(nil))
+                nil)
 	    (not (getl item '(operators reversealias grad noun verb expr op data)))
 	    (not (member item (cdr $props) :test #'eq))
 	    (or (not (member item (cdr $contexts) :test #'eq))
 		(not (eq item '$initial))
 		(let ((context '$initial)) (null (cdr ($facts '$initial)))))))
-      (t (when (and (boundp item) (not (mfilep (setq val (symbol-value item)))))
+      (t (when (boundp item)
+           (setq val (symbol-value item))
 	   (if (eq item '$context) (setq x (list* nil val (cdr x))))
 	   (dskatom item rename val)
 	   (if (not (optionp rename)) (infostore item file 'value stfl rename)))
@@ -266,8 +232,11 @@
   (do ((props (cdr (or (get item 'mprops) '(nil))) (cddr props)) (val))
       ((null props))
     (cond ((or (member (car props) '(trace trace-type trace-level trace-oldfun) :test #'eq)
-	       (mfilep (setq val (cadr props)))
-	       (and (eq (car props) 't-mfexpr) (not (get item 'translated)))))
+               ;; This clause has been reformulated to cut out a mfile-test,
+               ;; but to respect the side effect of assigning a value to val.
+               (and (setq val (cadr props)) nil)
+               (and (eq (car props) 't-mfexpr)
+                    (not (get item 'translated)))))
 	  ((not (member (car props) '(hashar array) :test #'eq))
 	   (fasprin (list 'mdefprop rename val (car props)))
 	   (if (not (member (car props) '(mlexprp mfexprp t-mfexpr) :test #'eq))
@@ -334,9 +303,6 @@
 	(eqfl (setq fasdeqlist (cons form fasdeqlist)))
 	(t (setq fasdnoneqlist (cons form fasdnoneqlist)))))
 
-(defun unstorep (item)
-  (i-$unstore (ncons item)))
-
 (defun infostore (item file flag storefl rename)
   (let ((prop (cond ((eq flag 'value)
 		     (if (member rename (cdr $labels) :test #'eq) '$labels '$values))
@@ -375,28 +341,3 @@
       (t
         (list 'defprop name val ind)))))
 
-(defun dskget (file name flag unstorep)
-  (let ((defaultf defaultf) (eof (list nil)) item)
-    (setq file (open file))
-    (setq item (do ((item (read file eof) (read file eof)))
-		   ((eq item eof) (merror (intl:gettext "unstore: ~:M not found.") name))
-		 (if (or (and (not (atom item)) (eq (car item) 'dsksetq)
-			      (eq flag 'value) (eq (cadr item) name))
-			 (and (not (atom item)) (= (length item) 4)
-			      (or (eq (cadddr item) flag)
-				  (and (eq (car (cadddr item)) 'quote)
-				       (eq (cadr (cadddr item)) flag)))
-			      (or (eq (cadr item) name)
-				  (and (eq (caadr item) 'quote)
-				       (eq (cadadr item) name)))))
-		     (return item))))
-    (when unstorep
-      (eval (read file))
-      (eval (read file)))
-    (close file)
-    (caddr item)))
-
-(defun dsksave nil
-  (let ((dsksavep t))
-    (if $dskall (i-$store '($labels $values $functions $macros $arrays))
-	(i-$store '($labels)))))

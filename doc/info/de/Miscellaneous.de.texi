@@ -1,0 +1,142 @@
+@c -----------------------------------------------------------------------------
+@c File        : Miscellaneous.de.texi
+@c License     : GNU General Public License (GPL)
+@c Language    : German
+@c Original    : Miscellaneous.texi revision 1.28
+@c Translation : Dr. Dieter Kaiser
+@c Date        : 03.01.2011
+@c 
+@c This file is part of Maxima -- GPL CAS based on DOE-MACSYMA
+@c -----------------------------------------------------------------------------
+
+@menu
+* Einf@"uhrung in Verschiedenes::
+* Share-Pakete::
+* Funktionen und Variablen f@"ur Verschiedenes::
+@end menu
+
+@c -----------------------------------------------------------------------------
+@node Einf@"uhrung in Verschiedenes, Share-Pakete, Verschiedenes, Verschiedenes
+@section Einf@"uhrung in Verschiedenes
+@c -----------------------------------------------------------------------------
+
+Dieses Kapitel enth@"alt verschiedene Funktionen und Optionsvariablen.
+
+@c -----------------------------------------------------------------------------
+@node Share-Pakete, Funktionen und Variablen f@"ur Verschiedenes, Einf@"uhrung in Verschiedenes, Verschiedenes
+@section Share-Pakete
+@c -----------------------------------------------------------------------------
+
+Das Maxima Share-Verzeichnis enth@"alt viele weitere zus@"atzliche Funktionen
+und Erweiterungen, die nicht Teil des Kernels von Maxima und in Paketen
+organisiert sind.  Diese Pakete werden mit der Funktion @code{load} geladen. 
+Einige Pakete werden automatisch geladen, wenn der Nutzer eine Funktion
+des Paketes aufruft.  Mit der Funktion @code{setup_autoload} k@"onnen Funktionen
+f@"ur das automatische Laden konfiguriert werden.
+
+Die Lisp-Variable @code{*maxima-sharedir*} enth@"alt das Verzeichnis der Pakete.
+Das Kommanod @code{printfile("share.usg")} gibt eine @"Ubersicht @"uber Pakete 
+aus.  Diese ist jedoch derzeit stark veraltert.
+
+@c TODO: FUEGE HIER EINE AUFSTELLUNG DER SHARE-PAKETE EIN.
+
+@c -----------------------------------------------------------------------------
+@node Funktionen und Variablen f@"ur Verschiedenes,  , Share-Pakete, Verschiedenes
+@section Funktionen und Variablen f@"ur Verschiedenes
+@c -----------------------------------------------------------------------------
+
+@c --- 22.10.2010 DK -----------------------------------------------------------
+@anchor{askexp}
+@defvr {Systemvariable} askexp
+
+@c TODO: KANN DIESE DOKUMENTATION ENTFERNT WERDEN?
+
+@c When @code{asksign} is called, @code{askexp} is the expression @code{asksign}
+@c is testing.
+
+Wenn @code{asksign} aufgerufen wird, enth@"alt @code{askexp} den Ausdruck, der 
+von @code{asksign} getestet wird.
+
+@c At one time, it was possible for a user to inspect @code{askexp} by entering
+@c a Maxima break with control-A.
+
+Es war einmal m@"oglich, die Variable @code{askexp} nach einer Unterbrechnung 
+mit Control-A zu inspezieren.
+@end defvr
+
+@c --- 29.12.2010 DK -----------------------------------------------------------
+@anchor{remvalue}
+@deffn  {Funktion} remvalue (@var{name_1}, @dots{}, @var{name_n})
+@deffnx {Funktion} remvalue (all)
+
+Entfernt die Werte von nutzerdefinierten Variablen @var{name_1}, @dots{}, 
+@var{name_n}.  Die Variablen k@"onnen indiziert sein.
+@code{remvalue(all)} entfernt die Werte aller Variablen, die in der 
+Informationsliste @code{values} enthalten sind.
+
+Siehe auch @mrefdot{values}
+@end deffn
+
+@c --- 29.12.2010 DK -----------------------------------------------------------
+@anchor{rncombine}
+@deffn {Funktion} rncombine (@var{expr})
+
+Transformiert den Ausdruck @var{expr} so, dass alle Terme mit identischem Nenner
+oder Nennern, die sich nur um einen numerischen Faktor voneinander 
+unterscheiden, @"uber einen Nenner zusammengefasst werden. Die Funktion
+@code{combine} fasst ebenfalls Ausdr@"ucke @"uber einen Nenner zusammen, 
+betrachtet aber Nenner als verschieden, die sich um einen Zahlenfaktor 
+voneinander unterscheiden.
+
+Die Funktion wird mit dem Kommando @code{rncomb} geladen.
+@end deffn
+
+@c --- 03.01.2011 DK -----------------------------------------------------------
+@anchor{setup_autoload}
+@deffn {Funktion} setup_autoload (@var{filename}, @var{function_1}, @dots{}, @var{function_n})
+
+Die Funktionen @var{function_1}, @dots{}, @var{function_n} erhalten die 
+Eigenschaft, dass die Datei @var{filename} automatisch geladen wird, wenn die 
+Funktion zum ersten Mal genutzt werden soll.  @var{filename} wird mit der 
+Funktion @code{load} geladen und enth@"alt @"ublicherweise den Code f@"ur die 
+Definition der zu ladenden Funktion.
+
+@code{setup_autoload} funktioniert nicht f@"ur Array-Funktionen.
+@code{setup_autoload} wertet die Argumente nicht aus.
+
+Beispiele:
+
+@c ===beg===
+@c legendre_p (1, %pi);
+@c setup_autoload ("specfun.mac", legendre_p, ultraspherical);
+@c ultraspherical (2, 1/2, %pi);
+@c legendre_p (1, %pi);
+@c legendre_q (1, %pi);
+@c ===end===
+@example
+(%i1) legendre_p (1, %pi);
+(%o1)                  legendre_p(1, %pi)
+(%i2) setup_autoload ("specfun.mac", legendre_p, ultraspherical);
+(%o2)                         done
+(%i3) ultraspherical (2, 1/2, %pi);
+Warning - you are redefining the Macsyma function ultraspherical
+Warning - you are redefining the Macsyma function legendre_p
+                            2
+                 3 (%pi - 1)
+(%o3)            ------------ + 3 (%pi - 1) + 1
+                      2
+(%i4) legendre_p (1, %pi);
+(%o4)                          %pi
+(%i5) legendre_q (1, %pi);
+@group
+                              %pi + 1
+                      %pi log(-------)
+                              1 - %pi
+(%o5)                 ---------------- - 1
+                             2
+@end group
+@end example
+@end deffn
+
+@c --- End of Miscellaneous.texi -----------------------------------------------
+

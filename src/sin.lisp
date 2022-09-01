@@ -23,7 +23,7 @@
 (declare-top (special ratform exptsum $radexpand $%e_to_numlog
 		      exptind quotind splist l ans splist arcpart coef
 		      aa dict powerlist *a* *b* k stack
-		      ratroot rootlist square e w y expres arg var
+		      square e w y expres arg var
 		      *powerl* *c* *d* exp varlist genvar repswitch $liflag
 		      noparts top maxparts numparts blank $opsubst))
 
@@ -85,68 +85,11 @@
 	((and (not (atom (car a)))
 	      (member 'array (cdar a) :test #'eq))
 	 (cond ((freevar (cdr a)) t)
-	       (t (merror "Variable of integration appeared in subscript"))))
+	       (t (merror "~&FREEVAR: variable of integration appeared in subscript."))))
 	(t (and (freevar (car a)) (freevar (cdr a))))))
 
 (defun varp (x)
   (alike1 x var))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Stage II
-;;; Implementation of Method 1: Elementary function of exponentials
-;;;
-;;; The following examples are integrated with this method:
-;;;
-;;;   integrate(exp(x)/(2+3*exp(2*x)),x)
-;;;   integrate(exp(x+1)/(1+exp(x)),x)
-;;;   integrate(10^x*exp(x),x)
-
-(defvar *base* nil)      ; the common base
-(defvar *exptflag* nil)  ; When T, the substitution is not possible
-
-(defun superexpt (exp var *base*)
-  (declare (special *exptflag*))
-  (prog (y *exptflag*)
-    ;; Transform the integrand.
-    (setq y (elemxpt exp))
-    (when *exptflag* (return nil))
-    ;; Integrate the transformed integrand and substitute back.
-    (return (substint
-              (list '(mexpt) *base* var)
-              var
-              (integrator (div y (mul var (take '(%log) *base*))) var)))))
-
-;; Transform expressions like g^(b*x+a) to the common base *base* and
-;; do the substitution y = *base*^(b*x+a) in the expr.
-(defun elemxpt (expr &aux w)
-  (declare (special *exptflag* *base*))
-  (cond ((freevar expr) expr)
-        ;; var is the base of a subexpression. The transformation fails.
-        ((atom expr) (setq *exptflag* t))
-        ((not (eq (caar expr) 'mexpt))
-         (cons (car expr)
-               (mapcar #'(lambda (c) (elemxpt c)) (cdr expr))))
-        ((not (freevar (cadr expr)))
-         (list '(mexpt)
-               (elemxpt (cadr expr))
-               (elemxpt (caddr expr))))
-        ;; Transform the expression to the common base *base*.
-        ((not (eq (cadr expr) *base*))
-         (elemxpt (list '(mexpt)
-                        *base*
-                        (mul (power (take '(%log) *base*) -1)
-                             (take '(%log) (cadr expr))
-                             (caddr expr)))))
-        ;; The exponent must be linear in the variable of integration.
-        ((not (setq w (m2-b*x+a (caddr expr))))
-         (list (car expr) *base* (elemxpt (caddr expr))))
-        ;; Do the substitution y = g^(b*x+a) = g^a*g^(b*x).
-        (t (maxima-substitute *base*
-                              '*base*
-                              (subliss w '((mtimes)
-                                           ((mexpt) *base* a)
-                                           ((mexpt) x b)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -168,7 +111,7 @@
 ;;; Check if the problem can be transformed or solved by special methods.
 ;;; 11 Methods are implemented by Moses, some more have been added.
 
-(defun intform (expres)
+(defun intform (expres &aux w)
   (cond ((freevar expres) nil)
         ((atom expres) nil)
         
@@ -238,7 +181,7 @@
 	    (not (eq (caar expres) 'mexpt))
 	    (get (caar expres) 'integral))
        (when *debug-integrate*
-	 (format t "~&INTFORM with Integral on property list~%"))
+	 (format t "~&INTFORM: found 'INTEGRAL on property list~%"))
        (cond
 	 ((setq arg
 	    (m2 exp
@@ -266,7 +209,7 @@
 	      (eq (caar exp) (caar expres))
 	      (or (atom (cadr exp))
 		  (not (eq (caaadr exp) 'mqapply))
-		  (merror "Invalid arg to `integrate':~%~M" exp))
+		  (merror (intl:gettext "integrate: invalid argument: ~M") exp))
 	      (checkderiv exp)))
         
         ;; Stop intform if we have not a power function.
@@ -277,8 +220,8 @@
         
         ;; Method 1: Elementary function of exponentials
         ((freevar (cadr expres))
-         (cond ((m2-b*x+a (caddr expres))
-                (superexpt exp var (cadr expres)))
+         (cond ((setq w (m2-b*x+a (caddr expres)))
+                (superexpt exp var (cadr expres) w))
                ((intform (caddr expres)))
                ((and (eq '$%e (cadr expres))
                      (isinop (caddr expres) '%log))
@@ -793,6 +736,163 @@
       (ratint ex var)
       (integrator ex var)))
 
+(defun denomfind (x)
+  (cond ((ratnump x) (caddr x))
+	((not (numberp x)) nil)
+	((not (floatp x)) 1)
+	(t (cdr (maxima-rationalize x)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Stage II
+;;; Implementation of Method 1: Elementary function of exponentials
+;;;
+;;; The following examples are integrated with this method:
+;;;
+;;;   integrate(exp(x)/(2+3*exp(2*x)),x)
+;;;   integrate(exp(x+1)/(1+exp(x)),x)
+;;;   integrate(10^x*exp(x),x)
+
+(let ((bas nil)       ; The common base.
+      (pow nil)       ; The common power of the form b*x+a. The values are
+                      ; stored in a list which is returned from m2.
+      (exptflag nil)) ; When T, the substitution is not possible.
+  
+  (defun superexpt (exp var bas1 pow1)
+    (prog (y)
+      (setq bas bas1
+            pow pow1
+            exptflag nil)
+      ;; Transform the integrand. At this point resimplify, because it is not
+      ;; guaranteed, that a correct simplified expression is returned.
+      (setq y (resimplify (elemxpt exp)))
+      (when exptflag (return nil))
+      ;; Integrate the transformed integrand and substitute back.
+      (return
+        ($multthru
+          (substint (list '(mexpt) bas
+                          (list '(mplus) (cdras 'a pow)
+                                (list '(mtimes) (cdras 'b pow) var)))
+                    var
+                    (integrator (div y
+                                     (mul var
+                                          (cdras 'b pow)
+                                          (take '(%log) bas))) var))))))
+  
+  ;; Transform expressions like g^(b*x+a) to the common base bas and
+  ;; do the substitution y = bas^(b*x+a) in the expr.
+  (defun elemxpt (expr &aux w)
+    (cond ((freevar expr) expr)
+          ;; var is the base of a subexpression. The transformation fails.
+          ((atom expr) (setq exptflag t))
+          ((not (eq (caar expr) 'mexpt))
+           (cons (car expr)
+                 (mapcar #'(lambda (c) (elemxpt c)) (cdr expr))))
+          ((not (freevar (cadr expr)))
+           (list '(mexpt)
+                 (elemxpt (cadr expr))
+                 (elemxpt (caddr expr))))
+          ;; Transform the expression to the common base.
+          ((not (eq (cadr expr) bas))
+           (elemxpt (list '(mexpt)
+                          bas
+                          (mul (power (take '(%log) bas) -1)
+                               (take '(%log) (cadr expr))
+                               (caddr expr)))))
+          ;; The exponent must be linear in the variable of integration.
+          ((not (setq w (m2-b*x+a (caddr expr))))
+           (list (car expr) bas (elemxpt (caddr expr))))
+          ;; Do the substitution y = g^(b*x+a).
+          (t
+           (setq w (cons (cons 'bb (cdras 'b pow)) w))
+           (setq w (cons (cons 'aa (cdras 'a pow)) w))
+           (setq w (cons (cons 'bas bas) w))
+           (subliss w '((mtimes)
+                        ((mexpt) bas a)
+                        ((mexpt)
+                         bas
+                         ((mquotient)
+                          ((mtimes) -1 aa b) bb))
+                        ((mexpt)
+                         x
+                         ((mquotient) b bb)))))))
+) ; End of let
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Stage II
+;;; Implementation of Method 3:
+;;; Substitution for a rational root of a linear fraction of x
+;;;
+;;; This method is applicable when the integrand is of the form:
+;;;
+;;;   /
+;;;   [       a x + b n1/m1   a x + b n1/m2
+;;;   I R(x, (-------)   ,   (-------)     , ...) dx
+;;;   ]       c x + d         c x + d
+;;;   /
+;;;
+;;; Substitute 
+;;;
+;;;    (1) t = ((a*x+b)/(c*x+d))^(1/k), or
+;;;
+;;;    (2) x = (b-d*t^k)/(c*t^k-a)
+;;;
+;;; where k is the least common multiplier of m1, m2, ... and
+;;;
+;;;    (3) dx = k*(a*d-b*c)*t^(k-1)/(a-c*t^k)^2 * dt
+;;;
+;;; First, the algorithm calls the routine RAT3 to collect the roots of the
+;;; form ((a*x+b)/(c*x+d))^(n/m) in the list *ROOTLIST*. The routine FINDGK
+;;; searches for the least common multiplier of m1, m2, ... Then the
+;;; substitutions (2) and (3) are done and the new problem is integrated.
+;;; As always, W is an alist which associates to the coefficients
+;;; a, b... (and to VAR) their values.
+
+(defvar *ratroot* nil)  ; Expression of the form (a*x+b)/(c*x+d)
+(defvar *rootlist* nil) ; List of powers of the expression *ratroot*.
+
+(defun ratroot (exp var *ratroot* w)
+  (prog (*rootlist* k y w1)
+     ;; Check if the integrand has a chebyform, if so return the result.
+     (when (setq y (chebyf exp var)) (return y))
+     ;; Check if the integrand has a suitably form and collect the roots
+     ;; in the global special variable *ROOTLIST*.
+     (when (not (rat3 exp t)) (return nil))
+     ;; Get the least common multiplier of m1, m2, ...
+     (setq k (findingk *rootlist*))
+     (setq w1 (cons (cons 'k k) w))
+     ;; Substitute for the roots.
+     (setq y
+           (subst41 exp
+                    (subliss w1
+                             '((mquotient)
+                               ((mplus) ((mtimes) b e)
+                                ((mtimes) -1 d ((mexpt) var k)))
+                               ((mplus) ((mtimes) c ((mexpt) var k))
+                                ((mtimes) -1 e a))))
+                    var))
+     ;; Integrate the new problem.
+     (setq y
+           (integrator
+             (mul y
+                  (subliss w1
+                           '((mquotient)
+                             ((mtimes) e
+                              ((mplus)
+                               ((mtimes) a d k
+                                ((mexpt) var ((mplus) -1 k)))
+                               ((mtimes) -1
+                                ((mtimes) b c k
+                                 ((mexpt) var ((mplus) -1 k))))))
+                             ((mexpt) ((mplus)
+                                       ((mtimes) c ((mexpt) var k))
+                                       ((mtimes) -1 a e))
+                              2))))
+             var))
+     ;; Substitute back and return the result.
+     (return (substint (power *ratroot* (power k -1)) var y))))
+
 (defun rat3 (ex ind)
   (cond ((freevar ex) t)
 	((atom ex) ind)
@@ -807,86 +907,36 @@
 	 (rat3 (caddr ex) t))
 	((integerp (caddr ex))
 	 (rat3 (cadr ex) ind))
-	((and (m2 (cadr ex) ratroot nil)
+        ((and (m2 (cadr ex) *ratroot* nil)
 	      (denomfind (caddr ex)))
-	 (setq rootlist (cons (denomfind (caddr ex)) rootlist)))
-	(t (rat3 (cadr ex) nil))))
+         (setq *rootlist* (cons (denomfind (caddr ex)) *rootlist*)))
+        (t (rat3 (cadr ex) nil))))
 
-(defun subst4 (ex)
-  (cond ((freevar ex) ex)
-	((atom ex) *a*)
-	((not (eq (caar ex) 'mexpt))
-	 (mapcar #'(lambda (u) (subst4 u)) ex))
-	((m2 (cadr ex) ratroot nil)
-	 (list (car ex) *b* (integerp2 (timesk k (caddr ex)))))
-	(t (list (car ex) (subst4 (cadr ex)) (subst4 (caddr ex))))))
-
-(defun findingk (list)
-  (do ((kk 1) (l list (cdr l)))
+;; Helper function for the function ratroot to get the smallest power of ll.
+(defun findingk (ll)
+  (do ((kk 1) (l ll (cdr l)))
       ((null l) kk)
     (setq kk (lcm kk (car l)))))
 
-(defun denomfind (x)
-  (cond ((ratnump x) (caddr x))
-	((not (numberp x)) nil)
-	((not (floatp x)) 1)
-	(t (cdr (maxima-rationalize x)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Stage II
-;;; Implementation of Method 3:
-;;; Substitution for a rational root of a linear fraction of x
-
-;; EXP = f(t,u) where f is some function with, say, VAR = t,
-;; u^k = RATROOT = e*(a*t+b)/(c*t+d), where the smallest possible k
-;; is calculated below.
-;; As always, W is an alist which associates to the coefficients
-;; a, b... (and to VAR) their values.
-(defun ratroot (exp var ratroot w)
-  (prog (rootlist k y w1)
-     (cond ((setq y (chebyf exp var)) (return y)))
-     (cond ((not (rat3 exp t)) (return nil)))
-     (setq k (findingk rootlist))
-     (setq w1 (cons (cons 'k k) w))
-     (setq y
-	   (subst41 exp
-		    (simplify
-		     (subliss w1
-			      '((mquotient)
-				((mplus) ((mtimes) b e)
-				 ((mtimes) -1 d ((mexpt) var k)))
-				((mplus) ((mtimes) c ((mexpt) var k))
-				 ((mtimes) -1 e a)))))
-		    var))
-     (setq y
-	   (integrator
-	    (simplify
-	     (list '(mtimes)
-		   y
-		   (subliss
-		    w1 '((mquotient)
-			 ((mtimes)
-			  e ((mplus)
-			     ((mtimes) a d k
-			      ((mexpt) var ((mplus) -1 k)))
-			     ((mtimes)
-			      -1
-			      ((mtimes) b c k
-			       ((mexpt) var ((mplus) -1 k))))))
-			 ((mexpt) ((mplus)
-				   ((mtimes) c ((mexpt) var k))
-				   ((mtimes) -1 a e))
-			  2)))))
-	    var))
-     (return (substint (simplify (list '(mexpt)
-				       ratroot
-				       (list '(mexpt) k -1)))
-		       var
-		       y))))
-
-(defun subst41 (exp *a* *b*)
-  (subst4 exp))
+(let ((rootform nil) ; Expression of the form x = (b*e-d*t^k)/(c*t^k-e*a).
+      (rootvar nil)) ; The variable we substitute for the root.
+  
+  (defun subst4 (ex)
+    (cond ((freevar ex) ex)
+          ((atom ex) rootform)
+          ((not (eq (caar ex) 'mexpt))
+           (mapcar #'(lambda (u) (subst4 u)) ex))
+          ((m2 (cadr ex) *ratroot* nil)
+           (list (car ex) rootvar (integerp2 (timesk k (caddr ex)))))
+          (t (list (car ex) (subst4 (cadr ex)) (subst4 (caddr ex))))))
+  
+  (defun subst41 (exp a b)
+    (setq rootform a
+          rootvar b)
+    ;; At this point resimplify, because it is not guaranteed, that a correct 
+    ;; simplified expression is returned.
+    (resimplify (subst4 exp)))
+) ; End of let
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1188,14 +1238,15 @@
 		    (b (cdras 'b arg))
 		    (new-var (gensym "NEW-VAR-"))
 		    (new-exp (maxima-substitute (div (sub new-var b) c)
-						var exp))
-		    (new-int (if (every-trigarg-alike new-exp new-var)
-                                 ;; avoid endless recursion when more than one
-                                 ;; trigarg exists or c is a float
-		                 (div (integrator new-exp new-var) c)
-		                 (rischint exp var))))
-	       (return-from monstertrig 
-	         (maxima-substitute *trigarg* new-var new-int))))
+						var exp)))
+	       (if (every-trigarg-alike new-exp new-var)
+		   ;; avoid endless recursion when more than one
+		   ;; trigarg exists or c is a float
+		   (return-from monstertrig 
+		     (maxima-substitute 
+		      *trigarg* 
+		      new-var 
+		      (div (integrator new-exp new-var) c))))))
 	    (t
 	     (return-from monstertrig (rischint exp var))))))
   (prog (*notsame* w a b y d)
@@ -1224,8 +1275,14 @@
 ;                  (member (car (setq d (cdr (sassq 'd y 'nill))))
 ;                          '(%sin %cos) :test #'eq)))
 ;        (return nil))
-       ((and (eq (car (setq b (cdras 'b y))) '%sin)
-             (eq (car (setq d (cdras 'd y))) '%sin))
+       ((progn
+	  ;; The tests after this depend on values of b and d being
+	  ;; set.  Set them here unconditionally, before doing the
+	  ;; tests.
+	  (setq b (cdras 'b y))
+	  (setq d (cdras 'd y))
+	  (and (eq (car b) '%sin)
+	       (eq (car d) '%sin)))
         ;; We have a*sin(m*x)*sin(n*x).
         ;; The integral is: a*(sin((m-n)*x)/(2*(m-n))-sin((m+n)*x)/(2*(m+n))
         (return (subliss y
@@ -1252,6 +1309,10 @@
                              ((%sin) ((mtimes) ((mplus) m n) x))
                              ((mtimes) 2 ((mplus) m n))))))))
        ((or (and (eq (car b) '%cos)
+		 ;; The following (destructively!) swaps the values of
+		 ;; m and n if first trig term is sin.  I (rtoy) don't
+		 ;; understand why this is needed.  The formula
+		 ;; doesn't depend on that.
                  (setq w (cdras 'm y ))
                  (rplacd (assoc 'm y) (cdras 'n y))
                  (rplacd (assoc 'n y) w))
@@ -1554,17 +1615,20 @@
   getout
      (setq y (list '(mtimes) *yy* *yz*))
   get2
-     (setq y (maxima-substitute var 'x y))
-     
      (when *debug-integrate*
        (format t "~& Call the INTEGRATOR with:~%")
        (format t "~&   : y    = ~A~%" y)
        (format t "~&   : repl = ~A~%" repl))
-     
      ;; See Bug 2880797.  We want atan(tan(x)) to simplify to x, so
      ;; set $triginverses to '$all.
-     (return (let (($triginverses '$all))
-	       (substint repl var (integrator y var))))))
+     (return
+       ;; Do not integrate for the global variable VAR, but substitute it.
+       ;; This way possible assumptions on VAR are no longer present. The
+       ;; algorithm of DEFINT depends on this behavior. See Bug 3085498.
+       (let (($triginverses '$all) (newvar (gensym)))
+         (substint repl
+                   newvar
+                   (integrator (maxima-substitute newvar 'x y) newvar))))))
 
 (defmvar $integration_constant_counter 0)
 (defmvar $integration_constant '$%c)
@@ -1575,7 +1639,7 @@
   ;; INTEGRATOR for more details.  Initialize it here.
   (let ((*integrator-level* 0))
     (declare (special *integrator-level*))
-    (cond ((mnump var) (merror "Attempt to integrate wrt a number: ~:M" var))
+    (cond ((mnump var) (merror (intl:gettext "integrate: variable must not be a number; found: ~:M") var))
 	  (($ratp var) (sinint exp (ratdisrep var)))
 	  (($ratp exp) (sinint (ratdisrep exp) var))
 	  ((mxorlistp exp)    ;; if exp is an mlist or matrix
@@ -1904,33 +1968,51 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; Recognize a^(b*(z^r)^p+d)
+;;; Recognize (a^(c*(z^r)^p+d)^v
 
-(defun m2-exp-type-1 (expr)
+(defun m2-exp-type-1a (expr)
   (m2 expr
-    '((mexpt)
-	(a freevar0)
-	((mplus)
-	   ((coefft)
-	      (b freevar0)
-	      ((mexpt)
-		 ((mexpt) (z varp) (r freevar0))
-		 (p freevar0)))
-	   ((coeffpp) (d freevar))))
-    nil))
+      '((mexpt)
+        ((mexpt)
+         (a freevar0)
+         ((mplus)
+          ;; The order of the pattern is critical. If we change it,
+          ;; we do not get the expected match.
+          ((coeffpp) (d freevar))
+          ((coefft) (c freevar0)
+           ((mexpt)
+            ((mexpt) (z varp) (r freevar0))
+            (p freevar)))))
+        (v freevar))
+      nil))
 
 ;;; Recognize z^v*a^(b*z^r+d)
 
 (defun m2-exp-type-2 (expr)
   (m2 expr
-    '((mtimes)
+      '((mtimes)
         ((mexpt) (z varp) (v freevar0))
-	((mexpt)
-	   (a freevar0)
-	   ((mplus)
-	      ((coefft) (b freevar0) ((mexpt) (z varp) (r freevar0)))
-	      ((coeffpp) (d freevar)))))
-    nil))
+        ((mexpt)
+         (a freevar0)
+         ((mplus)
+          ((coeffpp) (d freevar))
+          ((coefft) (b freevar0) ((mexpt) (z varp) (r freevar0))))))
+      nil))
+
+;;; Recognize z^v*%e^(a*z^r+b)^u
+
+(defun m2-exp-type-2-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt) (z varp) (v freevar0))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (b freevar))
+           ((coefft) (a freevar0) ((mexpt) (z varp) (r freevar0)))))
+         (u freevar)))
+      nil))
 
 ;;; Recognize (a*z+b)^p*%e^(c*z+d)
 
@@ -1947,7 +2029,7 @@
 	 ((mplus)
 	    ((coefft) (c freevar0) (z varp))
 	    ((coeffpp) (d freevar)))))
-     nil))
+      nil))
 
 ;;; Recognize d^(a*z^2+b/z^2+c)
 
@@ -1959,7 +2041,7 @@
 	   ((coefft) (a freevar0) ((mexpt) (z varp) 2))
 	   ((coefft) (b freevar0) ((mexpt) (z varp) -2))
 	   ((coeffpp) (c freevar))))
-    nil))
+      nil))
 
 ;;; Recognize z^(2*n)*d^(a*z^2+b/z^2+c)
 
@@ -1979,15 +2061,31 @@
 
 (defun m2-exp-type-5 (expr)
   (m2 expr
-    '((mtimes)
-	((mexpt) (z varp) (n freevar0))
-	((mexpt)
-	   (d freevar0)
-	   ((mplus)
-	      ((coefft) (a freevar0) ((mexpt) (z varp) 2))
-	      ((coefft) (b freevar0) (z varp))
-	      ((coeffpp) (c freevar)))))
-    nil))
+      '((mtimes)
+        ((mexpt) (z varp) (n freevar))
+        ((mexpt)
+         (d freevar0)
+         ((mplus)
+          ((coeffpt) (a freevar) ((mexpt) (z varp) 2))
+          ((coeffpt) (b freevar) (z varp))
+          ((coeffpp) (c freevar)))))
+      nil))
+
+;;; Recognize z^n*(%e^(a*z^2+b*z+c))^u
+
+(defun m2-exp-type-5-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt) (z varp) (n freevar0))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (c freevar))
+           ((coefft) (a freevar0) ((mexpt) (z varp) 2))
+           ((coefft) (b freevar0) (z varp))))
+         (u freevar)))
+      nil))
 
 ;;; Recognize z^n*d^(a*sqrt(z)+b*z+c)
 
@@ -2002,6 +2100,22 @@
 	      ((coefft) (b freevar0) (z varp))
 	      ((coeffpp) (c freevar)))))
      nil))
+
+;;; Recognize z^n*(%e^(a*sqrt(z)+b*z+c))^u
+
+(defun m2-exp-type-6-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt) (z varp) (n freevar0))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (c freevar))
+           ((coefft) (a freevar0) ((mexpt) (z varp) ((rat) 1 2)))
+           ((coefft) (b freevar0) (z varp))))
+         (u freevar)))
+      nil))
 
 ;;; Recognize z^n*a^(b*z^r+e)*h^(c*z^r+g)
 
@@ -2025,6 +2139,28 @@
 	      ((coeffpp) (g freevar)))))
     nil))
 
+;;; Recognize z^v*(%e^(b*z^r+e))^q*(%e^(c*z^r+g))^u
+
+(defun m2-exp-type-7-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt) (z varp) (v freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (e freevar))
+           ((coefft) (b freevar0) ((mexpt) (z varp) (r freevar0)))))
+         (q freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (g freevar))
+           ((coefft) (c freevar0) ((mexpt) (z varp) (r1 freevar0)))))
+         (u freevar)))
+      nil))
+
 ;;; Recognize a^(b*sqrt(z)+d*z+e)*h^(c*sqrt(z)+f*z+g)
 
 (defun m2-exp-type-8 (expr)
@@ -2044,6 +2180,50 @@
 	      ((coeffpp) (g freevar)))))
     nil))
 
+;;; Recognize (%e^(b*sqrt(z)+d*z+e))^u*(%e^(c*sqrt(z)+f*z+g))^v
+
+(defun m2-exp-type-8-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (e freevar))
+           ((coeffpt) (b freevar) ((mexpt) (z varp) ((rat) 1 2)))
+           ((coeffpt) (d freevar) (z varp))))
+         (u freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (g freevar))
+           ((coeffpt) (c freevar) ((mexpt) (z varp) ((rat) 1 2)))
+           ((coeffpt) (f freevar) (z varp))))
+         (v freevar)))
+      nil))
+
+;;; Recognize (%e^(b*z^r+e))^u*(%e^(c*z^r+g))^v
+
+(defun m2-exp-type-8-2 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (e freevar))
+           ((coefft) (b freevar) ((mexpt) (z varp) (r freevar0)))))
+         (u freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (g freevar))
+           ((coefft) (c freevar) ((mexpt) (z varp) (r1 freevar0)))))
+         (v freevar)))
+      nil))
+
 ;;; Recognize z^n*a^(b*z^2+d*z+e)*h^(c*z^2+f*z+g)
 
 (defun m2-exp-type-9 (expr)
@@ -2062,9 +2242,33 @@
 	    ((coeffpt)  (c freevar) ((mexpt) (z varp) 2))
 	    ((coeffpt)  (f freevar) (z varp))
 	    ((coeffpp) (g freevar)))))
-     nil))
+      nil))
 
-;;; Recognize z^n*a^(b*sqrt(z+)d*z+e)*h^(c*sqrt(z+)f*z+g)
+;;; Recognize z^n*(%e^(b*z^2+d*z+e))^q*(%e^(c*z^2+f*z+g))^u
+
+(defun m2-exp-type-9-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt) (z varp) (n freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (e freevar))
+           ((coeffpt) (b freevar) ((mexpt) (z varp) 2))
+           ((coeffpt) (d freevar) (z varp))))
+         (q freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (g freevar))
+           ((coeffpt) (c freevar) ((mexpt) (z varp) 2))
+           ((coeffpt) (f freevar) (z varp))))
+         (u freevar)))
+      nil))
+
+;;; Recognize z^n*a^(b*sqrt(z)+d*z+e)*h^(c*sqrt(z+)f*z+g)
 
 (defun m2-exp-type-10 (expr)
   (m2 expr
@@ -2084,39 +2288,65 @@
 	      ((coeffpp) (g freevar)))))
     nil))
 
+;;; Recognize z^n*(%e^(b*sqrt(z)+d*z+e))^q*(%e^(c*sqrt(z)+f*z+g))^u
+
+(defun m2-exp-type-10-1 (expr)
+  (m2 expr
+      '((mtimes)
+        ((mexpt) (z varp) (n freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (e freevar))
+           ((coeffpt) (b freevar) ((mexpt) (z varp) ((rat) 1 2)))
+           ((coeffpt) (d freevar) (z varp))))
+         (q freevar))
+        ((mexpt)
+         ((mexpt)
+          $%e
+          ((mplus)
+           ((coeffpp) (g freevar))
+           ((coeffpt) (c freevar) ((mexpt) (z varp) ((rat) 1 2)))
+           ((coeffpt) (f freevar) (z varp))))
+         (u freevar)))
+      nil))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun integrate-exp-special (expr var &aux w)
+(defun integrate-exp-special (expr var &aux w const)
 
-  (when *debug-integrate*
-    (format t "~&INTEGRATE-EXP-SPECIAL with ~A~%" expr)
-    (format t "~&Factored is ~A~%" (facsum-exponent expr)))
-
-  ;; First we factor the expression.
+  ;; First factor the expression.
   (setq expr ($factor expr))
-
+  
+  ;; Remove constant factors.
+  (setq w (partition expr var 1))
+  (setq const (car w))
+  (setq expr (cdr w))
+  
   (cond
-    ((setq w (m2-exp-type-1 (facsum-exponent expr)))
+    ((setq w (m2-exp-type-1a (facsum-exponent expr)))
      (let ((a (cdras 'a w))
-	   (b (cdras 'b w))
-	   (d (cdras 'd w))
-	   (r (cdras 'r w))
-	   (p (cdras 'p w)))
-
+           (c (cdras 'c w))
+           (d (cdras 'd w))
+           (r (cdras 'r w))
+           (p (cdras 'p w))
+           (v (cdras 'v w)))
+       
        (when *debug-integrate*
-	 (format t "~&Type 1: a^(b*(z^r)^p+d) : w = ~A~%" w))
-
-       (mul
-	 (power a d)
-	 (div -1 (mul p r))
-	 var
-	 ($gamma_incomplete
-	   (div 1 (mul p r))
-	   (mul -1 b (power (power var r) p) ($log a)))
-	 (power
-	   (mul -1 b (power (power var r) p) ($log a))
-	   (div -1 (mul r p))))))
-
+         (format t "~&Type 1a: (a^(c*(z^r)^p+d)^v : w = ~A~%" w))
+       
+       (mul -1
+            const
+            (inv (mul p r (power a (mul c v (power (power var r) p)))))
+            var
+            (power (power a (add d (mul c (power (power var r) p)))) v)
+            (take '(%gamma_incomplete)
+                  (inv (mul p r))
+                  (mul -1 c v (power (power var r) p) (take '(%log) a)))
+            (power (mul -1 c v (power (power var r) p) (take '(%log) a))
+                   (div -1 (mul p r))))))
+    
     ((setq w (m2-exp-type-2 (facsum-exponent expr)))
      (let ((a (cdras 'a w))
 	   (b (cdras 'b w))
@@ -2128,6 +2358,7 @@
 	 (format t "~&Type 2: z^v*a^(b*z^r+d) : w = ~A~%" w))
 
        (mul
+         const
 	 (div -1 r)
 	 (power a d)
 	 (power var (add v 1))
@@ -2137,7 +2368,28 @@
 	 (power
 	   (mul -1 b (power var r) ($log a))
 	   (mul -1 (div (add v 1) r))))))
-
+    
+    ((setq w (m2-exp-type-2-1 (facsum-exponent expr)))
+     (let ((a (cdras 'a w))
+           (b (cdras 'b w))
+           (v (cdras 'v w))
+           (r (cdras 'r w))
+           (u (cdras 'u w)))
+       
+       (when *debug-integrate*
+         (format t "~&Type 2-1: z^v*(%e^(a*z^r+b))^u : w = ~A~%" w))
+       
+       (mul const
+            -1
+            (inv r)
+            (power '$%e (mul -1 a u (power var r)))
+            (power (power '$%e (add (mul a (power var r)) b)) u)
+            (power var (add v 1))
+            (power (mul -1 a u (power var r)) (div (mul -1 (add v 1)) r))
+            (take '(%gamma_incomplete)
+                  (div (add v 1) r)
+                  (mul -1 a u (power var r))))))
+    
     ((setq w (m2-exp-type-3 (facsum-exponent expr)))
      (let ((a (cdras 'a w))
 	   (b (cdras 'b w))
@@ -2149,6 +2401,7 @@
 	 (format t "~&Type 3: (a*z+b)^p*%e^(c*z+d) : w = ~A~%" w))
 
        (mul
+         const
 	 (div -1 a)
 	 (power '$%e (sub d (div (mul b c) a)))
 	 (power (add b (mul a var)) (add p 1))
@@ -2165,6 +2418,7 @@
 	 (format t "~&Type 4: d^(a*z^2+b/z^2+c) : w = ~A~%" w))
 
        (mul
+         const
 	 (div 1 (mul 4 (power (mul -1 a ($log d)) (div 1 2))))
 	 (mul
 	   (power d c)
@@ -2203,7 +2457,8 @@
 
        (setq n (div n 2))
 
-       (mul (div 1 4)
+       (mul const
+            (div 1 4)
 	    (power d c)
 	    (power '$%pi (div 1 2))
 	    (simplify (list '(%derivative)
@@ -2250,6 +2505,7 @@
 	 (format t "~&Type 5: z^n*d^(a*z^2+b*z+c) : w = ~A~%" w))
 
        (mul
+         const
 	 (div -1 (mul 2 (power (mul a ($log d)) (div 1 2))))
 	 (mul
 	   (power d (sub c (div (mul b b) (mul 4 a))))
@@ -2272,7 +2528,43 @@
 		   (mul (div -1 a) (power (add b (mul 2 a var)) 2) ($log d))
 		   (mul (div -1 2) (add index 1))))
 	       index 0 n))))))
-
+    
+    ((and (setq w (m2-exp-type-5-1 (facsum-exponent expr)))
+          (maxima-integerp (cdras 'n w))
+          (eq ($sign (cdras 'n w)) '$pos))
+     (let ((a (cdras 'a w))
+           (b (cdras 'b w))
+           (c (cdras 'c w))
+           (u (cdras 'u w))
+           (n (cdras 'n w)))
+       
+       (when *debug-integrate*
+         (format t "~&Type 5-1: z^n*(%e^(a*z^2+b*z+c))^u : w = ~A~%" w))
+       
+       (mul const
+            (div -1 2)
+            (power '$%e
+                   (add (mul -1 (div (mul b b u) (mul 4 a)))
+                        (mul -1 u (add (mul a var var) (mul b var)))))
+            (power a (mul -1 (add n 1)))
+            (power (power '$%e
+                          (add (mul a var var) (mul b var) c))
+                   u)
+            (let ((index (gensumindex))
+                  ($simpsum t))
+              (dosum
+                (mul (power 2 (sub index n))
+                     (power (mul -1 b) (sub n index))
+                     (power (add b (mul 2 a var)) (add index 1))
+                     (power (div (mul -1 u (power (add b (mul 2 a var)) 2)) a)
+                            (mul (div -1 2) (add index 1)))
+                     (take '(%binomial) n index)
+                     (take '(%gamma_incomplete)
+                           (div (add index 1) 2)
+                           (div (mul -1 u (power (add b (mul 2 a var)) 2))
+                                (mul 4 a))))
+                index 0 n t)))))
+    
     ((and (setq w (m2-exp-type-6 (facsum-exponent expr)))
 	  (maxima-integerp (cdras 'n w))
 	  (eq ($sign (cdras 'n w)) '$pos))
@@ -2286,6 +2578,7 @@
 	 (format t "~&Type 6: z^n*d^(a*sqrt(z)+b*z+c) : w = ~A~%" w))
 
        (mul
+         const
 	 (power 2 (mul -1 (add n 1)))
 	 (power d (sub c (div (mul a a) (mul 4 b))))
 	 (power (mul b ($log d)) (mul -2 (add n 1)))
@@ -2335,7 +2628,83 @@
 			 ($log d))))))
 	       index2 0 index1)
 	     index1 0 n)))))
-
+    
+    ((and (setq w (m2-exp-type-6-1 (facsum-exponent expr)))
+          (maxima-integerp (cdras 'n w))
+          (eq ($sign (cdras 'n w)) '$pos))
+     (let ((a (cdras 'a w))
+           (b (cdras 'b w))
+           (c (cdras 'c w))
+           (u (cdras 'u w))
+           (n (cdras 'n w)))
+       
+       (when *debug-integrate*
+         (format t "~&Type 6-1: z^n*(%e^(a*sqrt(z)+b*z+c))^u : w = ~A~%" w))
+       
+       (mul const
+            (power 2 (mul -1 (add (mul 2 n) 1)))
+            (power '$%e
+                   (add (div (mul -1 u a a) (mul 4 b))
+                        (mul u (add (mul a (power var (div 1 2)))
+                                    (mul b var)
+                                    c))))
+            (power b (mul -2 (add n 1)))
+            (power (power '$%e
+                          (add (mul a (power var (div 1 2)))
+                               (mul b var)))
+                   u)
+            (let ((index1 (gensumindex))
+                  (index2 (gensumindex))
+                  ($simpsum t))
+              (dosum
+                (dosum
+                  (mul (power -1 (sub index1 index2))
+                       (power 4 index1)
+                       (power a (add (neg index2) (neg index1) (mul 2 n)))
+                       (power (add a (mul 2 b (power var (div 1 2))))
+                              (add index1 index2))
+                       (power (div (mul -1 u
+                                        (power (add a
+                                                    (mul 2
+                                                         b
+                                                         (power var (div 1 2))))
+                                               2))
+                                   b)
+                              (mul (div -1 2) (add index1 index2 1)))
+                       (take '(%binomial) index1 index2)
+                       (take '(%binomial) n index1)
+                       (add (mul a
+                                 (add a (mul 2 b (power var (div 1 2))))
+                                 (take '(%gamma_incomplete)
+                                       (div (add index1 index2 1) 2)
+                                       (div (mul -1 u 
+                                                 (power (add a 
+                                                             (mul 2 b 
+                                                                  (power var 
+                                                                         (div 1 2))))
+                                                        2))
+                                            (mul 4 b))))
+                            (mul (inv u)
+                                 (power (div (mul -1 u 
+                                                  (power (add a 
+                                                              (mul 2 b 
+                                                                   (power var 
+                                                                          (div 1 2))))
+                                                         2))
+                                             b)
+                                        (div 1 2))
+                                 (mul 2 b)
+                                 (take '(%gamma_incomplete)
+                                       (div (add index1 index2 2) 2)
+                                       (div (mul -1 u 
+                                                 (power (add a 
+                                                             (mul 2 b 
+                                                                  (power var (div 1 2))))
+                                                        2))
+                                            (mul 4 b))))))
+                  index2 0 index1 t)
+                index1 0 n t)))))
+    
     ((and (setq w (m2-exp-type-7 (facsum-exponent expr)))
 	  (eq ($sign (sub (cdras 'r w) (cdras 'r1 w))) '$zero))
      (let ((a (cdras 'a w))
@@ -2353,6 +2722,7 @@
        (setq n (add n 1))
 
        (mul
+         const
 	 (power var n)
 	 (div -1 r)
 	 (power a e)
@@ -2365,7 +2735,33 @@
 	 ($gamma_incomplete
 	   (div n r)
 	   (mul -1 (power var r) (add (mul b ($log a)) (mul c ($log h))))))))
-
+    
+    ((and (setq w (m2-exp-type-7-1 (facsum-exponent expr)))
+          (eq ($sign (sub (cdras 'r w) (cdras 'r1 w))) '$zero))
+     (let ((b (cdras 'b w))
+           (c (cdras 'c w))
+           (e (cdras 'e w))
+           (g (cdras 'g w))
+           (r (cdras 'r w))
+           (v (cdras 'v w))
+           (q (cdras 'q w))
+           (u (cdras 'u w)))
+       
+       (when *debug-integrate*
+         (format t "~&Type 7-1: z^v*(%e^(b*z^r+e))^q*(%e^(c*z^r+g))^u : w = ~A~%" w))
+       
+       (mul const
+            (div -1 r)
+            (power '$%e (mul -1 (power var r) (add (mul b q) (mul c u))))
+            (power (power '$%e (add e (mul b (power var r)))) q)
+            (power (power '$%e (add g (mul c (power var r)))) u)
+            (power var (add v 1))
+            (power (mul -1 (power var r) (add (mul b q) (mul c u)))
+                   (div (mul -1 (add v 1)) r))
+            (take '(%gamma_incomplete)
+                  (div (add v 1) r)
+                  (mul -1 (power var r) (add (mul b q) (mul c u)))))))
+    
     ((setq w (m2-exp-type-8 (facsum-exponent expr)))
      (let ((a (cdras 'a w))
 	   (b (cdras 'b w))
@@ -2381,6 +2777,7 @@
 	 (format t "~&   : w = ~A~%" w))
 
        (mul
+         const
 	 (div 1 2)
 	 (power a e)
 	 (power h g)
@@ -2408,7 +2805,97 @@
 		   (power (add (mul d ($log a)) (mul f ($log h))) (div 1 2)))))
 	     (add (mul b ($log a)) (mul c ($log h)))
 	     (power (add (mul d ($log a)) (mul f ($log h))) (div -3 2)))))))
-
+    
+    ((setq w (m2-exp-type-8-1 (facsum-exponent expr)))
+     (let ((b (cdras 'b w))
+	   (c (cdras 'c w))
+	   (d (cdras 'd w))
+	   (e (cdras 'e w))
+	   (f (cdras 'f w))
+	   (g (cdras 'g w))
+           (u (cdras 'u w))
+           (v (cdras 'v w)))
+       
+       (when *debug-integrate*
+	 (format t "~&Type 8-1: (%e^(b*sqrt(z)+d*z+e))^u*(%e^(c*sqrt(z)+f*z+g))^v")
+	 (format t "~&   : w = ~A~%" w))
+       
+       (mul const
+            (div 1 2)
+            (power (add (mul d u) (mul f v)) (div -3 2))
+            (mul (power '$%e
+                        (mul -1 
+                             (power (add (mul b u)
+                                         (mul 2 d u (power var (div 1 2)))
+                                         (mul v (add c (mul 2 f (power var (div 1 2))))))
+                                    2)
+                             (inv (mul 4 (add (mul d u) (mul f v))))))
+                 (power (power '$%e
+                               (add (mul b (power var (div 1 2)))
+                                    e
+                                    (mul d var)))
+                        u)
+                 (power (power '$%e
+                               (add (mul c (power var (div 1 2)))
+                                    g
+                                    (mul f var)))
+                        v)
+                 (add (mul 2
+                           (power '$%e
+                                  (mul (power (add (mul b u)
+                                                   (mul 2 d u (power var (div 1 2)))
+                                                   (mul v (add c (mul 2 f (power var (div 1 2))))))
+                                              2)
+                                       (inv (mul 4 (add (mul d u) (mul f v))))))
+                           (power (add (mul d u) (mul f v)) (div 1 2)))
+                      (mul -1
+                           (power '$%pi (div 1 2))
+                           (add (mul b u) (mul c v))
+                           (take '(%erfi)
+                                 (div (add (mul b u)
+                                           (mul 2 d u (power var (div 1 2)))
+                                           (mul c v)
+                                           (mul 2 f v (power var (div 1 2))))
+                                      (mul 2
+                                           (power (add (mul d u) (mul f v))
+                                                  (div 1 2)))))))))))
+    
+    ((and (setq w (m2-exp-type-8-2 (facsum-exponent expr)))
+          (eq ($sign (sub (cdras 'r w) (cdras 'r1 w))) '$zero))
+     (let ((b (cdras 'b w))
+           (c (cdras 'c w))
+           (e (cdras 'e w))
+           (g (cdras 'g w))
+           (r (cdras 'r w))
+           (u (cdras 'u w))
+           (v (cdras 'v w)))
+       
+       (when *debug-integrate*
+         (format t "~&Type 8-2: (%e^(b*z^r+e))^u*(%e^(c*z^r+g))^v")
+         (format t "~&   : w = ~A~%" w))
+       
+       (mul const
+            -1
+            (inv r)
+            (power '$%e
+                   (mul -1
+                        (power var r)
+                        (add (mul b u) (mul c v))))
+            (power (power '$%e
+                          (add (power var r) e))
+                   u)
+            (power (power '$%e
+                          (add (power var r) g))
+                   v)
+            var
+            (power (mul -1
+                        (power var r)
+                        (add (mul b u) (mul c v)))
+                   (div -1 r))
+            (take '(%gamma_incomplete)
+                  (div 1 r)
+                  (mul -1 (power var r) (add (mul b u) (mul c v)))))))
+    
     ((and (setq w (m2-exp-type-9 (facsum-exponent expr)))
 	  (maxima-integerp (cdras 'n w))
 	  (eq ($sign (cdras 'n w)) '$pos)
@@ -2429,6 +2916,7 @@
 	 (format t "~&   : w = ~A~%" w))
 
        (mul
+         const
 	 (div -1 2)
 	 (power a e)
 	 (power h g)
@@ -2471,124 +2959,277 @@
 			 (mul (add f (mul 2 c var)) ($log h)))
 		       2)
 		     (mul 4 (add (mul b ($log a)) (mul c ($log h))))))))
-	     index 0 n)))))
+	             index 0 n)))))
+    
+    ((and (setq w (m2-exp-type-9-1 (facsum-exponent expr)))
+          (maxima-integerp (cdras 'n w))
+          (eq ($sign (cdras 'n w)) '$pos)
+          (or (not (eq ($sign (cdras 'b w)) '$zero))
+              (not (eq ($sign (cdras 'c w)) '$zero))))
+     (let ((b (cdras 'b w))
+           (c (cdras 'c w))
+           (d (cdras 'd w))
+           (e (cdras 'e w))
+           (f (cdras 'f w))
+           (g (cdras 'g w))
+           (q (cdras 'q w))
+           (u (cdras 'u w))
+           (n (cdras 'n w)))
+       
+       (when *debug-integrate*
+         (format t "~&Type 9-1: z^n*(%e^(b*z^2+d*z+e))^q*(%e^(c*z^2+f*z+g))^u")
+         (format t "~&   : w = ~A~%" w))
+       
+       (mul const
+            (div -1 2)
+            (power (add (mul b q) (mul c u)) (div -1 2))
+            (power '$%e
+                   (add (div (power (add (mul d q) (mul f u)) 2)
+                             (mul -4 (add (mul b q) (mul c u))))
+                        (mul -1 var
+                             (add (mul d q)
+                                  (mul b q var)
+                                  (mul f u)
+                                  (mul c u var)))))
+            (power (power '$%e
+                          (add e
+                               (mul var (add d (mul b var)))))
+                   q)
+            (power (power '$%e
+                          (add g
+                               (mul var (add f (mul c var)))))
+                   u)
+            (let ((index (gensumindex))
+                  ($simpsum t))
+              (dosum
+               (mul (power 2 (sub index n))
+                    (power (add (mul b q) (mul c u)) (neg (add n (div 1 2))))
+                    (power (add (neg (mul d q)) (neg (mul f u)))
+                           (sub n index))
+                    (power (add (mul d q)
+                                (mul f u)
+                                (mul 2 var (add (mul b q) (mul c u))))
+                           (add index 1))
+                    (power (div (power (add (mul d q)
+                                            (mul f u)
+                                            (mul 2
+                                                 (add (mul b q)
+                                                      (mul c u))
+                                                 var))
+                                       2)
+                                (neg (add (mul b q) (mul c u))))
+                           (mul (div -1 2) (add index 1)))
+                    (take '(%binomial) n index)
+                    (take '(%gamma_incomplete)
+                          (div (add index 1) 2)
+                          (div (power (add (mul d q)
+                                           (mul f u)
+                                           (mul 2
+                                                (add (mul b q)
+                                                     (mul c u))
+                                                var))
+                                      2)
+                               (mul -4 (add (mul b q) (mul c u))))))
+               index 0 n t)))))
 
     ((and (setq w (m2-exp-type-10 (facsum-exponent expr)))
-	  (maxima-integerp (cdras 'n w))
-	  (eq ($sign (cdras 'n w)) '$pos)
-	  (or (not (eq ($sign (cdras 'b w)) '$zero))
-	      (not (eq ($sign (cdras 'c w)) '$zero))))
+          (maxima-integerp (cdras 'n w))
+          (eq ($sign (cdras 'n w)) '$pos)
+          (or (not (eq ($sign (cdras 'b w)) '$zero))
+              (not (eq ($sign (cdras 'c w)) '$zero))))
      (let ((a (cdras 'a w))
-	   (b (cdras 'b w))
-	   (c (cdras 'c w))
-	   (d (cdras 'd w))
-	   (e (cdras 'e w))
-	   (f (cdras 'f w))
-	   (g (cdras 'g w))
-	   (h (cdras 'h w))
-	   (n (cdras 'n w)))
-
+           (b (cdras 'b w))
+           (c (cdras 'c w))
+           (d (cdras 'd w))
+           (e (cdras 'e w))
+           (f (cdras 'f w))
+           (g (cdras 'g w))
+           (h (cdras 'h w))
+           (n (cdras 'n w)))
+       
        (when *debug-integrate*
-	 (format t "~&Type 10: z^n*a^(b*sqrt(z)+d*z+e)*h^(c*sqrt(z)+f*z+g)")
-	 (format t "~&   : w = ~A~%" w))
-
-       (mul
-	 (power 2 (add (mul -2 n) -1))
-	 (power a e)
-	 (power h g)
-	 (power '$%e
-	   (div
-	     (power (add (mul b ($log a)) (mul c ($log h))) 2)
-	     (mul -4 (add (mul d ($log a)) (mul f ($log h))))))
-	 (power (add (mul d ($log a)) (mul f ($log h))) (mul -2 (add n 1)))
-	 (let ((index1 (gensumindex))
-	       (index2 (gensumindex))
-	       ($simpsum t))
-	   (mfuncall '$sum
-	     (mfuncall '$sum
-	       (mul
-		 (power -1 (sub index1 index2))
-		 (power 4 index1)
-		 ($binomial index1 index2)
-		 ($binomial n index1)
-		 (power
-		   (add (mul b ($log a)) (mul c ($log h)))
-		   (sub (mul 2 n) (add index1 index2)))
-		 (power
-		   (add
-		     (mul b ($log a))
-		     (mul c ($log h))
-		     (mul 2
-		       (power var (div 1 2))
-		       (add (mul d ($log a)) (mul f ($log h)))))
-		   (add index1 index2))
-		 (power
-		   (mul -1
-		     (div
-		       (power
-			 (add
-			   (mul b ($log a))
-			   (mul c ($log h))
-			   (mul 2
-			     (power var (div 1 2))
-			     (add (mul d ($log a)) (mul f ($log h)))))
-			 2)
-		       (add (mul d ($log a)) (mul f ($log h)))))
-		   (mul (div -1 2) (add index1 index2 1)))
-		 (add
-		   (mul
-		     ($gamma_incomplete
-		       (mul (div 1 2) (add index1 index2 1))
-		       (mul
-			 (div -1 4)
-			 (div
-			   (power
-			     (add
-			       (mul b ($log a))
-			       (mul c ($log h))
-			       (mul 2
-				 (power var (div 1 2))
-				 (add (mul d ($log a)) (mul f ($log h)))))
-			     2)
-			   (add (mul d ($log a)) (mul f ($log h))))))
-		     (add (mul b ($log a)) (mul c ($log h)))
-		     (add
-		       (mul b ($log a))
-		       (mul c ($log h))
-		       (mul 2
-			 (power var (div 1 2))
-			 (add (mul d ($log a)) (mul f ($log h))))))
-		   (mul 2
-		     ($gamma_incomplete
-		       (mul (div 1 2) (add index1 index2 2))
-		       (mul
-			 (div -1 4)
-			 (div
-			   (power
-			     (add
-			       (mul b ($log a))
-			       (mul c ($log h))
-			       (mul 2
-				 (power var (div 1 2))
-				 (add (mul d ($log a)) (mul f ($log h)))))
-			     2)
-			   (add (mul d ($log a)) (mul f ($log h))))))
-		     (add (mul d ($log a)) (mul f ($log h)))
-		     (power
-		       (mul -1
-			 (div
-			   (power
-			     (add
-			       (mul b ($log a))
-			       (mul c ($log h))
-			       (mul 2
-				 (power var (div 1 2))
-				 (add (mul d ($log a)) (mul f ($log h)))))
-			     2)
-			   (add (mul d ($log a)) (mul f ($log h)))))
-		       (div 1 2)))))
-	       index2 0 index1)
-	     index1 0 n)))))
+         (format t "~&Type 10: z^n*a^(b*sqrt(z)+d*z+e)*h^(c*sqrt(z)+f*z+g)")
+         (format t "~&   : w = ~A~%" w))
+       
+       (mul const
+            (power 2 (add (mul -2 n) -1))
+            (power a e)
+            (power h g)
+            (power '$%e
+                   (div (power (add (mul b ($log a)) (mul c ($log h))) 2)
+                        (mul -4 (add (mul d ($log a)) (mul f ($log h))))))
+            (power (add (mul d ($log a)) (mul f ($log h))) (mul -2 (add n 1)))
+            (let ((index1 (gensumindex))
+                  (index2 (gensumindex))
+                  ($simpsum t))
+              (dosum
+               (dosum
+                (mul (power -1 (sub index1 index2))
+                     (power 4 index1)
+                     ($binomial index1 index2)
+                     ($binomial n index1)
+                     (power (add (mul b ($log a)) (mul c ($log h)))
+                            (sub (mul 2 n) (add index1 index2)))
+                     (power (add (mul b ($log a))
+                                 (mul c ($log h))
+                                 (mul 2
+                                      (power var (div 1 2))
+                                      (add (mul d ($log a)) (mul f ($log h)))))
+                            (add index1 index2))
+                     (power (mul -1
+                                 (div (power (add (mul b ($log a))
+                                                  (mul c ($log h))
+                                                  (mul 2
+                                                       (power var (div 1 2))
+                                                       (add (mul d ($log a)) 
+                                                            (mul f ($log h)))))
+                                             2)
+                                      (add (mul d ($log a)) (mul f ($log h)))))
+                            (mul (div -1 2) (add index1 index2 1)))
+                     (add (mul ($gamma_incomplete (mul (div 1 2)
+                                                       (add index1 index2 1))
+                                                  (mul (div -1 4)
+                                                       (div (power (add (mul b ($log a))
+                                                                        (mul c ($log h))
+                                                                        (mul 2
+                                                                             (power var (div 1 2))
+                                                                             (add (mul d ($log a)) (mul f ($log h)))))
+                                                                   2)
+                                                            (add (mul d ($log a)) (mul f ($log h))))))
+                               (add (mul b ($log a)) (mul c ($log h)))
+                               (add (mul b ($log a))
+                                    (mul c ($log h))
+                                    (mul 2
+                                         (power var (div 1 2))
+                                         (add (mul d ($log a)) (mul f ($log h))))))
+                          (mul 2
+                               ($gamma_incomplete (mul (div 1 2)
+                                                       (add index1 index2 2))
+                                                  (mul (div -1 4)
+                                                       (div (power (add (mul b ($log a))
+                                                                        (mul c ($log h))
+                                                                        (mul 2
+                                                                             (power var (div 1 2))
+                                                                             (add (mul d ($log a))
+                                                                                  (mul f ($log h)))))
+                                                                   2)
+                                                            (add (mul d ($log a))
+                                                                 (mul f ($log h))))))
+                               (add (mul d ($log a)) (mul f ($log h)))
+                               (power (mul -1
+                                           (div (power (add (mul b ($log a))
+                                                            (mul c ($log h))
+                                                            (mul 2
+                                                                 (power var (div 1 2))
+                                                                 (add (mul d ($log a))
+                                                                      (mul f ($log h)))))
+                                                       2)
+                                                (add (mul d ($log a))
+                                                     (mul f ($log h)))))
+                                      (div 1 2)))))
+                index2 0 index1 t)
+               index1 0 n t)))))
+    
+    ((and (setq w (m2-exp-type-10-1 (facsum-exponent expr)))
+          (maxima-integerp (cdras 'n w))
+          (eq ($sign (cdras 'n w)) '$pos)
+          (or (not (eq ($sign (cdras 'b w)) '$zero))
+              (not (eq ($sign (cdras 'c w)) '$zero))))
+     (let* ((b (cdras 'b w))
+            (c (cdras 'c w))
+            (d (cdras 'd w))
+            (e (cdras 'e w))
+            (f (cdras 'f w))
+            (g (cdras 'g w))
+            (q (cdras 'q w))
+            (u (cdras 'u w))
+            (n (cdras 'n w))
+            (bq+cu (add (mul b q) (mul c u)))
+            (dq+fu (add (mul d q) (mul f u))))
+       
+       (when *debug-integrate*
+         (format t "~&Type 10-1: z^n*(%e^(b*sqrt(z)+d*z+e))^q*(%e^(c*sqrt(z)+f*z+g))^u")
+         (format t "~&   : w = ~A~%" w))
+       
+       (mul const
+            (power 2 (mul -1 (add (mul 2 n) 1)))
+            (power '$%e
+                   (add (div (mul -1 (power bq+cu 2)) (mul 4 dq+fu))
+                        (mul -1 d var q)
+                        (mul -1 b (power var (div 1 2)) q)
+                        (mul -1 f var u)
+                        (mul -1 c (power var (div 1 2)) u)))
+            (power (power '$%e 
+                          (add (mul b (power var (div 1 2)))
+                               (mul d var)
+                               e))
+                   q)
+            (power (power '$%e
+                          (add (mul c (power var (div 1 2)))
+                               (mul f var)
+                               g))
+                   u)
+            (power dq+fu (mul -2 (add n 1)))
+            (let ((index1 (gensumindex))
+                  (index2 (gensumindex))
+                  ($simpsum t))
+              (dosum
+               (dosum
+                (mul (power -1 (sub index1 index2))
+                     (power 4 index1)
+                     (power bq+cu
+                            (add (neg index1) (neg index2) (mul 2 n)))
+                     (power (add bq+cu
+                                 (mul 2 (power var (div 1 2)) dq+fu))
+                            (add index1 index2))
+                     (power (div (power (add bq+cu
+                                             (mul 2 
+                                                  (power var (div 1 2))
+                                                  dq+fu))
+                                        2)
+                                 (mul -1 dq+fu))
+                            (mul (div -1 2)
+                                 (add index1 index2 1)))
+                     (take '(%binomial) index1 index2)
+                     (take '(%binomial) n index1)
+                     (add (mul bq+cu
+                               (add bq+cu
+                                    (mul 2
+                                         (power var (div 1 2))
+                                         dq+fu))
+                               (take '(%gamma_incomplete)
+                                     (mul (div 1 2)
+                                          (add index1 index2 1))
+                                     (div (power (add (mul b q)
+                                                      (mul c u)
+                                                      (mul 2
+                                                           (power var (div 1 2))
+                                                           dq+fu))
+                                                 2)
+                                          (mul -4
+                                               dq+fu))))
+                          (mul 2
+                               (power (div (power (add bq+cu
+                                                       (mul 2
+                                                            (power var (div 1 2))
+                                                            dq+fu))
+                                                  2)
+                                           (mul 1 dq+fu))
+                                      (div 1 2))
+                               dq+fu
+                               (take '(%gamma_incomplete)
+                                     (mul (div 1 2)
+                                          (add index1 index2 2))
+                                     (div (power (add bq+cu
+                                                      (mul 2
+                                                           (power var (div 1 2))
+                                                           dq+fu))
+                                                 2)
+                                          (mul -4
+                                               dq+fu))))))
+                index2 0 index1 t)
+               index1 0 n t)))))
+    
     (t nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

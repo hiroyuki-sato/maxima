@@ -1,7 +1,6 @@
 binary-cmucl/maxima.core : maxima-package.lisp
 binary-cmucl/maxima.core : autoconf-variables.lisp
 binary-cmucl/maxima.core : nregex.lisp
-binary-cmucl/maxima.core : intl.lisp
 binary-cmucl/maxima.core : cl-info.lisp
 binary-cmucl/maxima.core : sloop.lisp
 binary-cmucl/maxima.core : lmdcls.lisp
@@ -19,7 +18,6 @@ binary-cmucl/maxima.core : maxmac.lisp
 binary-cmucl/maxima.core : mopers.lisp
 binary-cmucl/maxima.core : mforma.lisp
 binary-cmucl/maxima.core : mrgmac.lisp
-binary-cmucl/maxima.core : procs.lisp
 binary-cmucl/maxima.core : rzmac.lisp
 binary-cmucl/maxima.core : strmac.lisp
 binary-cmucl/maxima.core : displm.lisp
@@ -29,7 +27,6 @@ binary-cmucl/maxima.core : opers.lisp
 binary-cmucl/maxima.core : utils.lisp
 binary-cmucl/maxima.core : sumcon.lisp
 binary-cmucl/maxima.core : sublis.lisp
-binary-cmucl/maxima.core : runtim.lisp
 binary-cmucl/maxima.core : merror.lisp
 binary-cmucl/maxima.core : mformt.lisp
 binary-cmucl/maxima.core : mutils.lisp
@@ -294,5 +291,6 @@ binary-cmucl/maxima.core : gnuplot_def.lisp
 binary-cmucl/maxima.core : xmaxima_def.lisp
 binary-cmucl/maxima.core : autol.lisp
 binary-cmucl/maxima.core : max_ext.lisp
+binary-cmucl/maxima.core : share-subdirs.lisp
 binary-cmucl/maxima.core : init-cl.lisp
 

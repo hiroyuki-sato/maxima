@@ -964,7 +964,7 @@ relational knowledge is contained in the default context GLOBAL.")
     (cond ((eq '$zero sgn) t)
 	  ((memq sgn '($pos $neg $pn)) nil)
 
-	  ((and (memq sgn '($complex $imaginary)) (linearp z '$%i))
+	  ((memq sgn '($complex $imaginary)) ;; previously checked also for (linearp z '$%i))
 	   (setq rsgn ($csign ($realpart z)))
 	   (setq isgn ($csign ($imagpart z)))
 	   (cond ((and (eq '$zero rsgn) (eq '$zero isgn)) t)
@@ -1367,7 +1367,70 @@ relational knowledge is contained in the default context GLOBAL.")
     (when sgn (setq sign sgn minus nil odds nil evens nil)
 	  t)))
 
+;;; Look for symbols with an assumption a > n or a < -n, where n is a number.
+;;; For this case shift the symbol a -> a+n in a summation and multiplication.
+;;; This handles cases like a>1 and b>1 gives sign(a+b-2) -> pos.
+
+(defun sign-shift (expr)
+  (do ((l (cdr expr) (cdr l))
+       (fl nil)
+       (acc nil))
+      ((null l) (addn acc nil))
+    (cond ((symbolp (car l))
+           ;; Get the facts related to the symbol (car l)
+           ;; Reverse the order to test the newest facts first.
+           (setq fl (reverse (cdr (facts1 (car l)))))
+           (push (car l) acc)
+           (dolist (f fl)
+             (cond ((and (eq (caar f) 'mgreaterp)
+                         (mnump (caddr f))
+                         (eq ($sign (caddr f)) '$pos))
+                    ;; The case a > n, where a is a symbol and n a number.
+                    ;; Add the number to the list of terms.
+                    (return (push (caddr f) acc)))
+                   ((and (eq (caar f) 'mgreaterp)
+                         (mnump (cadr f))
+                         (eq ($sign (cadr f)) '$neg))
+                    ;; The case a < -n, where a is a symbol and n a number.
+                    ;; Add the number to the list of terms.
+                    (return (push (cadr f) acc))))))
+          ((mtimesp (car l))
+           (let ((acctimes) (flag))
+             ;; Go through the factors of the multiplication.
+             (dolist (ll (cdar l))
+               (cond ((symbolp ll)
+                      ;; Get the facts related to the symbol (car l)
+                      ;; Reverse the order to test the newest facts first.
+                      (setq fl (reverse (cdr (facts1 ll))))
+                      (dolist (f fl)
+                        (cond ((and (eq (caar f) 'mgreaterp)
+                                    (mnump (caddr f))
+                                    (eq ($sign (caddr f)) '$pos))
+                               ;; The case a > n, where a is a symbol and n a
+                               ;; number. Add the number to the list of terms.
+                               (setq flag t)
+                               (return (push (add ll (caddr f)) acctimes)))
+                              ((and (eq (caar f) 'mgreaterp)
+                                    (mnump (cadr f))
+                                    (eq ($sign (cadr f)) '$neg))
+                               ;; The case a < -n, where a is a symbol and n a
+                               ;; number. Add the number to the list of terms.
+                               (setq flag t)
+                               (return (push (add ll (cadr f)) acctimes)))))
+                        (when (not flag) (push ll acctimes)))
+                     (t
+                      (push ll acctimes))))
+             (if flag
+                 ;; If a shift has been done expand the factors.
+                 (push ($multthru (muln acctimes nil)) acc)
+                 (push (muln acctimes nil) acc))))
+          (t
+           (push (car l) acc)))))
+
 (defun signsum (x)
+  (setq x (sign-shift x))
+  ;; x might be simplified to an atom in sign-shift.
+  (when (atom x) (setq x (cons '(mplus) (list x))))
   (do ((l (cdr x) (cdr l)) (s '$zero))
       ((null l) (setq sign s minus nil odds (list x) evens nil)
        (cond (*complexsign*
@@ -2317,6 +2380,12 @@ relational knowledge is contained in the default context GLOBAL.")
 	  (kind %coth $oddfun)
 	  (kind %csch $oddfun)
 	  (kind %sech $posfun)
+	  (kind %asinh $increasing) (kind %asinh $oddfun)
+	  ;; It would be nice to say %acosh is $posfun, but then
+	  ;; assume(xn<0); abs(acosh(xn)) -> acosh(xn), which is wrong
+	  ;; since acosh(xn) is complex.
+	  (kind %acosh $increasing)
+	  (kind %atanh $increasing) (kind %atanh $oddfun)
 	  (kind $li $complex)
 	  (kind $lambert_w $complex)
 	  (kind %cabs $complex)))

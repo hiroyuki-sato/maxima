@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -6094,7 +6094,7 @@ File: maxima.info,  Node: Funciones y variables para augmented_lagrangian,  Prev
                                            %lambda = [- 1.333337940892543]]
 
 
-File: maxima.info,  Node: bode,  Next: contrib_ode,  Prev: augmented_lagrangian,  Up: Top
+File: maxima.info,  Node: bode,  Next: cobyla,  Prev: augmented_lagrangian,  Up: Top
 
 43 bode
 *******
@@ -6206,9 +6206,176 @@ File: maxima.info,  Node: Funciones y variables para bode,  Prev: bode,  Up: bod
      Véase también `bode_gain'.
 
 
-File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: bode,  Up: Top
+File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
 
-44 contrib_ode
+44 cobyla
+*********
+
+* Menu:
+
+* Introducción a cobyla::
+* Funciones y variables para cobyla::
+* Ejemplos para cobyla::
+
+
+File: maxima.info,  Node: Introducción a cobyla,  Next: Funciones y variables para cobyla,  Prev: cobyla,  Up: cobyla
+
+44.1 Introducción a cobyla
+==========================
+
+`fmin_cobyla' es una traducción a Common Lisp hecha con el programa
+`f2cl' de la rutina Fortran COBYLA, (Powell, [1][2][3]), para
+optimización con restricciones.
+
+   COBYLA minimiza una función objetivo F(X) sujeta a M restricciones
+con desigualdades de la forma g(X) >= 0 sobre X, siendo X un vector de
+variables de N componentes.
+
+   Las restricciones en forma de igualdades se pueden implementar por
+pares de desigualdades de la forma g(X)>=0 y -g(X)>= 0. El interfaz
+Maxima para COBYLA admite restricciones de igualdad, transformándolas
+luego internamente a pares de desigualdades.
+
+   El algoritmo hace uso de aproximaciones lineales, tanto de la función
+objetivo como de las funciones de restricción; tales aproximaciones se
+hacen mediante interpolación lineal de N+1 puntos en el espacio de
+variables. Los puntos de interpolación se consideran vértices de un
+simplejo o símplex. El parámetro RHO controla el tamaño del simplejo y
+se reduce automáticamente de RHOBEG a RHOEND. Para cada RHO la
+subrutina intenta alcanzar un buen vector de variables para el tamaño
+actual, reduciéndose entonces RHO hasta alcanzar el valor de RHOEND.
+Por eso, tanto a RHOBEG como a RHOEND se les deben asignar valores
+razonables, lo que requiere cierto trabajo empírico previo.  La rutina
+trata cada restricción individualmente cuando se calcula un en las
+variables. El nombre de la rutina se deriva de la frase Constrained
+Optimization BY Linear Approximations.
+
+   Referecias:
+
+   [1] Cd'igo Fortran procede de
+`http://plato.asu.edu/sub/nlores.html#general'
+
+   [2] M. J. D. Powell, "A direct search optimization method that
+models the objective and constraint functions by linear interpolation,"
+en Advances in Optimization and Numerical Analysis, eds. S. Gomez and
+J.-P. Hennart (Kluwer Academic: Dordrecht, 1994), p. 51-67.
+
+   [3] M. J. D. Powell, "Direct search algorithms for optimization
+calculations," Acta Numerica 7, 287-336 (1998).  Also available as
+University of Cambridge, Department of Applied Mathematics and
+Theoretical Physics,  Numerical Analysis Group, Report NA1998/04 from
+`http://www.damtp.cam.ac.uk/user/na/reports.html'
+
+
+File: maxima.info,  Node: Funciones y variables para cobyla,  Next: Ejemplos para cobyla,  Prev: Introducción a cobyla,  Up: cobyla
+
+44.2 Funciones y variables para cobyla
+======================================
+
+ -- Función: fmin_cobyla (<F>, <X>, <Y>)
+ -- Función: fmin_cobyla (<F>, <X>, <Y>, optional_args)
+     Devuelve una aproximación del valor mínimo de la expresión <F>
+     respecto de las variables <X>, sujeta a un conjunto opcional de
+     restricciones. <Y> es una lista que contiene una solución semilla
+     inicial en <X>.
+
+     <F> debe ser una expresión ordinaria, no valen nombres de funciones
+     ni expresiones lambda.
+
+     `optional_args' hace referencia a argumentos adicionales, que se
+     especifican de la forma `<symbol> = <value>'. Los argumentos
+     opcionales que se reconocen son:
+
+    `constraints'
+          Lista de restricciones en forma de desigualdades e igualdades
+          que debe satisfacer <X>. Las desigualdades deben ser de la
+          forma `g(<X>) >= h(<X>)' o `g(<X>) <= h(<X>)'.  Las
+          restricciones de igualdad deben ser de la forma `g(<X>) =
+          h(<X>)'.
+
+    `rhobeg'
+          Valor inicial de la variable interna RHO, que controla el
+          tamaño del simplejo. Su valor por defecto es 1.0.
+
+    `rhoend'
+          El valor final deseado para el parámetro RHO. Es
+          aproximadamente la precisión de las variables. Su valor por
+          defecto es 1d-6.
+
+    `iprint'
+          Nivel de información de salida. Su valor por defecto es 0.
+             * 0 - Sin información de salida
+
+             * 1 - Sumario al final de los cálculos
+
+             * 2 - Se van mostrando los nuevos valores de RHO y SIGMA,
+               incluyendo  el vector de variables.
+
+             * 3 - Como en 2, pero la información se muestra cuando se
+               calcula F(X).
+
+    `maxfun'
+          Número máximo de evaluaciones de la función. Su valor por
+          defecto es 1000.
+
+     El resultado devuelto es un vector:
+       1. Los valores de las variables con las que se alcanza el valor
+          mínimo.  Es una lista de elementos de la forma `<var> =
+          <value>' para cada una de las variables listadas en <X>.
+
+       2. El valor mínimo de la función objetivo.
+
+       3. El número de evaluaciones de la función.
+
+       4. Código de retorno con los siguientes significados:
+            1.  0 - No ha habido errores.
+
+            2.  1 - Alcanzado el máximo número permitido de
+               evaluaciones de la función.
+
+            3.  2 - Errores de redondeo han impedido el avance del
+               proceso.
+
+     El código `load(fmin_cobyla)' carga en memoria esta función..
+
+
+ -- Función: bf_fmin_cobyla (<F>, <X>, <Y>)
+ -- Función: bf_fmin_cobyla (<F>, <X>, <Y>, optional_args)
+     Esta función es idéntica a `fmin_cobyla', excepto por el hecho de
+     que utiliza aritmética de precisión arbitraria (bigfloat) y que el
+     valor por defecto de <rhoend> es `10^(fpprec/2)'.
+
+     Véase `fmin_cobyla'.
+
+     El código `load(fmin_cobyla)' carga en memoria esta función..
+
+
+
+File: maxima.info,  Node: Ejemplos para cobyla,  Prev: Funciones y variables para cobyla,  Up: cobyla
+
+44.3 Ejemplos para cobyla
+=========================
+
+Minimí x1*x2 bajo la condición 1-x1^2-x2^2 >= 0.  La solución teórica
+es x1 = 1/sqrt(2), x2 = -1/sqrt(2).
+
+     (%i1) load(fmin_cobyla)$
+
+     (%i2) fmin_cobyla(x1*x2, [x1, x2], [1,1], constraints = [x1^2+x2^2<=1], iprint=1);
+
+        Normal return from subroutine COBYLA
+
+        NFVALS =   66   F =-5.000000E-01    MAXCV = 1.999845E-12
+        X = 7.071058E-01  -7.071077E-01
+     (%o2) [[x1 = 0.70710584934848, x2 = - 0.7071077130248], - 0.49999999999926,
+            [[-1.999955756559757e-12],[]], 66]
+
+   Hay más ejemplos en el directorio `share/cobyla/ex'.
+
+
+File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: cobyla,  Up: Top
+
+45 contrib_ode
 **************
 
 * Menu:
@@ -6222,7 +6389,7 @@ File: maxima.info,  Node: contrib_ode,  Next: descriptive,  Prev: bode,  Up: Top
 
 File: maxima.info,  Node: Introducción a contrib_ode,  Next: Funciones y variables para contrib_ode,  Prev: contrib_ode,  Up: contrib_ode
 
-44.1 Introducción a contrib_ode
+45.1 Introducción a contrib_ode
 ===============================
 
 La función `ode2' de Maxima resuelve ecuaciones diferenciales
@@ -6382,7 +6549,7 @@ orden sin resolver.
 
 File: maxima.info,  Node: Funciones y variables para contrib_ode,  Next: Posibles mejoras a contrib_ode,  Prev: Introducción a contrib_ode,  Up: contrib_ode
 
-44.2 Funciones y variables para contrib_ode
+45.2 Funciones y variables para contrib_ode
 ===========================================
 
  -- Función: contrib_ode (<eqn>, <y>, <x>)
@@ -6519,7 +6686,7 @@ File: maxima.info,  Node: Funciones y variables para contrib_ode,  Next: Posible
 
 File: maxima.info,  Node: Posibles mejoras a contrib_ode,  Next: Pruebas realizadas con contrib_ode,  Prev: Funciones y variables para contrib_ode,  Up: contrib_ode
 
-44.3 Posibles mejoras a contrib_ode
+45.3 Posibles mejoras a contrib_ode
 ===================================
 
 Este paquete aún se encuentra en fase de desarrollo. Aspectos
@@ -6551,7 +6718,7 @@ pendientes:
 
 File: maxima.info,  Node: Pruebas realizadas con contrib_ode,  Next: Referencias para contrib_ode,  Prev: Posibles mejoras a contrib_ode,  Up: contrib_ode
 
-44.4 Pruebas realizadas con contrib_ode
+45.4 Pruebas realizadas con contrib_ode
 =======================================
 
 Los procedimientos fueron probados con cerca de mil ecuaciones tomadas
@@ -6574,7 +6741,7 @@ directorio de pruebas.
 
 File: maxima.info,  Node: Referencias para contrib_ode,  Prev: Pruebas realizadas con contrib_ode,  Up: contrib_ode
 
-44.5 Referencias para contrib_ode
+45.5 Referencias para contrib_ode
 =================================
 
   1. E. Kamke, Differentialgleichungen Losungsmethoden und Losungen,
@@ -6613,7 +6780,7 @@ File: maxima.info,  Node: Referencias para contrib_ode,  Prev: Pruebas realizada
 
 File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
-45 descriptive
+46 descriptive
 **************
 
 * Menu:
@@ -6626,7 +6793,7 @@ File: maxima.info,  Node: descriptive,  Next: diag,  Prev: contrib_ode,  Up: Top
 
 File: maxima.info,  Node: Introducción a descriptive,  Next: Funciones y variables para el tratamiento de datos,  Prev: descriptive,  Up: descriptive
 
-45.1 Introducción a descriptive
+46.1 Introducción a descriptive
 ===============================
 
 El paquete `descriptive' contiene funciones para realizar cl'culos y
@@ -6765,7 +6932,7 @@ momento previo y luego se toma una muestra con el valor categórico `a',
 
 File: maxima.info,  Node: Funciones y variables para el tratamiento de datos,  Next: Funciones y variables de parámetros descriptivos,  Prev: Introducción a descriptive,  Up: descriptive
 
-45.2 Funciones y variables para el tratamiento de datos
+46.2 Funciones y variables para el tratamiento de datos
 =======================================================
 
  -- Función: continuous_freq (<list>)

@@ -11,71 +11,59 @@
 (defun memq (x lis)
   (member x lis :test #'eq))
 
-(eval-when
-    #+gcl (compile load)
-    #+ecl (compile load eval)
-    #-(or gcl ecl) (:compile-toplevel :load-toplevel)
+;;this will make operators which declare the type and result of numerical operations
+(eval-when (:compile-toplevel :load-toplevel)
 
-    ;;this will make operators which
-    ;;declare the type and result of numerical operations
+  (defmacro def-op (name arg-type op &optional return-type)
+    `(setf (macro-function ',name)
+           (make-operation ',arg-type ',op ',return-type)))
 
-    (defmacro def-op (name arg-type op &optional return-type)
-      `(setf (macro-function ',name)
-	     (make-operation ',arg-type ',op ',return-type)))
-
-    ;;make very sure .type .op and .return are not special!!
-    (defun make-operation (.type .op .return)
-      (or .return (setf .return .type))
-      #'(lambda (bod env)
-	  (declare (ignore env))
-	  (loop for v in (cdr bod)
-	     when (eq t .type) collect v into body
-	     else
-	     collect `(the , .type ,v) into body
-	     finally (setq body `(, .op ,@body))
+  ;;make very sure .type .op and .return are not special!!
+  (defun make-operation (.type .op .return)
+    (or .return (setf .return .type))
+    #'(lambda (bod env)
+        (declare (ignore env))
+        (loop for v in (cdr bod)
+           when (eq t .type) collect v into body
+           else
+           collect `(the , .type ,v) into body
+           finally (setq body `(, .op ,@body))
 	     (return
 	       (if (eq t .return)
 		   body
 		   `(the , .return ,body))))))
 
-    #+fix-debug
-    (progn
-      ;; these allow running of code and they print out where the error occurred
+  ;; these allow running of code and they print out where the error occurred
+  #+fix-debug
+  (progn
+    (defvar *dbreak* t)
 
-      (defvar *dbreak* t)
+    (defun chk-type (lis na typ sho)
+      (unless (every #'(lambda (v) (typep v typ)) lis)
+        (format t "~%Bad call ~a types:~a" (cons na sho) (mapcar #'type-of lis))
+        (when *dbreak*
+          (break "hi"))))
 
-      (defun chk-type (lis na typ sho)
-	(unless (every #'(lambda (v) (typep v typ)) lis)
-	  (format t "~%Bad call ~a types:~a" (cons na sho)
-		  (mapcar #'type-of lis))
-	  (when *dbreak*
-	    (break "hi"))))
+    (defmacro def-op (name arg-type old)
+      `(defmacro ,name (&rest l)
+         `(progn
+            (chk-type (list ,@l) ',',name ',',arg-type ',l)
+            (,',old ,@l)))))
 
-      (defmacro def-op (name arg-type old)
-	`(defmacro ,name (&rest l)
-	   `(progn (chk-type (list ,@l) ',',name ',',arg-type ',l)
-		   (,',old ,@l)))))
-
-    (def-op f+ fixnum +)
-    (def-op f* fixnum *)
-    (def-op f- fixnum -)
-    (def-op f1- fixnum 1-)
-    (def-op f1+ fixnum 1+)
-    (def-op quotient t quot)
-    (def-op // t quot))
+  (def-op f+ fixnum +)
+  (def-op f* fixnum *)
+  (def-op f- fixnum -)
+  (def-op f1- fixnum 1-)
+  (def-op f1+ fixnum 1+)
+  (def-op quotient t quot))
 
 ;;this is essentially what the quotient is supposed to do.
 
-(defun quot (a &rest b)
-  (cond ((null b)
-	 (quot 1 a))
-	((null (cdr b))
-	 (setq b (car b))
-	 (cond ((and (integerp a) (integerp b))
-		(values (truncate a b)))
-	       (t
-		(/ a b))))
-	(t (apply #'quot (quot a (car b)) (cdr b)))))
+(declaim (inline quot))
+(defun quot (a b)
+  (if (and (integerp a) (integerp b))
+      (truncate a b)
+      (/ a b)))
 
 (defmacro status (option &optional item)
   (cond ((equal (symbol-name option) (symbol-name '#:feature))
@@ -130,7 +118,7 @@
 
 (defun firstn (n lis)
   (subseq lis 0 n))
-  
+
 (defun fixnump (n)
   (typep n 'fixnum))
 
@@ -326,6 +314,17 @@
   ;; long-floats.
   #+nil
   (setf (ext:long-float-digits) 128)
+
+  ;; We want underflows not to signal errors.
+  (ext:without-package-lock ()
+    (setq sys::*inhibit-floating-point-underflow* t))
+  )
+
+#+abcl
+(progn
+  ;; We want underflows not to signal errors
+  (when (fboundp (find-symbol "FLOAT-UNDERFLOW-MODE" "SYS"))
+    (funcall (find-symbol "FLOAT-UNDERFLOW-MODE" "SYS") nil))
   )
 
 ;; Make the maximum exponent larger for CMUCL.  Without this, cmucl
@@ -341,9 +340,8 @@
 ;;;; get double-float as the flonum type.
 ;;;;
 ;;;; Default double-float flonum.
-(eval-when (compile load eval)
-(setq *read-default-float-format* 'double-float)
-) ; eval-when
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setq *read-default-float-format* 'double-float))
 
 #-(or flonum-long flonum-double-double)
 (progn
@@ -381,9 +379,8 @@
 ;;;; The Maxima 'flonum can be a CL 'long-float on the Scieneer CL or CLISP,
 ;;;; but should be the same a 'double-float on other CL implementations.
 
-(eval-when (compile load eval)
-(setq *read-default-float-format* 'long-float)
-) ; eval-when
+  (eval-when (:compile-toplevel :load-toplevel :execute)
+    (setq *read-default-float-format* 'long-float))
 
 ;; Tell Lisp the float type for a 'flonum.
 (deftype flonum (&optional low high)
@@ -410,9 +407,8 @@
 
 ;;;; The Maxima 'flonum can be a 'kernel:double-double-float on the CMU CL.
 
-(eval-when (compile load eval)
-(setq *read-default-float-format* 'kernel:double-double-float)
-) ; eval-when
+  (eval-when (:compile-toplevel :load-toplevel :execute)
+    (setq *read-default-float-format* 'kernel:double-double-float))
 
 ;; Tell Lisp the float type for a 'flonum.
 (deftype flonum (&optional low high)
@@ -452,7 +448,7 @@
 (defmacro float (x &optional (y 1e0))
   `(cl:float ,x ,y))
 
-;; DO-MERGE-ASYM moved here from nset.lisp so that it is defined before 
+;; DO-MERGE-ASYM moved here from nset.lisp so that it is defined before
 ;; it is referenced in compar.lisp.
 
 (defmacro do-merge-symm (list1 list2 eqfun lessfun bothfun onefun)
@@ -525,4 +521,3 @@
 ; one2 k
 ; one1 l
 ; nil
-

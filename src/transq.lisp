@@ -105,20 +105,6 @@
 
 (defvar forms-to-compile-queue ())
 
-(defun compile-forms-to-compile-queue-now ()
-  (cond (forms-to-compile-queue
-	 (loop for v in forms-to-compile-queue
-	       do (eval v) (compile (second v)))))
-  (setq forms-to-compile-queue nil))
-
-(defmacro compile-forms-to-compile-queue ()
-  (if forms-to-compile-queue
-      (nconc (list 'progn ''compile)
-	     (prog1
-		 forms-to-compile-queue
-	       (setq forms-to-compile-queue nil))
-	     (list '(compile-forms-to-compile-queue)))))
-
 (defun emit-defun (exp)
   (if $tr_semicompile (setq exp `(progn ,exp)))
   (let nil
@@ -172,12 +158,6 @@
        ,@body))))
 
 
-(defun for-eval-then-quote (var)
-  `(list 'quote ,var))
-
-(defun for-eval-then-quote-argl (argl)
-  (mapcar 'for-eval-then-quote argl))
-
 ;; Problem: You can pass a lambda expression around in macsyma
 ;; because macsyma "general-rep" has a CAR which is a list.
 ;; Solution: Just as well anyway.
@@ -188,30 +168,6 @@
 
 ;;; this is the important case for numerical hackery.
 
-(defun declare-snarf (body)
-  (cond ((and (not (atom (car body)))
-	      (eq (caar body) 'declare))
-	 (list (car body)))
-	(t nil)))
-
-
-;;; I will use the special variable given by the NAME as a pointer to
-;;; an environment.
-
-(defopt m-tlambda-i (mode env argl &rest body &aux (name (gentemp "maxima"))
-			  (declarep (declare-snarf body)))
-  (cond ((eq mode '$float)
-	 (emit-defun `(defprop ,name t flonum-compiled))))
-  (emit-defun
-   `(defun ,name ,argl
-     ,@declarep
-     (let ((,env ,name))
-       ,@(cond (declarep (cdr body))
-	       (t body)))))
-  (emit-defun `(defparameter ,name (make-list ,(length env))))
-  `(progn
-    (set-vals-into-list ,env ,name)
-    (quote ,name)))
 
 ;;; This is not optimal code.
 ;;; I.E. IT SUCKS ROCKS.

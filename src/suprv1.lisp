@@ -27,19 +27,14 @@
 
 (declare-top  (special bindlist loclist errset *rset ^q lf tab ff cr
 		       $values $functions $arrays $gradefs $dependencies
-		       $rules $props $ratvars $ratvarswitch
-		       varlist genvar $filename
+		       $rules $props $ratvars
+		       varlist genvar
 		       $gensumnum checkfactors $features featurel
 		       $weightlevels tellratlist $dontfactor
 		       dispflag savefile $%% $error smart-tty
 		       opers *ratweights $ratweights
 		       $stringdisp $lispdisp defaultf command
 		       transp $contexts $setcheck $macros autoload))
-
-(mapc #'(lambda (x) (putprop (car x) (cadr x) 'opalias))
-      '((+ $+) (- $-) (* $*) (// $//) (^ $^) (|.| |$.|) (< $<) (= $=)
-	(> $>) (|(| |$(|) (|)| |$)|) (|[| |$[|) (|]| |$]|) (|,| |$,|) (|:| |$:|)
-	(|!| |$!|) (|#| |$#|) (|'| |$'|) (|;| |$;|)))
 
 (mapc #'(lambda (x) (setf (symbol-value (car x))
 			 (cond ((char< (cadr x) #.(code-char 160.))
@@ -48,11 +43,10 @@
       '((tab #\tab) (lf #\linefeed) (ff #\page) (cr #\return) (sp #\space)))
 
 (defvar thistime 0)
-(defvar refchkl nil)
+(defvar *refchkl* nil)
 (defvar *mdebug* nil)
-(defvar baktrcl nil)
+(defvar *baktrcl* nil)
 (defvar errbrksw nil)
-(defvar mbreak nil)
 (defvar errcatch nil)
 (defvar mcatch nil)
 (defvar brklvl -1)
@@ -69,7 +63,6 @@
 (defvar pos nil)
 (defvar dcount 0)
 (defvar dskfnp nil)
-(defvar dsksavep nil)
 (defvar saveno 0)
 (defvar quitmsg  " ")
 (defvar more-^w nil)
@@ -77,16 +70,11 @@
 
 (defvar state-pdl (ncons 'lisp-toplevel))
 
-(defmvar $filenum 0)
-(defmvar $storenum 1000.)
-(defmvar $dskall t)
-(defmvar $errorfun nil)
 (defmvar $disptime nil)
 (defmvar $strdisp t)
 (defmvar $grind nil)
 (defmvar $backtrace '$backtrace)
 (defmvar $debugmode nil)
-(defmvar $pagepause nil)
 (defmvar $poislim 5)
 (defmvar $loadprint nil)
 (defmvar $nolabels nil)
@@ -98,7 +86,6 @@
                  $dependencies $let_rule_packages $structures))
 
 (defmvar $labels (list '(mlist simp)))
-(defmvar $device '$dsk)
 (defmvar $dispflag t)
 
 (defmvar $% '$% "The last out-line computed, corresponds to lisp *"
@@ -116,10 +103,6 @@
 (defmvar $linenum 1 "the line number of the last expression."
 	 fixnum no-reset)
 
-(defmvar $direc 'jrmu
-  "The default file directory for `save', `store', `fassave', and `stringout'."
-  no-reset)
-
 (defmvar $file_output_append nil
   "Flag to tell file-writing functions whether to append or clobber the output file.")
 
@@ -134,24 +117,17 @@
   "is used by the `makeatomic' scheme which has never been completed"
   no-reset)
 
-(defun sys-gctime ()
-  (status gctime))
-
-;(defmfun meval* (test)
-;  (let (refchkl baktrcl checkfactors)
-;    (prog2 (if $ratvarswitch (setq varlist (cdr $ratvars)))
-;	(meval test)
-;      (clearsign))))
-
-;; This version of meval* makes sure that the facts from the global variable
+;; This version of meval* makes sure, that the facts from the global variable
 ;; locals are cleared with a call to clearsign. The facts are added by asksign
-;; and friends. meval* function is only used for top level evaluations.
+;; and friends. The function meval* is only used for top level evaluations.
 ;; For other cases the function meval can be used.
+
+(defmvar $ratvarswitch t) ; If T, start an evaluation with a fresh list VARLIST.
 
 (defun meval* (expr)
   ;; Make sure that clearsign is called after the evaluation.
   (unwind-protect
-    (let (refchkl baktrcl checkfactors)
+    (let (*refchkl* *baktrcl* checkfactors)
       (if $ratvarswitch (setq varlist (cdr $ratvars)))
       (meval expr))
     ;; Clear the facts from asksign and friends.
@@ -202,18 +178,8 @@
 	   (boundp ($concat '|| x $linenum)))))
 
 (defun gctimep (timep tim)
-  (cond ((and (eq timep '$all) (not (zerop tim))) (princ "Totaltime= ") t)
-	(t (princ "Time= ") nil)))
-
-(defun display* (&aux (ret nil) (tim 0))
-  (setq tim (get-internal-run-time)
-	ret (let ((errset 'errbreak2) (thistime -1))
-	      (errset (displa (list '(mlable) linelable $%)))))
-  (if (null ret) (mtell "~%Error during display~%"))
-  (when $disptime
-    (mtell-open "Displaytime= ~A sec.~%" (/ (float (- (get-internal-run-time) tim))
-					    internal-time-units-per-second)))
-  ret)
+  (cond ((and (eq timep '$all) (not (zerop tim))) (princ (intl:gettext "Total time = ")) t)
+	(t (princ (intl:gettext "Time = ")) nil)))
 
 ; Following GENERIC-AUTOLOAD is copied from orthopoly/orthopoly-init.lisp.
 ; Previous version didn't take Clisp, CMUCL, or SBCL into account.
@@ -243,13 +209,9 @@
   (let ((file (get func 'autoload)))
     (if file (funcall autoload (cons func file)))))
 
-(defmfun load-file (file)
-  ($load (to-macsyma-namestring file)))
-
 (defmspec $loadfile (form)
   (loadfile (namestring (maxima-string (meval (cadr form)))) nil
 	    (not (member $loadprint '(nil $autoload) :test #'equal))))
-
 
 (defun $setup_autoload (filename &rest functions)
   (let ((file ($file_search filename)))
@@ -274,43 +236,23 @@
   (or (mgetl func '(mexpr mmacro))
       (getl func '(translated-mmacro mfexpr* mfexpr*s))))
 
-(defmfun filenamel (file)
-  (cond ((atom file) (setq file (ncons file)))
-	(($listp file) (setq file (cdr file)))
-	(t (merror "Not a proper filename ~M" file)))
-  (filestrip file))
-
-
 (defmfun loadfile (file findp printp &aux (saveno 0))
   (and findp (member $loadprint '(nil $loadfile) :test #'equal) (setq printp nil))
   ;; Should really get the truename of FILE.
-  (if printp (format t "~%~A being loaded.~%" file))
+  (if printp (format t (intl:gettext "loadfile: loading ~A.~%") file))
   (let* ((path (pathname file))
 	 ($load_pathname path)
 	 (tem (errset #-sbcl (load (pathname file)) #+sbcl (with-compilation-unit nil (load (pathname file))))))
-    (or tem (merror "Load failed for ~A" (namestring path)))
+    (or tem (merror (intl:gettext "loadfile: failed to load ~A") (namestring path)))
     (namestring path)))
 
 (defun $directory (path)
   (cons '(mlist) (mapcar 'namestring (directory ($filename_merge path)))))
 
-(defmfun truefname (file)
-  (probe-file file))
-
-(defmfun carfile (file)		       ; FILE is in OldIO list format.
-  (if (= (length file) 3) (cdr file) file))
-
-;; SPECP is T if the file is being batched for TRANSL, or $LOAD,
-;;	or some other special purpose.
-
-(defmacro filepos-check ()
-  `(if specp (setq filepos (filepos file-obj))))
-
 (defmspec $kill (form)
   (clear)	;; get assume db into consistent state
   (mapc #'kill1 (cdr form))
   '$done)
-
 
 ;;; The following *builtin- variables are used to keep/restore builtin
 ;;; symbols and values during kill operations. Their values are set at
@@ -347,6 +289,7 @@
 			 (remove-transl-fun-props x)
 			 (remove-transl-array-fun-props x)))
       (when (not (get x 'sysconst))
+	(remprop x 'lineinfo)
 	(remprop x 'mprops))
       (dolist (u '(bindtest nonarray evfun evflag opers special mode))
 	(remprop x u))
@@ -486,7 +429,7 @@
 		 ;; Silently let it stand and hope it doesn't cause trouble.
 		 ((eq (symbol-value x) x) t)
 		 (t
-		  (mtell "remvalue: ~M doesn't appear to be a known variable; just unbind it anyway.~%" x)
+		  (mtell (intl:gettext "remvalue: ~M doesn't appear to be a known variable; just unbind it anyway.~%") x)
 		  (makunbound x)
 		  t))))))
 
@@ -505,81 +448,6 @@
   (declare (ignore assign-var))
   (setq *mdebug* (setq *rset y)))
 
-(defun retrieve1 (a b &aux (eof '(nil)))
-  (let ((*mread-prompt* b) r )
-    (declare (special *mread-prompt*))
-    (catch 'macsyma-quit
-      (tagbody
-       top
-	 (setq r (dbm-read (or a *terminal-io*) nil eof))
-	 (cond ((and (consp r) (keywordp (car r)))
-		(let ((value (break-call (car r) (cdr r) 'break-command)))
-		  (if (eq value :resume)
-		      (return-from retrieve1 '$exit))
-		  (go top))))))
-    (nth 2 r)))
-
-(defmfun errbreak (y)		       ; The ERRSET interrupt function
-  (cond (*mdebug*
-	 (let ((brklvl (1+ brklvl))
-	       (varlist varlist)
-	       (genvar genvar)
-	       (errbrkl (cons bindlist loclist))
-	       (linelable linelable))
-	   (declare (special $help))
-	   (prog (x ^q #.ttyoff o^r tim $%% $backtrace retval oldst)
-	      (setq  errset 'errbreak1)
-	      (setq tim (get-internal-run-time)
-		    $%% '$%%
-		    ;; just in case baktrcl is cons'd on the stack
-		    $backtrace (cons '(mlist simp) (copy-list baktrcl)))
-	      (setq o^r #.writefilep #.writefilep (and #.writefilep (not dskfnp)))
-	      (cond ((eq y 'noprint))
-		    (t
-		     (mterpri)
-		     (if y (princ 'macsyma-break) (princ 'error-break))
-		     (unless (zerop brklvl) (princ " level ") (princ brklvl))
-		     (princ " Type exit; to quit, help; for more help.")))
-	      (setq $help
-		    "BACKTRACE; will give a successive list of forms
- (you must have already set ?DEBUG:ALL; for BACKTRACE to record)
-     LISP; goes to lisp
-     TOPLEVEL; goes all the way to top level
-     EXIT; exits one level of the error break")
-	      (mterpri)
-	      a    (cond ((null
-			   (catch 'macsyma-break
-			     (let ((state-pdl (cons 'macsyma-break state-pdl)))
-			       (errset
-				(cond ((eq (setq x
-						 (retrieve1 nil
-							    (if y "_ " "(debug) "
-								))) '$exit)
-				       (timeorg tim)
-				       (setq retval 'exit) (go end))
-				      ((eq x '$lisp)
-				       (setq retval 'lisp)
-				       (go end))
-				      ((eq x '$toplevel)
-				       (cond ((catch 'mbreak
-						(let (st oldst rephrase
-							 (mbreak (cons bindlist loclist)))
-						  (incf $linenum)
-						  (continue)))
-					      (go end))
-					     (t (mtell-open "Back to the break~%"))))
-				      (t (let (($dispflag dispflag)) (setq $%% (meval x)))
-					 (if dispflag (displa $%%) (mterpri))))))))
-			  (errlfun1 errbrkl)
-			  (mtell-open "~%(Still in break loop)~%")))
-	      (go a)
-	      end  (unless (eq y 'noprint)
-		     (princ "Exited from the break ")
-		     (unless (zerop brklvl) (princ brklvl))
-		     (mterpri))
-	      (if o^r (setq #.writefilep t))
-	      (return retval))))))
-
 (defun errbreak1 (ign)
   (declare (ignore ign))
   nil)					; Used to nullify ERRSETBREAKs
@@ -588,37 +456,6 @@
   (declare (ignore ign))
   (let ((state-pdl (cons 'lisp-break state-pdl)))
     (break "erst ~S" '(errbrksw))))
-
-(defmspec $tobreak (x)
-  (if mbreak (throw 'mbreak (cdr x))
-      (merror "`tobreak' may be used only within a Maxima break.")))
-
-(defun errlfun (x)
-  (when (null (errset (progn
-			(if loadf
-			    (setq defaultf loadf
-				  loadf nil)))))
-    (setq ^q nil)
-    (mtell-open "~%`errlfun' has been clobbered."))
-  (if $errorfun
-      (if (null (errset (mapply1 $errorfun nil $errorfun nil)))
-	  (mtell "~%Incorrect `errorfun'")))
-  (when (null
-	 (errset (progn
-		   (if (not (eq x 'mquit))
-		       (supunbind))
-		   (clearsign))))
-    (setq ^q nil)
-    (mtell-open "~%`errlfun' has been clobbered."))
-  (when (null x)
-    (princ quitmsg)
-    (setq quitmsg " ")))
-
-(defun supunbind nil
-  (munbind (reverse bindlist))
-  (do ()
-      ((null loclist))
-    (munlocal)))
 
 (defmfun errlfun1 (mpdls)
   (do ((l bindlist (cdr l))
@@ -643,17 +480,12 @@
 
 (defmfun fexprcheck (form)
   (if (or (null (cdr form)) (cddr form))
-      (merror "~:M takes just one argument." (caar form))
+      (merror (intl:gettext "~:M: expected just one argument; found: ~M") (caar form) form)
       (cadr form)))
 
 (defmfun nonsymchk (x fn)
   (unless (symbolp x)
-    (merror "The argument to ~:M must be a symbolic name:~%~M" fn x)))
-
-(defmfun prinl (l)
-  (dolist (x l)
-    (princ x)
-    (write-char #\space)))
+    (merror (intl:gettext "~:M: argument must be a symbol; found: ~M") fn x)))
 
 (defmfun $print (&rest args)
   (if (null args)
@@ -705,8 +537,8 @@
 		((or incharp
 		     (prog2 (when (and timep (setq l (get (car l1) 'time)))
 			      (setq x (gctimep timep (cdr l)))
-			      (mtell-open "~A sec." (car l))
-			      (if x (mtell-open "  GCtime= ~A sec." (cdr l)))
+			      (mtell (intl:gettext "~A seconds") (car l))
+			      (if x (mtell (intl:gettext "  GC time = ~A seconds") (cdr l)))
 			      (mterpri))
 			 (not (or inputp (get (car l1) 'nodisp)))))
 		 (mterpri) (displa (list '(mlable) (car l1) (meval1 (car l1)))))
@@ -726,7 +558,7 @@
 
 (defmspec $alias (form)
   (if (oddp (length (setq form (cdr form))))
-      (merror "`alias' takes an even number of arguments."))
+      (merror (intl:gettext "alias: expected an even number of arguments.")))
   (do ((l nil (cons (alias (pop form) (pop form))
 		    l)))
       ((null form)
@@ -741,7 +573,7 @@
 ;	 (merror "-ed symbols may not be aliased. ~M" x))
 	((get x 'reversealias)
 	 (if (not (eq x y))
-	     (merror "~M already is aliased." x)))
+	     (merror (intl:gettext "alias: ~M already has an alias.") x)))
 	(t (putprop x y'alias)
 	   (putprop y x 'reversealias)
 	   (add2lnc y $aliases)
@@ -761,7 +593,7 @@
 (defmfun stripdollar (x)
   (cond ((not (atom x))
 	 (cond ((and (eq (caar x) 'bigfloat) (not (minusp (cadr x)))) (implode (fpformat x)))
-	       (t (merror "Atomic arg required:~%~M" x))))
+	       (t (merror (intl:gettext "STRIPDOLLAR: argument must be an atom; found: ~M") x))))
 	((numberp x) x)
 	((null x) 'false)
 	((eq x t) 'true)
@@ -789,13 +621,6 @@
   (let ($stringdisp $lispdisp)
     (makestring x)))
 
-(defun makstring* (x)
-  (setq x (string* x))
-  (do ((l x (cdr l)))
-      ( (null l))
-    (rplaca l (ascii (car l))))
-  x)
-
 ;;; Note that this function had originally stripped a prefix of '|M|.  This
 ;;; was intended for operators such as 'MABS, but with the case flipping
 ;;; performed by explodec this test would always fail.  Dependent code has
@@ -804,7 +629,7 @@
 ;;;
 (defmfun $nounify (x)
   (if (not (or (symbolp x) (stringp x)))
-    (merror "nounify: argument must be a symbol or a string."))
+    (merror (intl:gettext "nounify: argument must be a symbol or a string; found: ~M") x))
   (setq x (amperchk x))
   (cond ((get x 'verb))
 	((get x 'noun) x)
@@ -819,7 +644,7 @@
 
 (defmfun $verbify (x)
   (if (not (or (symbolp x) (stringp x)))
-    (merror "verbify: argument must be a symbol or a string."))
+    (merror (intl:gettext "verbify: argument must be a symbol or a string; found: ~M") x))
   (setq x (amperchk x))
   (cond ((get x 'noun))
         ((eq x '||) x)
@@ -922,7 +747,7 @@
 		     (setq maxima-error t)))
 	      (setq truename (truename savefile))
 	      (terpri savefile))
-	    (if maxima-error (let ((errset 'errbreak1)) (merror "Error in `stringout' attempt")))
+	    (if maxima-error (let ((errset 'errbreak1)) (merror (intl:gettext "stringout: unspecified error."))))
 	    (cl:namestring truename)))))
 
 (defmspec $labels (char)
@@ -937,7 +762,7 @@
      (if (> x 0) (setq x (- x)))
      (if (cdr $labels)
 	 (setq l (cddr $labels) outchar (getlabcharn $outchar)))
-     loop (if (null l) (merror "Improper call to %th"))
+     loop (if (null l) (merror (intl:gettext "%th: no such previous output: ~M") x))
      (if (and (char= (getlabcharn (car l)) outchar) (= (setq x (1+ x)) 0))
 					; Only the 1st alphabetic character of $OUTCHAR is tested.
 	 (return (meval (car l))))
@@ -982,7 +807,7 @@
       (errlfun1 mcatch))))
 
 (defmfun $throw (exp)
-  (if (null mcatch) (merror "`throw' not within `catch':~%~M" exp))
+  (if (null mcatch) (merror (intl:gettext "throw: not within 'catch'; expression: ~M") exp))
   (throw 'mcatch exp))
 
 (defmspec $time (l)
@@ -1017,12 +842,7 @@
   #+excl "don't know quit function"
   #+lispworks (lispworks:quit))
 
-(defmfun $logout () (bye))
-
 ;; File-processing stuff.
-
-(defun mfile nil
-  (fullstrip (list $filename (setq $filenum (1+ $filenum)) $device $direc)))
 
 ;; This prevents single blank lines from appearing at the top of video
 ;; terminals.  If at the upper left corner and we want to print a blank
@@ -1035,22 +855,15 @@
 	(terpri))
       (terpri)))
 
-(defmfun $pagepause (x)
-  (pagepause1 nil x))
-
-(defun pagepause1 (xx yy)
-  (declare (ignore xx yy))
-  (merror "`pagepause' does not exist in this system."))
-
 (defmspec $status (form)
   (setq form (cdr form))
   (let* ((keyword (car form))
          (feature (cadr form)))
     (when (not (symbolp keyword))
-      (merror (intl:gettext "status: First argument must be a symbol.")))
+      (merror (intl:gettext "status: first argument must be a symbol; found: ~M") keyword))
     (when (not (or (stringp feature) (symbolp feature)))
       (merror
-        (intl:gettext "status: Second argument must be symbol or a string.")))
+        (intl:gettext "status: second argument must be symbol or a string; found: ~M") feature))
     (case keyword
       ($feature (cond ((null feature) (dollarify *features*))
                       ((member (intern (if (stringp feature)
@@ -1058,7 +871,7 @@
                                            (symbol-name (fullstrip1 feature)))
                                        'keyword)
                                *features* :test #'equal) t)))
-      (t (merror (intl:gettext "status: Unknown argument: ~M~%") keyword)))))
+      (t (merror (intl:gettext "status: unknown argument: ~M") keyword)))))
 
 (defquote $sstatus (keyword item)
   (cond ((equal keyword '$feature)
@@ -1066,7 +879,7 @@
         ((equal keyword '$nofeature)
          (setq *features* (delete ($mkey item) *features*)) t)
         (t
-         (merror (intl:gettext "sstatus: Unknown argument: ~M~%") keyword))))
+         (merror (intl:gettext "sstatus: unknown argument: ~M") keyword))))
 
 (dolist (l '($sin $cos $tan $log $plog $sec $csc $cot $sinh $cosh
 	     $tanh $sech $csch $coth $asin $acos $atan $acot $acsc $asec $asinh
@@ -1086,7 +899,6 @@
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'assign))
       '(($debugmode debugmode1)
-	($pagepause pagepause1)
 	($ttyintfun ttyintfunsetup)
 	($fpprec fpprec1) ($poislim poislim1)
 	($default_let_rule_package let-rule-setter)

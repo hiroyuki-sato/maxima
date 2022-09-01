@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -92,14 +92,18 @@ Paquetes adicionales
 
 * augmented_lagrangian::        Paquete augmented_lagrangian.
 * bode::                        Gráficos de Bode.
+* cobyla::                      Optimización no lineal con restricciones en desigualdades.
 * contrib_ode::                 Procedimientos adicionales para EDOs.
 * descriptive::                 Estadística descriptiva.
 * diag::                        Matrices de Jordan.
 * distrib::                     Distribuciones de probabilidad.
 * draw::                        Un interfaz Maxima-Gnuplot.
+* drawdf::                      Dibuja campos de direcciones con Gnuplot.
 * dynamics::                    Gráficas de sistemas dinámicos y fractales.
 * ezunits::                     Magnitudes dimensionales.
 * f90::                         Traductor de Maxima fortran.
+* finance::                     Cálculo financiero.
+* fractals::                    Fractales.
 * ggf::                         Expresión general de sucesiones.
 * graphs::                      Teoría de grafos.
 * grobner::                     Funciones para trabajar con bases de Groebner.
@@ -116,7 +120,7 @@ Paquetes adicionales
 * numericalio::                 Lectura y escritura de ficheros.
 * opsubst::                     Utilidad para sustituciones.
 * orthopoly::                   Polinomios ortogonales.
-* plotdf::                      Gráficos de campos vectoriales.
+* plotdf::                      Dibuja campos de direcciones con Openmath.
 * romberg::                     Integración numérica por el método de Romberg.
 * simplex::                     Programación lineal.
 * simplification::              Reglas y funciones de simplificación.
@@ -361,6 +365,12 @@ bode
 
 * Funciones y variables para bode::
 
+cobyla
+
+* Introducción a cobyla::
+* Funciones y variables para cobyla::
+* Ejemplos para cobyla::
+
 contrib_ode
 
 * Introducción a contrib_ode::
@@ -393,6 +403,11 @@ draw
 * Funciones y variables para picture::
 * Funciones y variables para worldmap::
 
+drawdf
+
+* Introducción a drawdf::
+* Funciones y variables para drawdf::
+
 dynamics
 
 * Introducción a dynamics::
@@ -407,6 +422,19 @@ ezunits
 f90
 
 * Funciones y variables para f90::
+
+finance
+
+* Introducción a finance::
+* Funciones y Variables para finance::
+
+* fractals
+
+* Introducción a fractals::
+* Definiciones para IFS fractals::
+* Definiciones para fractales complejos::
+* Definiciones para cops de Koch::
+* Definiciones para curvas de Peano::
 
 ggf
 
@@ -691,28 +719,14 @@ finalizar el comando con `$' en vez de `;'.
                                [y = -------------, x = - -----------]]
                                           2                   2
 
-   Bajo un sistema X window, (es decir que poseea interfaz gráfica),
-Maxima puede generar gráficas  de una o más funciones:
+   Maxima puede generar gráficos de una o más funciones:
 
-     (%i1) eq_1: x^2 + 3*x*y + y^2 = 0$
-     (%i2) eq_2: 3*x + y = 1$
-     (%i3) solve ([eq_1, eq_2]);
-                   3 sqrt(5) + 7      sqrt(5) + 3
-     (%o3) [[y = - -------------, x = -----------],
-                         2                 2
+     (%i1) plot2d (sin(x)/x, [x, -20, 20])$
 
-                                    3 sqrt(5) - 7        sqrt(5) - 3
-                               [y = -------------, x = - -----------]]
-                                          2                   2
-     (%i4) kill(labels);
-     (%o0)                         done
-     (%i1) plot2d (sin(x)/x, [x, -20, 20]);
-     (%o1)
-     (%i2) plot2d ([atan(x), erf(x), tanh(x)], [x, -5, 5]);
-     (%o2)
-     (%i3) plot3d (sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2), [x, -12, 12],
-           [y, -12, 12]);
-     (%o3)
+     (%i2) plot2d ([atan(x), erf(x), tanh(x)], [x, -5, 5], [y, -1.5, 2])$
+
+     (%i3) plot3d (sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2),
+              [x, -12, 12], [y, -12, 12])$
 
 
 File: maxima.info,  Node: Detección e informe de fallos,  Next: Ayuda,  Prev: Introducción a Maxima,  Up: Top
@@ -837,8 +851,8 @@ convención de nombres.  Un símblo Lisp el cual comienza con un signo
 pesos `$' corresponde a un símbolo Maxima sin el signo pesos.  Un
 símbolo Maxima el cual comienza con un signo de cierre de interrogación
 `?' corresponde a un símbolo Lisp sin dicho signo.  Por ejemplo, el
-símbolo Maxima `foo' corresponde a el símbolo Lisp `$foo', mientras que
-el símbolo Maxima `?foo' corresponde a el símbolo Lisp `foo', tenga en
+símbolo Maxima `foo' corresponde a el símbolo Lisp `$FOO', mientras que
+el símbolo Maxima `?foo' corresponde a el símbolo Lisp `FOO', tenga en
 cuenta que `?foo' esta escrito sin espacio entre `?' y `foo'; de otra
 manera se estaría invocando a `describe ("foo")'.
 
@@ -868,16 +882,17 @@ Maxima como funciones y variables con nombres oridinarios (sin una
 puntuación especial), deben tener nombres tipo Lisp que comiencen con
 el signo pesos `$'.
 
-   Maxima es case-sensitive, distingue entre letras minúsculas y
-mayúsculas en identificadores, mientras que Lisp no.  Existen algunas
-reglas que gobiernan la traducción de nombres entre Lisp y Maxima.
+   Maxima distingue entre letras minúsculas y mayúsculas en
+identificadores.  Existen algunas reglas que gobiernan la traducción de
+nombres entre Lisp y Maxima.
 
   1. Un identificador Lisp que no se encuentra encerrado en barras
      verticales corresponde a un identificador Maxima en minúscula.
      Que el idenficador Lisp esté en mayúscula, minúscula o una
      combinación de ambas, no afecta en nada.  Por ejemplo, los
      identificadores Lisp `$foo', `$FOO', y `$Foo', todos corresponden
-     al identificador Maxima `foo'.
+     al identificador Maxima `foo'. Esto es así porque `$foo', `$FOO' y
+     `$Foo' se convierten por defecto al símbolo `$FOO' de Lisp.
 
   2. Un identificador Lisp el cual se encuentre todo en mayúscula o
      todo en minúscula y encerrado entre barras verticales corresponde
@@ -930,17 +945,21 @@ File: maxima.info,  Node: Recolector de basura,  Next: Documentación,  Prev: Li
 3.2 Recolector de basura
 ========================
 
-La computación simbólica tiende a crear una buena cantidad de basura, y
-un manejo efectivo de esto puede ser crucial para el término exitoso de
-algunos programas.
+La computación simbólica tiende a crear una buena cantidad de basura
+(resultados temporales que ya no serán utilizados), y un manejo
+efectivo de esto puede ser crucial para el término exitoso de algunos
+programas.
 
-   Bajo GCL (GNU Common Lisp), en los sistemas UNIX donde la llamada al
-sistema mprotect esta disponible (incluyendo SUN OS 4.0 y algunas
-variantes de BSD) un recolector de basura estratificado está
-disponible. Estos límites de colección para memoria virtual, han sido
-escritos recientemente. Mire la documentación de GCL bajo ALLOCATE y
-GBC.  En el nivel lisp haga (setq si::*notify-gbc* t) eso le ayudará a
-determinar cuales áreas necesitan más espacio.
+   Bajo GCL (GNU Common Lisp), en aquellos sistemas UNIX donde la
+llamada al sistema mprotect está disponible (incluyendo SUN OS 4.0 y
+algunas variantes de BSD) se dispone de un recolector de basura
+estratificado. Véase la documentación de GCL para ALLOCATE y GBC. A
+nivel Lisp, ejecutando (setq si::*notify-gbc* t) pemitirá determinar
+qué áreas necesitan más espacio.
+
+   En cuanto al resto de Lisps bajo los que funciona Maxima, se remite
+al lector a la documentación correspondiente para controlar la
+recolección de basura.
 
 
 File: maxima.info,  Node: Documentación,  Next: Funciones y variables para la ayuda,  Prev: Recolector de basura,  Up: Ayuda
@@ -1004,9 +1023,10 @@ File: maxima.info,  Node: Funciones y variables para la ayuda,  Prev: Documentac
      `"gamma"' en su nombre:
 
           (%i1) apropos("gamma");
-          (%o1) [%gamma, %gammagreek, gamma, gammagreek, gammalim, gamma_expand,
-          gamma_imag, gamma_incomplete, gamma_incomplete_generalized,
-          gamma_incomplete_regularized, gamma_radius, Gamma, log_gamma, makegamma,
+          (%o1) [%gamma, gamma, gammalim, gamma_expand, gamma_greek,
+          gamma_incomplete, gamma_incomplete_generalized,
+          gamma_incomplete_regularized, Gamma, log_gamma, makegamma,
+          prefer_gamma_incomplete,
           gamma_incomplete_generalized_regularized]
 
 
@@ -3814,45 +3834,35 @@ macro.
 
           (%i1) unitfrac(r) := block([uf : [], q],
               if not(ratnump(r)) then
-                error("The input to 'unitfrac' must be a rational number"),
+                 error("The input to 'unitfrac' must be a rational number"),
               while r # 0 do (
                   uf : cons(q : 1/ceiling(1/r), uf),
                   r : r - q),
-              reverse(uf));
-          (%o1) unitfrac(r) := block([uf : [], q],
-          if not ratnump(r) then
-            error("The input to 'unitfrac' must be a rational number"),
-                                               1
-          while r # 0 do (uf : cons(q : ----------, uf), r : r - q),
-                                                   1
-                                           ceiling(-)
-                                                   r
-          reverse(uf))
+              reverse(uf))$
+          (%i2) unitfrac (9/10);
                                       1  1  1
           (%o2)                      [-, -, --]
                                       2  3  15
-          (%i3) unitfrac (9/10);
+          (%i3) apply ("+", %);
                                          9
           (%o3)                          --
                                          10
-          (%i4) apply ("+", %);
+          (%i4) unitfrac (-9/10);
                                             1
           (%o4)                       [- 1, --]
                                             10
-          (%i5) unitfrac (-9/10);
+          (%i5) apply ("+", %);
                                           9
           (%o5)                         - --
                                           10
-          (%i6) apply ("+", %);
+          (%i6) unitfrac (36/37);
                                   1  1  1  1    1
           (%o6)                  [-, -, -, --, ----]
                                   2  3  8  69  6808
-          (%i7) unitfrac (36/37);
+          (%i7) apply ("+", %);
                                          36
           (%o7)                          --
                                          37
-          (%i8) apply ("+", %);
-
 
  -- Función: round (<x>)
      Si <x> es un número real, la función devuelve el entero más
@@ -3870,12 +3880,20 @@ macro.
 
 
  -- Función: signum (<x>)
-     Para <x> numérico, devuelve 0 si <x> es 0, en caso contrario
-     devuelve -1 o +1, según que <x> sea menor o mayor que 0,
-     respectivamente.
+     Tanto sea <x> real o complejo, la función `signum' devuelve 0 si
+     <x> es cero. Para un valor no nulo de <x>, la función devuelve
+     `abs(x)/x'.
 
-     Si <x> no es numérico, entonces se devuelve una forma simplificada
-     equivalente.  Por ejemplo, `signum(-x)' devuelve `-signum(x)'.
+     Para valores no numéricos de <x>, Maxima intenta determinar el
+     signo del argumento. Cuando es negativo, cero o positivo, `signum'
+     devuelve -1, 0 o 1, respectivamente. En caso de no poder
+     determinarse, `signum' devuelve una forma simplificada
+     equivalente. Estas simplificaciones incluyen la transformación de
+     `signum(-x)' en `-signum(x)' y la de `signum(x*y)' en `signum(x) *
+     signum(y)'.
+
+     La función `signum' es distributiva respecto de listas, matrices o
+     ecuaciones. Véase `distribute_over'.
 
 
  -- Función: sort (<L>, <P>)
@@ -3993,6 +4011,25 @@ macro.
      simplificación después de invocar a `sublis', o si se tiene que
      hacer un `ev' para hacerlo. Si `sublis_apply_lambda' vale `true',
      significa que se ejecute la aplicación.
+
+
+ -- Variable opcional: subnumsimp
+     Valor por defecto: `false'
+
+     Si vale `true', entonces las funciones `subst' y `psubst' pueden
+     sustituir una variable con subíndice `f[x]' por un número, solo
+     con dar el símbolo `f'.
+
+     Véase también `subst'.
+
+          (%i1) subst(100,g,g[x]+2);
+
+          subst: cannot substitute 100 for operator g in expression g
+                                                                     x
+           -- an error. To debug this try: debugmode(true);
+
+          (%i2) subst(100,g,g[x]+2),subnumsimp:true;
+          (%o2)                          102
 
 
  -- Función: subst (<a>, <b>, <c>)
@@ -4832,6 +4869,11 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
           escalar.  Se aplica comúnmente para declarar una variable
           como un vector simbólico o una matriz simbólica.
 
+    `nonarray'
+          Indica que Maxima no debe considerar <a_i> como un array.
+          Esta declaración evita la evaluación múltiple de variables
+          subindicadas.
+
     `mainvar'
           Hace que Maxima considere a <a_i> como una "variable
           principal", dándole prioridad frente a cualesquiera otras
@@ -5631,6 +5673,24 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
           (%i7) expand (a.(b+c.(d+e)+f));
           (%o7)         a . f + a . c . e + a . c . d + a . b
 
+
+ -- Propiedad: nonarray
+     La instrucción `declare(a, nonarray)' le indica a Maxima que no
+     considere <a> como un array. Esta declaración evita la evaluación
+     múltiple de <a>, si ésta es una variable subindicada.
+
+     Ejemplo:
+
+          (%i1) a:'b$ b:'c$ c:'d$
+
+          (%i4) a[x];
+          (%o4)                          d
+                                          x
+          (%i5) declare(a, nonarray);
+          (%o5)                         done
+          (%i6) a[x];
+          (%o6)                          a
+                                          x
 
  -- Función: nounify (<f>)
      Devuelve la forma nominal de la función cuyo nombre es <f>.  Puede
@@ -6474,11 +6534,11 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Sim
 
      La variable `expand' utilizada con `ev' provocará una expansión.
 
-     El fichero `simplification/facexp.mac' contiene algunas funciones
-     relacionadas con `expand' (en concreto, `facsum', `factorfacsum' y
-     `collectterms', que se cargan automáticamente) y variables
-     (`nextlayerfactor' y `facsum_combine') que permiten al usuario
-     estructurar las expresiones controlando la expansión.  En
+     El fichero `share/simplification/facexp.mac' contiene algunas
+     funciones relacionadas con `expand' (en concreto, `facsum',
+     `factorfacsum' y `collectterms', que se cargan automáticamente) y
+     variables (`nextlayerfactor' y `facsum_combine') que permiten al
+     usuario estructurar las expresiones controlando la expansión.  En
      `simplification/facexp.usg' se pueden encontrar breves
      descripciones de estas funciones.  Se accederá a una demostración
      con la instrucción `demo("facexp")'.

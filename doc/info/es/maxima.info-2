@@ -1,6 +1,6 @@
 This is maxima.info, produced by makeinfo version 4.7 from maxima.texi.
 
-   Ver. 5.22 Este es el Manual de Maxima en versión Texinfo
+   Ver. 5.24 Este es el Manual de Maxima en versión Texinfo
 
    Copyright 1994, 2001 William F. Schelter
 
@@ -940,6 +940,11 @@ los discos en "directorios", que son listas de archivos.  Instrucciones
 que operan con archivos son: `save', `load', `loadfile', `stringout',
 `batch', `demo', `writefile', `closefile' y `appendfile'.
 
+   Cuando el nombre de un fichero se pasa a funciones como `plot2d',
+`save' o `writefile' y en él no se incluye la ruta de acceso, Maxima
+almacena el fichero en la carpeta de trabajo actual. La ubicación de la
+carpeta de trabajo depende del sistema operativo y de la instalación.
+
 
 File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev: Archivos,  Up: Lectura y escritura
 
@@ -1188,9 +1193,18 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
 
  -- Función: batch (<filename>)
-     Lee expresiones de Maxima desde <filename> y las evalúa. La función
-     `batch' busca <filename> en la lista `file_search_maxima'.  Véase
-     `file_search'.
+ -- Function: batch (<filename>, `option')
+     `batch(<filename>)' lee expresiones de Maxima desde <filename> y
+     las evalúa. La función `batch' busca <filename> en la lista
+     `file_search_maxima'. Véase `file_search'.
+
+     `batch(<filename>, `test')' es como `run_testsuite' con la opción
+     `display_all=true'. En este caso `batch' busca <filename> en la
+     lista `file_search_maxima' y no en `file_search_tests' como hace
+     `run_testsuite'. Además, `run_testsuite' ejecuta tests que están
+     en la lista `testsuite_files'. Con `batch' es posible ejecutar
+     cualquier fichero que se encuentre en `file_search_maxima' en modo
+     de prueba.
 
      El contenido de <filename> debe ser una secuencia de expresiones
      de Maxima, cada una de las cuales termina en `;' o `$'.  La
@@ -1205,7 +1219,7 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      solicitados y muestra las expresiones de los resultados.  A las
      expresiones de entrada se les asignan etiquetas, así como a las de
      salida. La función `batch' evalúa todas las expresiones de entrada
-     del archivo a menos que se produzca un error.  Si se le solicita
+     del archivo a menos que se produzca un error. Si se le solicita
      información al usuario (con `asksign' o `askinteger', por ejemplo)
      `batch' se detiene para leer la nueva información para luego
      continuar.
@@ -1214,11 +1228,15 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      El efecto de `control-C' depende del entorno Lisp instalado.
 
      La función `batch' tiene diversas aplicaciones, tales como servir
-     de almacén de líneas de instrucciones, suministrar demostraciones
-     libres de errores o ayudar a organizar el trabajo del usuario en
-     la resolución de problemas complejos.
+     de almacén de código escrito por el usuario, suministrar
+     demostraciones libres de errores o ayudar a organizar el trabajo
+     del usuario en la resolución de problemas complejos.
 
-     La función `batch' evalúa su argumento.
+     La función `batch' evalúa su argumento y devuelve la ruta hacia
+     <filename> en formato cadena cuando es invocada sin segundo
+     argumento o con la opción `demo'. Cuando es llamada con la opción
+     `test', devuelve la lista vacía `[]' o una lista con <filename> y
+     los números de tests que han fallado.
 
      Véanse también  `load', `batchload' y `demo'.
 
@@ -1572,12 +1590,18 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      extensión, sin intentar abrir el archivo para inspeccionar su
      contenido.
 
-     El valor que la función retorna puede ser cualquiera de los
-     siguientes: `object', `lisp' o `maxima'.  Si la extensión comienza
-     por `m' o `d', `file_type' devuelve `maxima'.  Si la extensión
-     comienza por `l', `file_type' devuelve `lisp'.  En cualquier otro
-     caso, `file_type' devuelve `object'.
+     El valor devuelto es un símbolo `object', `lisp' o `maxima'. Si la
+     extensión es "mac", "mc", "demo", "dem", "dm1", "dm2", "dm3" o
+     "dmt", `file_type' devuelve `maxima'. Si la extensión es "l",
+     "lsp" o "lisp", `file_type' devuelve `lisp'. Si la extensión no es
+     ninguna de las anteriores, `file_type' devuelve `object'.
 
+     Véase también `pathname_type'.
+
+     Ejemplos:
+
+          (%i2) map('file_type,["test.lisp", "test.mac", "test.dem", "test.txt"]);
+          (%o2)            [lisp, maxima, maxima, object]
 
  -- Función: grind (<expr>)
  -- Variable opcional: grind
@@ -1906,6 +1930,33 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      La función `load' evalúa sus argumentos.
 
 
+ -- Variable del sistema: load_pathname
+     Valor por defecto: `false'
+
+     Cuando se carga un fichero con las funciones `load', `loadfile' o
+     `batchload', a la variable `load_pathname' se le asigna la ruta al
+     fichero en cuestión.
+
+     Se puede acceder a la variable `load_pathname' mientras se está
+     cargando el fichero.
+
+     Ejemplo:
+
+     Supóngase que se tiene el fichero `test.mac' en la carpeta
+     `"/home/usuario/workspace/mymaxima/temp/"' con las siguientes
+     instrucciones:
+
+          print("The value of load_pathname is: ", load_pathname)$
+          print("End of batchfile")$
+
+     Entonces se obtiene el siguiente resultado:
+
+          (%i1) load("/home/usuario/workspace/mymaxima/temp/test.mac")$
+          The value of load_pathname is:
+                             /home/usuario/workspace/mymaxima/temp/test.mac
+          End of batchfile
+
+
  -- Función: loadfile (<filename>)
      Evalúa las expresiones Lisp del archivo <filename>. La función
      `loadfile' no llama a `file_search', de manera que `filename' debe
@@ -2003,6 +2054,20 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
      información a la listas de información de Maxima (por ejemplo,
      `values', `functions') excepto allí donde sea necesario cuando el
      archivo sea cargado en memoria.
+
+ -- Función: pathname_directory (<pathname>)
+ -- Función: pathname_name (<pathname>)
+ -- Función: pathname_type (<pathname>)
+     Estas funciones devuelven las componentes de <pathname>.
+
+     Ejemplos:
+
+          (%i1) pathname_directory("/home/usuario/maxima/changelog.txt");
+          (%o1)                 /home/usuario/maxima/
+          (%i2) pathname_name("/home/usuario/maxima/changelog.txt");
+          (%o2)                       changelog
+          (%i3) pathname_type("/home/usuario/maxima/changelog.txt");
+          (%o3)                          txt
 
 
  -- Variable opcional: pfeformat
@@ -2127,6 +2192,9 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
 
         * El símbolo negativo se reemplaza por `Negterm'.
 
+        * Las listas se reemplazan por `List(<n>)', siendo <n> el
+          número de elementos de la lista.
+
      Si el entero  <depth> es mayor o igual que la profundidad máxima
      de <expr>, `reveal (<expr>, <depth>)' devuelve <expr> sin
      modificar.
@@ -2170,7 +2238,6 @@ File: maxima.info,  Node: Funciones y variables para lectura y escritura,  Prev:
           (%o7)               -------------------------
                                   b + a     2 b     2 a
                               2 %e      + %e    + %e
-
 
  -- Variable opcional: rmxchar
      Valor por defecto: `]'
@@ -2805,7 +2872,7 @@ File: maxima.info,  Node: Funciones y variables para la aritmética de punto flot
 
 
  -- Variable optativa: float2bf
-     Valor por defecto: `false'
+     Valor por defecto: `true'
 
      Si `float2bf' vale `false' se mostrará un mensaje de aviso cuando
      un número en punto flotante se convierte a decimal de tipo
@@ -3156,7 +3223,7 @@ File: maxima.info,  Node: Funciones y variables para Contextos,  Prev: Contextos
      contexto actual. Los hechos que estén activos en contextos
      diferentes no aparecen en la lista.
 
-     La lamada `facts ()', sin argumentos, muestra el contexto actual.
+     La llamada `facts ()', sin argumentos, muestra el contexto actual.
 
 
  -- Declaración: features
@@ -4496,6 +4563,58 @@ File: maxima.info,  Node: Funciones y variables para polinomios,  Prev: Introduc
      llamada `ratvars ()' vacía la lista.
 
 
+ -- Variable opcional: ratvarswitch
+     Valor por defecto: `true'
+
+     Maxima almacena una lista interna en la variable Lisp `VARLIST'
+     cuyo contenido son las variables principales de las expresiones
+     racionales. Cuando `ratvarswitch' vale `true', su valor por
+     defecto, cada evaluación comienza con la lista `VARLIST' vacía. En
+     caso contrario, las variables principales de las expresiones
+     anteriores se mantienen en la lista `VARLIST'.
+
+     Las variables principales declaradas con la función `ratvars' no se
+     ven afectadas por la opción `ratvarswitch'.
+
+     Ejemplos:
+
+     Cuando `ratvarswitch' vale `true', su valor por defecto, cada
+     evaluación comienza con la lista `VARLIST' vacía.
+
+          (%i1) ratvarswitch:true$
+
+          (%i2) rat(2*x+y^2);
+                                       2
+          (%o2)/R/                    y  + 2 x
+          (%i3) :lisp varlist
+          ($X $Y)
+
+          (%i3) rat(2*a+b^2);
+                                       2
+          (%o3)/R/                    b  + 2 a
+
+          (%i4) :lisp varlist
+          ($A $B)
+
+     Cuando `ratvarswitch' vale `false', las variables principales de
+     las expresiones anteriores se mantienen en lista `VARLIST'.
+
+          (%i4) ratvarswitch:false$
+
+          (%i5) rat(2*x+y^2);
+                                       2
+          (%o5)/R/                    y  + 2 x
+          (%i6) :lisp varlist
+          ($X $Y)
+
+          (%i6) rat(2*a+b^2);
+                                       2
+          (%o6)/R/                    b  + 2 a
+
+          (%i7) :lisp varlist
+          ($A $B $X $Y)
+
+
  -- Función: ratweight (<x_1>, <w_1>, ..., <x_n>, <w_n>)
  -- Función: ratweight ()
      Asigna un peso <w_i> a la variable <x_i>. Un término será
@@ -4772,8 +4891,9 @@ File: maxima.info,  Node: Funciones y variables para Constantes,  Prev: Constant
 
      Ejemplo:
 
-          (%i1) limit (1/x, x, 0);
+          (%i1) limit (x*sin(x), x, inf);
           (%o1)                          und
+
 
  -- Constante: zeroa
      `zeroa' representa un infinitesimal mayor que cero.  `zeroa' puede
@@ -5856,23 +5976,23 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
 
      Simetría especular:
 
-          (%i8) declare(z,complex)$
-          (%i9) conjugate(gamma(z));
-          (%o9)                         gamma(conjugate(z))
+          (%i6) declare(z,complex)$
+          (%i7) conjugate(gamma(z));
+          (%o7)                         gamma(conjugate(z))
 
      Maxima expande `gamma(z+n)' y `gamma(z-n)' si `gamma_expand' vale
      `true':
 
-          (%i10) gamma_expand:true$
-          (%i11) [gamma(z+1),gamma(z-1),gamma(z+2)/gamma(z+1)];
+          (%i8) gamma_expand:true$
+          (%i9) [gamma(z+1),gamma(z-1),gamma(z+2)/gamma(z+1)];
                                                 gamma(z)
-          (%o11)                   [z gamma(z), --------, z + 1]
+          (%o9)                    [z gamma(z), --------, z + 1]
                                                  z - 1
 
      Derivada de `gamma':
 
-          (%i12) diff(gamma(z),z);
-          (%o12)                         psi (z) gamma(z)
+          (%i10) diff(gamma(z),z);
+          (%o10)                         psi (z) gamma(z)
                                             0
 
      Véase también `makegamma'.
@@ -5883,19 +6003,38 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
      Logaritmo natural de la función gamma.
 
  -- Función: gamma_incomplete (<a>,<z>)
-     Función gamma incompleta superior, A&S 6.5.2: gamma_incomplete(a,
-     z) = integrate(exp(-t)*t^(a-1), t, z, inf)
+     Función gamma incompleta superior, A&S 6.5.2:
+
+                                        inf
+                                       /
+                                       [     a - 1   - t
+              gamma_incomplete(a, z) = I    t      %e    dt
+                                       ]
+                                       /
+                                        z
+
 
  -- Función: gamma_incomplete_regularized (<a>,<z>)
      Función gamma incompleta superior regularizada, A&S 6.5.1.
 
-     ` gamma_incomplete_regularized(a,z)=gamma_incomplete(a,z)/gamma(a)'
+          gamma_incomplete_regularized(a, z) =
+                                                  gamma_incomplete(a, z)
+                                                  ----------------------
+                                                         gamma(a)
+
 
  -- Función: gamma_incomplete_generalized (<a>,<z1>,<z1>)
      Función gamma incompleta generalizada.
 
-     `gamma_incomplete_generalized(a,z) = integrate(t^(a-1)*exp(-t), z,
-     z1,z2) '
+          gamma_incomplete_generalized(a, z1, z2) =
+                                                         z2
+                                                        /
+                                                        [    a - 1   - t
+                                                        I   t      %e    dt
+                                                        ]
+                                                        /
+                                                         z1
+
 
  -- Variable optativa: gammalim
      Valor por defecto: 1000000
@@ -6161,17 +6300,28 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
 
      Derivada e integral de `beta_incomplete':
 
-          (%i34) diff(beta_incomplete(a,b,z),z);
-                                               b - 1  a - 1
-          (%o34)                        (1 - z)      z
-          (%i35) integrate(beta_incomplete(a,b,z),z);
-          (%o35)     beta_incomplete(a, b, z) z - beta_incomplete(a + 1, b, z)
-          (%i36) diff(%,z);
-          (%o36)                     beta_incomplete(a, b, z)
+               (%i34) diff(beta_incomplete(a, b, z), z);
+                                             b - 1  a - 1
+               (%o34)                 (1 - z)      z
+               (%i35) integrate(beta_incomplete(a, b, z), z);
+                             b  a
+                      (1 - z)  z
+               (%o35) ----------- + beta_incomplete(a, b, z) z
+                         b + a
+                                                      a beta_incomplete(a, b, z)
+                                                    - --------------------------
+                                                                b + a
+               (%i36) factor(diff(%, z));
+               (%o36)              beta_incomplete(a, b, z)
+
 
  -- Función: beta_incomplete_regularized (<a>, <b>, <z>)
      Función beta incompleta regularizada A&S 6.6.2, definida como
-     `beta_incomplete(a,b,z)/beta(a,b)'.
+
+          beta_incomplete_regularized(a, b, z) =
+                                                beta_incomplete(a, b, z)
+                                                ------------------------
+                                                       beta(a, b)
 
      Al igual que `beta_incomplete', esta definición no es completa.
      Véase Funcións.wolfram.com para una definición completa de
@@ -6236,29 +6386,32 @@ capítulo 6 de Abramowitz y Stegun, Handbook of Mathematical Functions.
      Expansión cuando `beta_expand' vale `true':
 
           (%i13) beta_incomplete_regularized(a+1,b,z);
-                                                                      b  a
-                                                               (1 - z)  z
-          (%o13)        beta_incomplete_regularized(a, b, z) - ------------
-                                                               a beta(a, b)
+                                                               b  a
+                                                        (1 - z)  z
+          (%o13) beta_incomplete_regularized(a, b, z) - ------------
+                                                        a beta(a, b)
           (%i14) beta_incomplete_regularized(a-1,b,z);
-                                                                    b  a - 1
-                                                             (1 - z)  z
-          (%o14)   beta_incomplete_regularized(a, b, z) - ----------------------
-                                                          beta(a, b) (b + a - 1)
+          (%o14) beta_incomplete_regularized(a, b, z)
+                                                               b  a - 1
+                                                        (1 - z)  z
+                                                   - ----------------------
+                                                     beta(a, b) (b + a - 1)
 
      Derivada e integral respecto de <z>:
 
           (%i15) diff(beta_incomplete_regularized(a,b,z),z);
-                                               b - 1  a - 1
-                                        (1 - z)      z
-          (%o15)                        -------------------
-                                            beta(a, b)
-
+                                        b - 1  a - 1
+                                 (1 - z)      z
+          (%o15)                 -------------------
+                                     beta(a, b)
           (%i16) integrate(beta_incomplete_regularized(a,b,z),z);
           (%o16) beta_incomplete_regularized(a, b, z) z
-                                     a beta_incomplete_regularized(a + 1, b, z)
-                                   - ------------------------------------------
-                                                       b + a
+                                                                     b  a
+                                                              (1 - z)  z
+                    a (beta_incomplete_regularized(a, b, z) - ------------)
+                                                              a beta(a, b)
+                  - -------------------------------------------------------
+                                             b + a
 
 
  -- Función: beta_incomplete_generalized (<a>, <b>, <z1>, <z2>)
@@ -6638,29 +6791,28 @@ aparecer en resultados devueltos por `hgfred'.
      `hypergeometric' devuelve un polinomio expandido.
 
      Ejemplos:
-           (%i1)  hypergeometric([],[],x);
-           (%o1) %e^x
+          (%i1)  hypergeometric([],[],x);
+          (%o1) %e^x
 
      Los polinomios se expanden automáticamente cuando
      `expand_hypergeometric' vale `true'.
 
-           (%i2) hypergeometric([-3],[7],x);
-           (%o2) hypergeometric([-3],[7],x)
+          (%i2) hypergeometric([-3],[7],x);
+          (%o2) hypergeometric([-3],[7],x)
 
-           (%i3) hypergeometric([-3],[7],x), expand_hypergeometric : true;
-           (%o3) -x^3/504+3*x^2/56-3*x/7+1
+          (%i3) hypergeometric([-3],[7],x), expand_hypergeometric : true;
+          (%o3) -x^3/504+3*x^2/56-3*x/7+1
 
      Se soporta la evaluación en doble (float) y gran (bigfloat)
      precisión:
 
-           (%i4) hypergeometric([5.1],[7.1 + %i],0.42);
-           (%o4) 1.346250786375334-0.0559061414208204*%i
-
-           (%i5) hypergeometric([5,6],[8], 5.7 - %i);
-           (%o5) 0.00737582400977495-0.00104981368857867*%i
-
-           (%i6) hypergeometric([5,6],[8], 5.7b0 - %i), fpprec : 30;
-           (%o6) 7.37582400977494674506442010824b-3-1.04981368857867315858055393376b-3*%i
+          (%i4) hypergeometric([5.1],[7.1 + %i],0.42);
+          (%o4)       1.346250786375334 - 0.0559061414208204 %i
+          (%i5) hypergeometric([5,6],[8], 5.7 - %i);
+          (%o5)     .007375824009774946 - .001049813688578674 %i
+          (%i6) hypergeometric([5,6],[8], 5.7b0 - %i), fpprec : 30;
+          (%o6) 7.37582400977494674506442010824b-3
+                                    - 1.04981368857867315858055393376b-3 %i
 
 
 File: maxima.info,  Node: Funciones de cilindro parabólico,  Next: Funciones y variables para las funciones especiales,  Prev: Funciones hipergeométricas,  Up: Funciones Especiales
@@ -6732,27 +6884,28 @@ File: maxima.info,  Node: Funciones y variables para las funciones especiales,  
      Ejemplos para integrales exponenciales:
 
           (%i4) assume(s>0,a>0,s-a>0)$
-          (%i5) ratsimp(specint(%e^(a*t)*(log(a)+expintegral_e1(a*t))*%e^(-s*t),t));
-                                              log(s)
-          (%o5)                               ------
-                                              s - a
-
+          (%i5) ratsimp(specint(%e^(a*t)
+                                *(log(a)+expintegral_e1(a*t))*%e^(-s*t),t));
+                                       log(s)
+          (%o5)                        ------
+                                       s - a
           (%i6) logarc:true$
-          (%i7) gamma_expand:true$
-          (%i8) radcan(specint((cos(t)*expintegral_si(t)
-                               -sin(t)*expintegral_ci(t))*%e^(-s*t),t));
-                                              log(s)
-          (%o8)                               ------
-                                               2
-                                              s  + 1
 
-          (%i9) ratsimp(specint((2*t*log(a)+2/a*sin(a*t)
+          (%i7) gamma_expand:true$
+
+          radcan(specint((cos(t)*expintegral_si(t)
+                               -sin(t)*expintegral_ci(t))*%e^(-s*t),t));
+                                       log(s)
+          (%o8)                        ------
+                                        2
+                                       s  + 1
+          ratsimp(specint((2*t*log(a)+2/a*sin(a*t)
                                 -2*t*expintegral_ci(a*t))*%e^(-s*t),t));
-                                                2    2
-                                           log(s  + a )
-          (%o9)                            ------------
-                                                 2
-                                                s
+                                         2    2
+                                    log(s  + a )
+          (%o9)                     ------------
+                                          2
+                                         s
 
      Resultados cuando se utiliza la expansión de `gamma_incomplete' y
      se cambia la representación de `expintegral_e1':

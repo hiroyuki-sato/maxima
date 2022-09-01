@@ -9,6 +9,10 @@
 ;;; faster, but this allows users to write just one routine that can
 ;;; handle all of the data types in a more "natural" Lisp style.
 
+#+cmu
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setf lisp::*enable-package-locked-errors* nil))
+
 (in-package #-gcl #:bigfloat #+gcl "BIGFLOAT")
 
 (defun intofp (re)
@@ -129,7 +133,7 @@
 
 (defmethod maxima::to ((z cl:rational))
   (if (typep z 'ratio)
-      (maxima::div (numerator z) (denominator z))
+      (list '(maxima::rat maxima::simp) (numerator z) (denominator z))
       z))
 
 (defmethod maxima::to ((z cl:complex))
@@ -146,7 +150,10 @@
   (maxima::add (real-value z)
 	       (maxima::mul 'maxima::$%i
 			    (imag-value z))))
-  
+
+(defmethod maxima::to ((z t))
+  z)
+
 ;;; REALP
 
 ;; GCL doesn't have the REAL class!  But since a real is a rational or
@@ -1448,7 +1455,25 @@
 	  (bigfloat 1))
       (if (and (zerop a) (plusp (realpart b)))
 	  (* a b)
-	  (exp (* (bigfloat b) (log a))))))
+	  ;; Handle a few special cases using multiplication.
+	  (cond ((= b 1)
+		 a)
+		((= b -1)
+		 (/ a))
+		((= b 2)
+		 (* a a))
+		((= b -2)
+		 (/ (* a a)))
+		((= b 3) (* a a a))
+		((= b -3) (/ (* a a a)))
+		((= b 4)
+		 (let ((a2 (* a a)))
+		   (* a2 a2)))
+		((= b -4)
+		 (let ((a2 (* a a)))
+		   (/ (* a2 a2))))
+		(t
+		 (exp (* (bigfloat b) (log a))))))))
 
 ;; Handle a^b a little more carefully because the result is known to
 ;; be real when a is real and b is an integer.
@@ -1458,8 +1483,19 @@
 	((and (zerop a) (plusp b))
 	 ;; 0^b, for positive b
 	 (* a b))
+	;; Handle a few special cases using multiplication.
 	((eql b 1) a)
 	((eql b -1) (/ a))
+	((eql b 2) (* a a))
+	((eql b -2) (/ (* a a)))
+	((eql b 3) (* a a a))
+	((eql b -3) (/ (* a a a)))
+	((eql b 4)
+	 (let ((a2 (* a a)))
+	   (* a2 a2)))
+	((eql b -4)
+	 (let ((a2 (* a a)))
+	   (/ (* a2 a2))))
 	((minusp a)
 	 ;; a^b = exp(b*log(|a|) + %i*%pi*b)
 	 ;;     = exp(b*log(|a|))*exp(%i*%pi*b)
@@ -1476,6 +1512,25 @@
 ;;; bigfloats are convert to BIGFLOATS.  Maxima complex numbers are
 ;;; converted to CL complex numbers or to COMPLEX-BIGFLOAT's.
 (defun to (maxima-num &optional imag)
+  (let ((result (ignore-errors (%to maxima-num imag))))
+    (or result
+	(maxima::merror (intl:gettext "BIGFLOAT: unable to convert ~M to a CL or BIGFLOAT number.")
+			(if imag
+			    (maxima::add maxima-num (maxima::mul imag 'maxima::$%i))
+			    maxima-num)))))
+
+;;; MAYBE-TO - External
+;;;
+;;;   Like TO, but if the maxima number can't be converted to a CL
+;;; number or BIGFLOAT, just return the maxima number.
+(defun maybe-to (maxima-num &optional imag)
+  (let ((result (ignore-errors (%to maxima-num imag))))
+    (or result
+	(if imag
+	    (maxima::add maxima-num imag)
+	    maxima-num))))
+	
+(defun %to (maxima-num &optional imag)
   (cond (imag
 	 (complex (to maxima-num) (to imag)))
 	(t
@@ -1506,7 +1561,7 @@
 		    (typep maxima-num 'complex-bigfloat))
 		maxima-num)
 	       (t
-		(maxima::merror (intl:gettext "BIGFLOAT: unable to convert ~M to a CL or BIGFLOAT number.") maxima-num))))))
+		(error "BIGFLOAT: unable to convert to a CL or BIGFLOAT number."))))))
 
 ;;; EPSILON - External
 ;;;

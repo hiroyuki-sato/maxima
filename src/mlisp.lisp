@@ -26,7 +26,7 @@ or if apply is being used are printed.")
 (declare-top (special derivflag derivlist $labels $values $functions $arrays 
                       $rules $gradefs $dependencies $aliases
 		      $myoptions $props genvar $maxposex $maxnegex $expop $expon
-		      $numer state-pdl *mdebug* refchkl baktrcl
+		      $numer state-pdl *mdebug* *refchkl* *baktrcl*
 		      $norepeat $detout $doallmxops $doscmxops opers
 		      *mopl* $powerdisp $dispflag *alphabet* $%% %e-val
 		      outfiles $macros linel $ratfac $ratwtlvl
@@ -39,7 +39,7 @@ or if apply is being used are printed.")
 (defvar bindlist nil)
 (defvar loclist nil)
 (defvar mproplist nil)
-(defvar nounl nil)
+(defvar *nounl* nil)
 (defvar scanmapp nil)
 (defvar maplp nil)
 (defvar mprogp nil)
@@ -55,11 +55,9 @@ or if apply is being used are printed.")
 (defvar factlist nil)
 (defvar fundefsimp nil)
 (defvar mfexprp t)
-(defvar nounsflag nil)
-(defvar opexprp nil)
+(defvar *nounsflag* nil)
 (defvar transp nil)
 (defvar noevalargs nil)
-(defvar fexprerrp nil)
 (defvar rulefcnl nil)
 (defvar featurel
   '($integer $noninteger $even $odd $rational $irrational $real $imaginary $complex
@@ -70,7 +68,6 @@ or if apply is being used are printed.")
 (defmvar $%enumer nil)
 (defmvar $float nil)
 (defmvar $refcheck nil)
-(defmvar $subscrmap nil)
 (defmvar $translate nil)
 (defmvar $transrun t)
 (defmvar $savedef t)
@@ -121,9 +118,9 @@ or if apply is being used are printed.")
 	 (apply fn args))
 
 	;; extension for pdiff; additional extension are welcomed.
-    ;; (AND (CONSP FN) (CONSP (CAR FN)) ...) is an attempt to identify
-    ;; conventional Maxima expressions ((FOO) X Y Z); probably should
-    ;; encapsulate somewhere, maybe it is already ??
+        ;; (AND (CONSP FN) (CONSP (CAR FN)) ...) is an attempt to identify
+        ;; conventional Maxima expressions ((FOO) X Y Z); probably should
+        ;; encapsulate somewhere, maybe it is already ??
 	((and (consp fn) (consp (car fn)) (symbolp (mop fn)) (get (mop fn) 'mapply1-extension)
 	      (apply (get (mop fn) 'mapply1-extension) (list fn args fnname form))))
 	((eq (car fn) 'lambda)
@@ -212,7 +209,7 @@ is EQ to FNNAME if the latter is non-NIL."
 	     (unless (> (array-total-size ar) (+ (fill-pointer ar) 10))
 	       (setq ar (adjust-array ar (+ (array-total-size ar) 50)	:fill-pointer (fill-pointer ar))))
 	     (vector-push bindlist ar)
-	     ;; rather than pushing all on baktrcl it might be good
+	     ;; rather than pushing all on *baktrcl* it might be good
 	     ;; to make a *last-form* global that is set in meval1
 	     ;; and is pushed here.
 	     (vector-push form ar)
@@ -274,158 +271,149 @@ is EQ to FNNAME if the latter is non-NIL."
 (defvar *last-meval1-form* nil)
 
 (defmfun meval1 (form)
-  (declare (special nounl *break-points* *break-step*))
-  (cond ((atom form)
-	 (prog (val)
-	    (cond ((not (symbolp form)) (return form))
-		  ((and $numer (setq val (safe-mget form '$numer))
-			(or (not (eq form '$%e)) $%enumer))
-		   (return (meval1 val)))
-		  ((not (boundp form))
-		   (if (safe-get form 'bindtest)
-		       (merror (intl:gettext "evaluation: unbound variable ~:M") form)
-		       (return form)))
-		  ((mfilep (setq val (symbol-value form)))
-		   (setq val
-			 (eval (dskget (cadr val) (caddr val) 'value nil)))))
-	    (when (and $refcheck (member form (cdr $values) :test #'eq)
-		       (not (member form refchkl :test #'eq)))
-	      (setq refchkl (cons form refchkl))
-	      (mtell (intl:gettext "evaluation: ~:M has a value.~%") form))
-	    (return val)))
-	((or (and (atom (car form))
-		  (setq form (cons (ncons (car form)) (cdr form))))
-	     (atom (caar form)))
-	 (let ((baktrcl baktrcl) transp)
-	   (prog (u aryp)
-	      (declare (special aryp))
-	      (setq *last-meval1-form* form)
-	      (setq aryp (member 'array (cdar form) :test #'eq))
-	      (cond ((and (not opexprp) (not aryp)
-			  (member (caar form) '(mplus mtimes mexpt mnctimes) :test #'eq))
-		     (go c))
-		    ;; dont bother pushing mplus and friends on baktrcl
-		    ;; should maybe even go below aryp.
-		    ((and *mdebug*
-			  (progn
-			    ;; if wanting to step, the *break-points*
-			    ;; variable will be set to a vector (possibly empty).
-			    (when (and *break-points*
-				       (or (null  *break-step*)
-					   (null (funcall *break-step* form))))
-			      (let ((ar *break-points*))
-				(declare (type (vector t) ar))
-				(loop for i below (fill-pointer ar)
-				   when (eq (car (aref ar i)) form)
-				   do (*break-points* form)
-				   (loop-finish))))
-			    nil)))
-		    ((and $subscrmap aryp
-			  (do ((x (margs form) (cdr x)))
-			      ((or (null x) (mxorlistp (car x))) x)))
-		     (setq noevalargs nil) (return (subgen form)))
-		    ((eq (caar form) 'mqapply) (return (mqapply1 form))))
-	      (badfunchk (caar form) (caar form) nil)
-	      a    (setq u (or (safe-getl (caar form) '(noun))
-			       (and nounsflag (eq (getcharn (caar form) 1) #\%)
-				    (not (or (getl-lm-fcn-prop (caar form) '(subr fsubr lsubr))
-					     (safe-getl (caar form) '(mfexpr* mfexpr*s))))
-				    (prog2 ($verbify (caar form))
-					(safe-getl (caar form) '(noun))))
-			       (and (not aryp) $transrun
-				    (setq transp
-					  (or (safe-mgetl (caar form) '(t-mfexpr))
-					      (safe-getl (caar form) '(translated-mmacro)))))
-			       (and (not aryp)
-				    (setq u
-					  (or (safe-mget (caar form) 'trace)
-					      (and $transrun
-						   (safe-get (caar form) 'translated)
-						   (not (safe-mget (caar form) 'local-fun))
-						   (setq transp t) (caar form))))
-				    (getl-lm-fcn-prop u '(expr subr lsubr)))
-			       (cond (aryp (safe-mgetl (caar form) '(hashar array)))
-				     ((safe-mgetl (caar form) '(mexpr mmacro)))
-				     ((safe-mgetl (caar form) '(t-mfexpr)))
-				     (t (or (safe-getl (caar form)
-						       '(mfexpr* mfexpr*s))
-					    (getl-lm-fcn-prop (caar form)
-						      '(subr fsubr expr fexpr macro lsubr)))))))
-	      (cond ((null u) (go b))
-		    ((and (member (car u) '(mexpr mmacro) :test #'eq) (mfilep (cadr u)))
-		     (setq u (list (car u)
-				   (dskget (cadadr u) (car (cddadr u))
-					   (car u) nil))))
-		    ((and (member (car u) '(array hashar) :test #'eq) (mfilep (cadr u)))
-		     (i-$unstore (ncons (caar form)))
-		     (return (meval1 form))))
-	      (return
-		(cond ((eq (car u) 'hashar)
-		       (harrfind (cons (car form) (mevalargs (cdr form)))))
-		      ((member (car u) '(fexpr fsubr) :test #'eq)
-		       (if fexprerrp
-			   ;; UNREACHABLE MESSAGE: FEXPRERRP IS ALWAYS NIL
-			   (merror "Attempt to call ~A ~A from Maxima level.~
-				 ~%Send a bug note."
-				   (car u) (caar form)))
-		       (setq noevalargs nil) (apply (caar form) (cdr form)))
-		      ((or (eq (car u) 'subr)
-			   (eq (car u) 'lsubr))
-		       (apply (caar form) (mevalargs (cdr form))))
-		      ((eq (car u) 'noun)
-		       (cond ((or (member (caar form) nounl :test #'eq) nounsflag)
-			      (setq form (cons (cons (cadr u) (cdar form))
-					       (cdr form)))
-			      (go a))
-			     (aryp (go b))
-			     ((member (caar form) '(%sum %product) :test #'eq)
-			      (setq u (do%sum (cdr form) (caar form))
-				    noevalargs nil)
-			      (cons (ncons (caar form)) u))
-			     (t (meval2 (mevalargs (cdr form)) form))))
-		      ((eq (car u) 'array)
-		       (arrfind (cons (car form) (mevalargs (cdr form)))))
-		      ((eq (car u) 'mexpr)
-		       (mlambda (cadr u) (cdr form) (caar form) noevalargs form))
-		      ((member (car u) '(mmacro translated-mmacro) :test #'eq)
-		       (setq noevalargs nil)
-		       (meval (mmacro-apply (cadr u) form)))
-		      ((eq (car u) 'mfexpr*)
-		       (setq noevalargs nil)  (apply (cadr u) (ncons form)))
-		      ((eq (car u) 'macro)
-		       (setq noevalargs nil)
-		       (setq form (cons(caar form) (cdr form)))
-		       (eval form))
-		      ((eq (car u) 't-mfexpr)
-		       (apply (cadr u) (cdr form)))
-		      (t
-		       (apply (cadr u) (mevalargs (cdr form))))))
-	      b   (if (and (not aryp) (load-function (caar form) t)) (go a))
-	      (badfunchk (caar form) (caar form) nil)
-	      (if (symbolp (caar form))
-		  (setq u (boundp (caar form)))
-		  (return (meval1-extend form)))
-	      c   (cond ((or (null u)
-			     (and (safe-get (caar form) 'operators) (not aryp))
-			     (eq (caar form) (setq u (symbol-value (caar form)))))
-			 (setq form (meval2 (mevalargs (cdr form)) form))
-			 (return (or (and (safe-mget (caar form) 'atvalues)
-					  (at1 form)) form)))
-			((and aryp (safe-get (caar form) 'nonarray))
-			 (return (cons (cons (caar form) aryp)
-				       (mevalargs (cdr form)))))
-			((atom u)
-			 (badfunchk (caar form) u nil)
-			 (setq form (cons (cons (getopr u) aryp) (cdr form)))
-			 (go a))
-			((eq (caar u) 'lambda)
-			 (if aryp
-			     (merror (intl:gettext "lambda: cannot apply lambda as an array function."))
-			     (return (mlambda u (cdr form)
-					      (caar form) noevalargs form))))
-			(t (return (mapply1 u (mevalargs (cdr form))
-					    (caar form) form)))))))
-	(t (mapply1 (caar form) (mevalargs (cdr form)) (caar form) form))))
+  (declare (special *nounl* *break-points* *break-step*))
+  (cond
+    ((atom form)
+     (prog (val)
+       (cond ((not (symbolp form)) (return form))
+             ((and $numer
+                   (setq val (safe-mget form '$numer))
+                   (or (not (eq form '$%e)) $%enumer))
+              (return (meval1 val)))
+             ((not (boundp form))
+              (if (safe-get form 'bindtest)
+                  (merror (intl:gettext "evaluation: unbound variable ~:M")
+                          form)
+                  (return form))))
+       (setq val (symbol-value form))
+       (when (and $refcheck
+                  (member form (cdr $values) :test #'eq)
+                  (not (member form *refchkl* :test #'eq)))
+         (setq *refchkl* (cons form *refchkl*))
+         (mtell (intl:gettext "evaluation: ~:M has a value.~%") form))
+       (return val)))
+    ((or (and (atom (car form))
+              (setq form (cons (ncons (car form)) (cdr form))))
+         (atom (caar form)))
+     (let ((*baktrcl* *baktrcl*) transp)
+       (prog (u aryp)
+         (declare (special aryp))
+         (setq *last-meval1-form* form)
+         (setq aryp (member 'array (cdar form) :test #'eq))
+         (cond ((and (not aryp)
+                     (member (caar form)
+                             '(mplus mtimes mexpt mnctimes) :test #'eq))
+                (go c))
+               ;; dont bother pushing mplus and friends on *baktrcl*
+               ;; should maybe even go below aryp.
+               ((and *mdebug*
+                     (progn
+                       ;; if wanting to step, the *break-points*
+                       ;; variable will be set to a vector (possibly empty).
+                       (when (and *break-points*
+                                  (or (null  *break-step*)
+                                      (null (funcall *break-step* form))))
+                         (let ((ar *break-points*))
+                           (declare (type (vector t) ar))
+                           (loop for i below (fill-pointer ar)
+                                 when (eq (car (aref ar i)) form)
+                                 do (*break-points* form)
+                                 (loop-finish))))
+                       nil)))
+               ((eq (caar form) 'mqapply) (return (mqapply1 form))))
+         (badfunchk (caar form) (caar form) nil)
+       a 
+         (setq u
+               (or (safe-getl (caar form) '(noun))
+                   (and *nounsflag*
+                        (eq (getcharn (caar form) 1) #\%)
+                        (not (or (getl-lm-fcn-prop (caar form) '(subr))
+                                 (safe-getl (caar form) '(mfexpr*))))
+                        (prog2 ($verbify (caar form))
+                               (safe-getl (caar form) '(noun))))
+                   (and (not aryp)
+                        $transrun
+                        (setq transp
+                              (safe-getl (caar form) '(translated-mmacro))))
+                   (and (not aryp)
+                        (setq u
+                              (or (safe-mget (caar form) 'trace)
+                                  (and $transrun
+                                       (safe-get (caar form) 'translated)
+                                       (not (safe-mget (caar form) 'local-fun))
+                                       (setq transp t)
+                                       (caar form))))
+                        (getl-lm-fcn-prop u '(subr)))
+                   (cond (aryp (safe-mgetl (caar form) '(hashar array)))
+                         ((safe-mgetl (caar form) '(mexpr mmacro)))
+                         (t
+                          (or (safe-getl (caar form) '(mfexpr*))
+                              (getl-lm-fcn-prop (caar form) '(subr macro)))))))
+         (when (null u) (go b))
+         (return
+           (cond ((eq (car u) 'hashar)
+                  (harrfind (cons (car form) (mevalargs (cdr form)))))
+                 ((eq (car u) 'subr)
+                  (apply (caar form) (mevalargs (cdr form))))
+                 ((eq (car u) 'noun)
+                  (cond ((or (member (caar form) *nounl* :test #'eq) *nounsflag*)
+                         (setq form (cons (cons (cadr u) (cdar form))
+                                          (cdr form)))
+                         (go a))
+                        (aryp (go b))
+                        ((member (caar form) '(%sum %product) :test #'eq)
+                         (setq u (do%sum (cdr form) (caar form))
+                               noevalargs nil)
+                         (cons (ncons (caar form)) u))
+                        (t (meval2 (mevalargs (cdr form)) form))))
+                 ((eq (car u) 'array)
+                  (arrfind (cons (car form) (mevalargs (cdr form)))))
+                 ((eq (car u) 'mexpr)
+                  (mlambda (cadr u) (cdr form) (caar form) noevalargs form))
+                 ((member (car u) '(mmacro translated-mmacro) :test #'eq)
+                  (setq noevalargs nil)
+                  (meval (mmacro-apply (cadr u) form)))
+                 ((eq (car u) 'mfexpr*)
+                  (setq noevalargs nil)
+                  (apply (cadr u) (ncons form)))
+                 ((eq (car u) 'macro)
+                  (setq noevalargs nil)
+                  (setq form (cons(caar form) (cdr form)))
+                  (eval form))
+                 (t
+                  (apply (cadr u) (mevalargs (cdr form))))))
+       b 
+         (if (and (not aryp) (load-function (caar form) t)) (go a))
+         (badfunchk (caar form) (caar form) nil)
+         (if (symbolp (caar form))
+             (setq u (boundp (caar form)))
+             (return (meval1-extend form)))
+       c 
+         (cond ((or (null u)
+                    (and (safe-get (caar form) 'operators) (not aryp))
+                    (eq (caar form) (setq u (symbol-value (caar form)))))
+                (setq form (meval2 (mevalargs (cdr form)) form))
+                (return (or (and (safe-mget (caar form) 'atvalues)
+                                 (at1 form))
+                            form)))
+               ((and aryp
+                     (safe-get (caar form) 'nonarray))
+                (return (cons (cons (caar form) aryp)
+                              (mevalargs (cdr form)))))
+               ((atom u)
+                (badfunchk (caar form) u nil)
+                (setq form (cons (cons (getopr u) aryp) (cdr form)))
+                (go a))
+               ((eq (caar u) 'lambda)
+                (if aryp
+                    (merror (intl:gettext "lambda: cannot apply lambda as an array function."))
+                    (return (mlambda u (cdr form)
+                                       (caar form) noevalargs form))))
+               (t
+                (return
+                  (mapply1 u (mevalargs (cdr form)) (caar form) form)))))))
+    (t
+     (mapply1 (caar form) (mevalargs (cdr form)) (caar form) form))))
 
 (defun getl-lm-fcn-prop (sym props &aux fn typ)
   (check-arg sym symbolp "symbol")
@@ -709,7 +697,7 @@ wrapper for this."
 ;;     ALSO, THIS MAKES `KILL' KILL DEFSTRUCTS.
 ;; (4) @ EVALUATES LHS AND QUOTES RHS
 ;; (5) $STRUCTURES INFOLIST
-;; (6) LBP = 190, RBP = 191 (HIGHER PRECEDENCE, LEFT-ASSOCIATIVE)
+;; (6) LBP = 200, RBP = 201 (HIGHER PRECEDENCE, LEFT-ASSOCIATIVE)
 ;; (7) A@B => A@B WHEN B IS NOT BOUND TO SOMETHING OTHER THAN ITSELF
 ;; (8) DISALLOW @ APPLIED TO EXPRESSIONS W/ OPERATOR NOT DECLARED BY DEFSTRUCT
 ;; (9) MAKE RECORD AND LIST ASSIGNMENT FUNCTIONS LISP FUNCTIONS (STRIP OFF $ FROM NAME)
@@ -784,14 +772,20 @@ wrapper for this."
     (if (eq e b) L e)))
 
 (defun $@-function (in fn)
-  (if (not (listp in))(list '(%@) in fn) ;noun form
-    (let* ((index  
-	    (if (integerp fn) fn ;;; allow foo@3, also
-	      (position fn (get (caar in) 'defstruct-template))))) ;field->integer
-    (if (null index) (merror (intl:gettext "@: no such field: ~M @ ~M") in fn))
-    (if  (< 0 index (length in))
-	(elt in index) (merror (intl:gettext "@: no such field: ~M @ ~M") in fn))
-   )))
+  (cond
+    ((not (listp in))
+     (list '(%@) in fn)) ;; noun form
+    ((get (caar in) 'defstruct-template)
+     (let*
+       ((index
+         (if (integerp fn) fn ;; allow foo@3
+             (position fn (get (caar in) 'defstruct-template))))) ;; field->integer
+       (if (null index) (merror (intl:gettext "@: no such field: ~M @ ~M") in fn))
+       (if  (< 0 index (length in))
+         (elt in index)
+         (merror (intl:gettext "@: no such field: ~M @ ~M") in fn))))
+    (t
+      (list '($@) in fn))))
 
 (defun dimension-defstruct (form result)
   (let
@@ -859,7 +853,7 @@ wrapper for this."
 
           `(,(car recordname) ,@(mapcar #'meval (cdr recordname))))))))
 
-;; Following property assignments comprise the Lisp code equivalent to infix("@", 190, 191)
+;; Following property assignments comprise the Lisp code equivalent to infix("@", 200, 201)
 
 (defprop $@ %@ verb) 
 (defprop $@ "@" op) 
@@ -870,8 +864,8 @@ wrapper for this."
 (defprop $@ dimension-infix dimension) 
 (defprop $@ (#\@) dissym) 
 (defprop $@ msize-infix grind) 
-(defprop $@ 190 lbp) 
-(defprop $@ 191 rbp) 
+(defprop $@ 200 lbp) 
+(defprop $@ 201 rbp) 
 (defprop $@ parse-infix led) 
 (defprop %@ dimension-infix dimension) 
 (defprop %@ (#\@) dissym) 
@@ -924,10 +918,10 @@ wrapper for this."
 
 (defmspec $ev (l)
   (setq l (cdr l))
-  (let ((evp t) (nounl nounl) ($float $float) ($numer $numer)
+  (let ((evp t) (*nounl* *nounl*) ($float $float) ($numer $numer)
 	($expop $expop) ($expon $expon) ($doallmxops $doallmxops)
 	($doscmxops $doscmxops) (derivflag derivflag) ($detout $detout)
-	(nounsflag nounsflag) (rulefcnl rulefcnl))
+	(*nounsflag* *nounsflag*) (rulefcnl rulefcnl))
     (if (and (cdr l) (null (cddr l)) (eq (car l) '$%e) (eq (cadr l) '$numer))
 	(setq l (append l '($%enumer))))
     (do ((l (cdr l) (cdr l)) (bndvars) (bndvals) (locvars) (exp (car l))
@@ -984,7 +978,7 @@ wrapper for this."
 			    ((eq (car l) '$detout)
 			     (setq $doallmxops nil $doscmxops nil $detout t))
 			    ((eq (car l) '$numer) (setq $numer t $float t))
-			    ((eq (car l) '$nouns) (setq nounsflag t))
+			    ((eq (car l) '$nouns) (setq *nounsflag* t))
 			    ((eq (car l) '$pred) (setq predflg t))
 			    ((eq (car l) '$expand)
 			     (setq $expop $maxposex $expon $maxnegex))
@@ -1002,7 +996,7 @@ wrapper for this."
 				 (setq l (list* nil '$del (cdr l))))
 				((eq fl '$risch)
 				 (setq l (list* nil '$integrate (cdr l)))))
-			  (setq nounl (cons ($nounify fl) nounl)))
+			  (setq *nounl* (cons ($nounify fl) *nounl*)))
 			 ((numberp fl) (improper-arg-err (car l) '$ev))
 			 ((stringp fl) (improper-arg-err (car l) '$ev))
 			 ((eq (caar fl) 'mlist)
@@ -1039,7 +1033,8 @@ wrapper for this."
 	     (if (atom (cadar l))
 		 (setq bndvars (cons (cadar l) bndvars)
 		       bndvals (cons (meval (specrepcheck (caddar l))) bndvals))))
-	    (t (setq l (append (car l) (cdr l))))))))
+        (t (setq l (append (car l) (cdr l))))))))
+
 (defmfun mevalatoms (exp)
   (cond ((atom exp) (meval1 exp))
 	((member 'array (cdar exp) :test #'eq)
@@ -1064,15 +1059,12 @@ wrapper for this."
 	((and (eq (caar exp) '$%th) (eq (ml-typep (simplify (cadr exp))) 'fixnum))
 	 (meval1 exp))
 	((prog2 (autoldchk (caar exp))
-	     (and (or (getl-lm-fcn-prop (caar exp) '(fsubr fexpr))
-		      (getl (caar exp) '(mfexpr* mfexpr*s)))
+	     (and (getl (caar exp) '(mfexpr*))
 		  (not (get (caar exp) 'evok))))
 	 exp)
-	((mgetl (caar exp) '(mfexprp t-mfexpr))
+	((mgetl (caar exp) '(mfexprp))
 	 (cons (car exp)
-	       (do ((a (or (cdr (mget (caar exp) 't-mfexpr))
-			   (cdadr (mget (caar exp) 'mexpr)))
-		       (cdr a))
+	       (do ((a (cdadr (mget (caar exp) 'mexpr)) (cdr a))
 		    (b (cdr exp) (cdr b)) (l))
 		   ((not (and a b)) (nreverse l))
 		 (cond ((mdeflistp a)
@@ -1140,8 +1132,8 @@ wrapper for this."
 		   $parsewindow $ttyintnum) :test #'eq)
 	 (if (not (fixnump y)) (mseterr x y))
          (if (eq x '$linel)
-             (cond ((not (and (> y 0)       ; at least one char per line
-                              (< y 10001))) ; arbitrary chosen big value
+             (cond ((not (and (> y 0)         ; at least one char per line
+                              (< y 1000001))) ; arbitrary chosen big value
                     (mseterr x y))
                    (t
                     (setq linel y))))
@@ -1154,8 +1146,8 @@ wrapper for this."
 	((eq x 'modulus)
 	 (cond ((null y))
 	       ((integerp y)
-		(if (or (not (primep y)) (member y '(1 0 -1)))
-		    (mtell (intl:gettext "warning: assigning ~:M, a non-prime, to 'modulus'") y)))
+	        (if (or (not (primep y)) (member y '(1 0 -1)))
+	            (mtell (intl:gettext "warning: assigning ~:M, a non-prime, to 'modulus'~&") y)))
 	       (t (mseterr x y))))
 	((eq x '$setcheck)
 	 (if (not (or (member y '($all t nil) :test #'eq) ($listp y))) (mseterr x y)))
@@ -1350,7 +1342,7 @@ wrapper for this."
     (apply #'outermap1 (append outargs1 (list (first args)) outargs2))))
 
 (defmfun funcer (fn args)
-  (cond ((and (not opexprp) (member fn '(mplus mtimes mexpt mnctimes) :test #'eq))
+  (cond ((member fn '(mplus mtimes mexpt mnctimes) :test #'eq)
 	 (simplify (cons (ncons fn) args)))
 	((or (member fn '(outermap2 constfun) :test #'eq)
 	     (and $transrun (symbolp fn) (get fn 'translated)
@@ -1526,6 +1518,7 @@ wrapper for this."
 			   (when (member prop '(mexpr mmacro) :test #'eq)
 			     (mremprop var 'mlexprp)
 			     (mremprop var 'mfexprp)
+			     (remprop var 'lineinfo)
 			     (if (mget var 'trace)
 				 (macsyma-untrace var))))
 		   ((and (eq prop '$alphabetic) (stringp var))
@@ -1553,7 +1546,6 @@ wrapper for this."
   (when (and (get fun 'translated) (not (eq $savedef '$all)))
     (fmakunbound fun)
     (zl-remprop fun 'translated-mmacro)
-    (mremprop fun 't-mfexpr)
     (zl-remprop fun 'function-mode)
     (when (not (getl fun '(a-expr a-subr)))
 	(zl-remprop fun 'once-translated)
@@ -1571,7 +1563,7 @@ wrapper for this."
           (not (symbolp var))
           (and
             (not (mgetl var '($nonscalar $scalar $mainvar $numer
-                                        matchdeclare $atomgrad atvalues t-mfexpr)))
+                                        matchdeclare $atomgrad atvalues)))
             (not (getl var '(evfun evflag translated nonarray bindtest
                                    sp2 operators opers special data autoload mode)))))
 	   (not (member var *builtin-$props* :test #'equal)))
@@ -1623,8 +1615,6 @@ wrapper for this."
 				 x)))))))
 
 (defmfun remarrelem (ary form)
-  (if (mfilep (cadr ary))
-      (i-$unstore (ncons (caar form))))
   (let ((y (car (arraydims (cadr ary)))))
     (arrstore form (cond ((eq y 'fixnum) 0) ((eq y 'flonum) 0.0) (t munbound)))))
 
@@ -1845,16 +1835,12 @@ wrapper for this."
 	(t
 	 (let ((fun ($verbify (caar l))) ary sub (lispsub 0) hashl mqapplyp)
 	   (cond ((setq ary (mget fun 'array))
-		  (when (mfilep ary)
-		    (i-$unstore (ncons fun)) (setq ary (mget fun 'array)))
 		  (dimcheck fun (setq sub (mapcar #'meval (cdr l))) t)
 		  (if (and (member (setq fun (car (arraydims ary))) '(fixnum flonum) :test #'eq)
 			   (not (eq (ml-typep r) fun)))
 		      (merror (intl:gettext "assignment: attempt to assign ~M to an array of type ~M.") r fun))
 		  (setf (apply #'aref (symbol-array ary) sub)  r))
 		 ((setq ary (mget fun 'hashar))
-		  (when (mfilep ary)
-		    (i-$unstore (ncons fun)) (setq ary (mget fun 'hashar)))
 		  (if (not (= (aref (symbol-array ary) 2) (length (cdr l))))
 		      (merror (intl:gettext "assignment: array ~:M has dimension ~:M, but it was called by ~:M")
 			      fun (aref (symbol-array ary) 2) l))
@@ -2035,11 +2021,8 @@ wrapper for this."
 	     (mputprop fnname (mdefine1 args body) 'mexpr)
 	     (if $translate (translate-function fnname)))
 	    ((prog2 (add2lnc fnname $arrays)
-		 (setq ary (mgetl fnname '(hashar array)))
+	       (setq ary (mgetl fnname '(hashar array)))
 	       (remove-transl-array-fun-props fnname))
-	     (when (mfilep (cadr ary))
-	       (i-$unstore (ncons fnname))
-	       (setq ary (mgetl fnname '(hashar array))))
 	     (if (not (= (if (eq (car ary) 'hashar)
 			     (aref (symbol-array (cadr ary)) 2)
 			     (length (cdr (arraydims (cadr ary)))))
@@ -2062,8 +2045,7 @@ wrapper for this."
 (defun mredef-check (fnname)
   (when (and (not (mget fnname 'mexpr))
 	     (or (and (or (get fnname 'autoload)
-			  (getl-lm-fcn-prop fnname '(subr fsubr lsubr))
-			  (get fnname 'mfexpr*s))
+			  (getl-lm-fcn-prop fnname '(subr)))
 		      (not (get fnname 'translated)))
 		 (mopp fnname)))
     (format t (intl:gettext "define: warning: redefining the built-in ~:[function~;operator~] ~a~%")
@@ -2084,8 +2066,8 @@ wrapper for this."
 	   (mputprop fun (mdefine1 subs (mdefine1 args body)) 'aexpr))))
 
 (defmfun mspecfunp (fun)
-  (and (or (getl-lm-fcn-prop fun '(fsubr fexpr macro))
-	   (getl fun '(mfexpr* mfexpr*s))
+  (and (or (getl-lm-fcn-prop fun '(macro))
+	   (getl fun '(mfexpr*))
 	   (and $transrun (get fun 'translated-mmacro))
 	   (mget fun 'mmacro))
        (not (get fun 'evok))))
@@ -2173,10 +2155,10 @@ wrapper for this."
 				   (mgetl name '(aexpr)))))
 	   (arryp (setq fun (meval1 (setq name (cons (list ($verbify (caar x)) 'array) (cdr x)))))
 		  (if (or (atom fun) (not (eq (caar fun) 'lambda))) (setq fun nil))))
-     (cond ((not fun) (cond (stringp (return x)) ((member 'edit state-pdl :test #'eq) (terpri)))
-	    (merror (intl:gettext "fundef: no such function: ~:M") x))
-	   ((and (not arryp) (mfilep (cadr fun)))
-	    (setq fun (list (car fun) (dskget (cadadr fun) (car (cddadr fun)) (car fun) nil)))))
+     (cond ((not fun)
+            (cond (stringp (return x)) 
+                  ((member 'edit state-pdl :test #'eq) (terpri)))
+            (merror (intl:gettext "fundef: no such function: ~:M") x)))
      (return
        (cons (if (eq (car fun) 'mmacro) '(mdefmacro simp) '(mdefine simp))
 	     (cond (arryp (cons (cons '(mqapply) (cons name (cdadr fun))) (cddr fun)))
@@ -2220,8 +2202,7 @@ wrapper for this."
 (defun meval-atoms (form)
   (cond ((atom form) (meval1 form))
 	((eq (caar form) 'mquote) (cadr form))
-	((and (or (getl-lm-fcn-prop (caar form) '(fsubr fexpr))
-		  (getl (caar form) '(mfexpr* mfexpr*s)))
+	((and (getl (caar form) '(mfexpr*))
 	      (not (member (caar form) '(mcond mand mor mnot mprogn mdo mdoin) :test #'eq)))
 	 form)
 	(t (recur-apply #'meval-atoms form))))
@@ -2334,13 +2315,6 @@ wrapper for this."
 (defmfun rat (x y)
   `((rat simp) ,x ,y))
 
-; The definiton of $exp and $sqrt have changed and moved to simp.lisp
-;(defmfun $exp (x)
-;  `((mexpt) $%e ,x))
-
-;(defmfun $sqrt (x)
-;  `((%sqrt) ,x))
-
 (defmfun add2lnc (item llist)
   (unless (memalike item (if ($listp llist) (cdr llist) llist))
     (unless (atom item)
@@ -2354,9 +2328,6 @@ wrapper for this."
 
 (defmfun $allbut (&rest args)
   (cons '($allbut) args))
-
-(defmfun mfilep (x)
-  (and (not (atom x)) (not (atom (car x))) (eq (caar x) 'mfile)))
 
 (defquote dsksetq (&rest l)
   (let ((dsksetp t))
@@ -2393,10 +2364,6 @@ wrapper for this."
   (|''MAKE| $acoth %acoth) (|''MAKE| $asech %asech) (|''MAKE| $acsch %acsch)
   (|''MAKE| $round %round) (|''MAKE| $truncate %truncate) (|''MAKE| $plog %plog)
   (|''MAKE| $signum %signum) (|''MAKE| $gamma %gamma))
-
-(defmfun $binomial (x y)
-  (let (($numer t) ($float t))
-    (simplify (list '(%binomial) x y))))
 
 ;; evfun properties
 (mapc #'(lambda (x) (putprop x t 'evfun))

@@ -12,7 +12,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.22.1 Manual
+Maxima 5.24.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -81,22 +81,28 @@ Advanced facilities and programming
                                 simplification rules.
 * Lists::                       Manipulation of lists.
 * Sets::                        Manipulation of sets.
+* Structures::                  Aggregated data.
 * Function Definition::         Defining functions.
 * Program Flow::                Defining Maxima programs.
 * Debugging::                   Debugging Maxima programs.
 
 Additional packages
 
+* asympa::                      Asymptotic analysis package
 * augmented_lagrangian::        augmented_lagrangian package.
 * bode::                        Bode gain and phase plots.
+* cobyla::                      Nonlinear optimization with inequality constraints.
 * contrib_ode::                 Additional routines for ODEs
 * descriptive::                 Descriptive statistics.
 * diag::                        Jordan matrices.
 * distrib::                     Probability distributions.
 * draw::                        A Maxima-Gnuplot interface.
+* drawdf::                      Direction fields with Gnuplot.
 * dynamics::                    Graphics for dynamical systems and fractals.
 * ezunits::                     Dimensional quantities.
 * f90::                         Maxima to fortran translator.
+* finance::                     Financial package.
+* fractals::                    Fractals.
 * ggf::                         Generating function of sequences.
 * graphs::                      Graph theory package.
 * grobner::                     Functions for working with Groebner bases.
@@ -340,6 +346,11 @@ Sets
 * Introduction to Sets::
 * Functions and Variables for Sets::
 
+Structures
+
+* Introduction to Structures::
+* Functions and Variables for Structures::
+
 Function Definition
 
 * Introduction to Function Definition::
@@ -356,6 +367,10 @@ Debugging
 
 * Functions and Variables for Debugging::
 
+asympa
+
+* Introduction to asympa::
+* Functions and variables for asympa::
 
 augmented_lagrangian
 
@@ -364,6 +379,12 @@ augmented_lagrangian
 bode
 
 * Functions and Variables for bode::
+
+cobyla
+
+* Introduction to cobyla::
+* Functions and Variables for cobyla::
+* Examples for cobyla::
 
 contrib_ode
 
@@ -397,6 +418,11 @@ draw
 * Functions and Variables for pictures::
 * Functions and Variables for worldmap::
 
+drawdf
+
+* Introduction to drawdf::
+* Functions and Variables for drawdf::
+
 dynamics
 
 * Introduction to dynamics::
@@ -411,6 +437,19 @@ ezunits
 f90
 
 * Functions and Variables for f90::
+
+finance
+
+* Introduction to finance::
+* Functions and Variables for finance::
+
+fractals
+
+* Introduction to fractals::
+* Definitions for IFS fractals::
+* Definitions for complex fractals::
+* Definitions for Koch snowflakes::
+* Definitions for Peano maps::
 
 ggf
 
@@ -705,25 +744,12 @@ want a result printed, you can finish your command with `$' instead of
 
    Maxima can generate plots of one or more functions:
 
-     (%i1) eq_1: x^2 + 3*x*y + y^2 = 0$
-     (%i2) eq_2: 3*x + y = 1$
-     (%i3) solve ([eq_1, eq_2]);
-                   3 sqrt(5) + 7      sqrt(5) + 3
-     (%o3) [[y = - -------------, x = -----------],
-                         2                 2
+     (%i1) plot2d (sin(x)/x, [x, -20, 20])$
 
-                                    3 sqrt(5) - 7        sqrt(5) - 3
-                               [y = -------------, x = - -----------]]
-                                          2                   2
-     (%i4) kill(labels);
-     (%o0)                         done
-     (%i1) plot2d (sin(x)/x, [x, -20, 20]);
-     (%o1)
-     (%i2) plot2d ([atan(x), erf(x), tanh(x)], [x, -5, 5]);
-     (%o2)
-     (%i3) plot3d (sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2), [x, -12, 12],
-           [y, -12, 12]);
-     (%o3)
+     (%i2) plot2d ([atan(x), erf(x), tanh(x)], [x, -5, 5], [y, -1.5, 2])$
+
+     (%i3) plot3d (sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2),
+              [x, -12, 12], [y, -12, 12])$
 
 
 File: maxima.info,  Node: Bug Detection and Reporting,  Next: Help,  Prev: Introduction to Maxima,  Up: Top
@@ -841,8 +867,8 @@ distinguished by a naming convention.  A Lisp symbol which begins with
 a dollar sign `$' corresponds to a Maxima symbol without the dollar
 sign.  A Maxima symbol which begins with a question mark `?'
 corresponds to a Lisp symbol without the question mark.  For example,
-the Maxima symbol `foo' corresponds to the Lisp symbol `$foo', while
-the Maxima symbol `?foo' corresponds to the Lisp symbol `foo', Note
+the Maxima symbol `foo' corresponds to the Lisp symbol `$FOO', while
+the Maxima symbol `?foo' corresponds to the Lisp symbol `FOO', Note
 that `?foo' is written without a space between `?' and `foo'; otherwise
 it might be mistaken for `describe ("foo")'.
 
@@ -870,13 +896,15 @@ functions and variables with ordinary names (no special punctuation)
 must have Lisp names beginning with the dollar sign `$'.
 
    Maxima is case-sensitive, distinguishing between lowercase and
-uppercase letters in identifiers, while Lisp is not.  There are some
-rules governing the translation of names between Lisp and Maxima.
+uppercase letters in identifiers.  There are some rules governing the
+translation of names between Lisp and Maxima.
 
   1. A Lisp identifier not enclosed in vertical bars corresponds to a
      Maxima identifier in lowercase.  Whether the Lisp identifier is
      uppercase, lowercase, or mixed case, is ignored.  E.g., Lisp
-     `$foo', `$FOO', and `$Foo' all correspond to Maxima `foo'.
+     `$foo', `$FOO', and `$Foo' all correspond to Maxima `foo'.  But
+     this is because `$foo', `$FOO' and `$Foo' are converted by the
+     Lisp reader by default to the Lisp symbol `$FOO'.
 
   2. A Lisp identifier which is all uppercase or all lowercase and
      enclosed in vertical bars corresponds to a Maxima identifier with
@@ -926,9 +954,10 @@ File: maxima.info,  Node: Garbage Collection,  Next: Documentation,  Prev: Lisp 
 3.2 Garbage Collection
 ======================
 
-Symbolic computation tends to create a good deal of garbage, and
-effective handling of this can be crucial to successful completion of
-some programs.
+Symbolic computation tends to create a good deal of garbage (temporary
+or intermediate results that are eventually not used), and effective
+handling of this can be crucial to successful completion of some
+programs.
 
    Under GCL, on UNIX systems where the mprotect system call is
 available (including SUN OS 4.0 and some variants of BSD) a stratified
@@ -936,6 +965,9 @@ garbage collection is available.   This limits the collection to pages
 which have been recently written to.    See the GCL documentation under
 ALLOCATE and GBC.   At the Lisp level doing (setq si::*notify-gbc* t)
 will help you determine which areas might need more space.
+
+   For other Lisps that run Maxima, we refer the reader to the
+documentation for that Lisp on how to control GC.
 
 
 File: maxima.info,  Node: Documentation,  Next: Functions and Variables for Help,  Prev: Garbage Collection,  Up: Help
@@ -957,7 +989,6 @@ and as a web page by any ordinary web browser.
 
      (%i2) test(f):=block([u],u:integrate(f,x),ratsimp(f-diff(u,x)))
      (%o2) test(f) := block([u], u : integrate(f, x),
-
                                               ratsimp(f - diff(u, x)))
      (%i3) test(sin(x))
      (%o3)                           0
@@ -993,9 +1024,10 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
      Show all Maxima symbols wich have `"gamma"' in the name:
 
           (%i1) apropos("gamma");
-          (%o1) [%gamma, %gammagreek, gamma, gammagreek, gammalim, gamma_expand,
-          gamma_imag, gamma_incomplete, gamma_incomplete_generalized,
-          gamma_incomplete_regularized, gamma_radius, Gamma, log_gamma, makegamma,
+          (%o1) [%gamma, gamma, gammalim, gamma_expand, gamma_greek,
+          gamma_incomplete, gamma_incomplete_generalized,
+          gamma_incomplete_regularized, Gamma, log_gamma, makegamma,
+          prefer_gamma_incomplete,
           gamma_incomplete_generalized_regularized]
 
 
@@ -1684,9 +1716,11 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Prev: Intro
      to the variable <x>.
 
      The flags which have the `evflag' property by default are the
-     following: `algebraic', `cauchysum', `demoivre', `dotscrules',
-     `%emode', `%enumer', `exponentialize', `exptisolate', `factorflag',
-     `float', `halfangles', `infeval', `isolate_wrt_times', `keepfloat',
+     following:
+
+     `algebraic', `cauchysum', `demoivre', `dotscrules', `%emode',
+     `%enumer', `exponentialize', `exptisolate', `factorflag', `float',
+     `halfangles', `infeval', `isolate_wrt_times', `keepfloat',
      `letrat', `listarith', `logabs', `logarc', `logexpand',
      `lognegint', `lognumer', `m1pbranch', `numer_pbranch',
      `programmode', `radexpand', `ratalgdenom', `ratfac', `ratmx',
@@ -1744,9 +1778,11 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Prev: Intro
      the function <F>.
 
      The functions which have the `evfun' property by default are the
-     following: `bfloat', `factor', `fullratsimp', `logcontract',
-     `polarform', `radcan', `ratexpand', `ratsimp', `rectform',
-     `rootscontract', `trigexpand', and `trigreduce'.
+     following:
+
+     `bfloat', `factor', `fullratsimp', `logcontract', `polarform',
+     `radcan', `ratexpand', `ratsimp', `rectform', `rootscontract',
+     `trigexpand', and `trigreduce'.
 
      Examples:
 
@@ -1862,8 +1898,8 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Prev: Intro
      `kill' quotes its arguments.  The quote-quote operator `'''
      defeats quotation.
 
-     `kill (<symbol>)' unbinds all properties of <symbol>.  In
-     contrast, `remvalue', `remfunction', `remarray', and `remrule'
+     `kill (<symbol>)' unbinds all properties of <symbol>.  In contrast,
+     the functions `remvalue', `remfunction', `remarray', and `remrule'
      unbind a specific property.
 
      `kill' always returns `done', even if an argument has no binding.
@@ -2076,20 +2112,20 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Prev: Intro
      Maxima.
 
           (%i1) f(x):=x^2+x;
-                                                   2
-          (%o1)                           f(x) := x  + x
+                                            2
+          (%o1)                    f(x) := x  + x
           (%i2) to_lisp();
           Type (to-maxima) to restart, ($quit) to quit Maxima.
-
           MAXIMA> (symbol-plist '$f)
-          (MPROPS (NIL MEXPR ((LAMBDA) ((MLIST) $X) ((MPLUS) ((MEXPT) $X 2) $X))))
+          (MPROPS (NIL MEXPR ((LAMBDA) ((MLIST) $X)
+                                       ((MPLUS) ((MEXPT) $X 2) $X))))
           MAXIMA> (setq $result ($factor (caddr (mget '$f 'mexpr))))
           ((MTIMES SIMP FACTORED) $X ((MPLUS SIMP IRREDUCIBLE) 1 $X))
           MAXIMA> (to-maxima)
           Returning to Maxima
-          (%o2)                                true
+          (%o2)                         true
           (%i3) result;
-          (%o3)                              x (x + 1)
+          (%o3)                       x (x + 1)
 
 
  -- System variable: values
@@ -2436,7 +2472,8 @@ File: maxima.info,  Node: Relational operators,  Next: General operators,  Prev:
           (%o3)                         false
           (%i4) if x >= z then 1 else 0;
           (%o4)                           0
-          (%i5) block ([S], S : 0, for i:1 while i <= 100 do S : S + i, return (S));
+          (%i5) block ([S], S : 0, for i:1 while i <= 100 do S : S + i,
+                       return (S));
           (%o5)                         5050
 
      Relational expressions are not otherwise evaluated or simplified
@@ -2752,14 +2789,10 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      context from which the macro was called, printing message (2).
 
           (%i1) x: %pi$
-
           (%i2) y: 1234$
-
           (%i3) z: 1729 * w$
-
           (%i4) printq1 (x) ::= block (print ("(1) x is equal to", x),
                 '(print ("(2) x is equal to", x)))$
-
           (%i5) printq1 (y - z);
           (1) x is equal to y - z
           (2) x is equal to %pi
@@ -2770,14 +2803,10 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      message (2) is not printed until the explicit evaluation `''%'.
 
           (%i1) x: %pi$
-
           (%i2) y: 1234$
-
           (%i3) z: 1729 * w$
-
           (%i4) printe1 (x) := block (print ("(1) x is equal to", x),
                 '(print ("(2) x is equal to", x)))$
-
           (%i5) printe1 (y - z);
           (1) x is equal to 1234 - 1729 w
           (%o5)                     print((2) x is equal to, x)
@@ -2790,13 +2819,9 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      function.
 
           (%i1) x: %pi$
-
           (%i2) y: 1234$
-
           (%i3) z: 1729 * w$
-
           (%i4) g (x) ::= buildq ([x], print ("x is equal to", x))$
-
           (%i5) macroexpand (g (y - z));
           (%o5)                     print(x is equal to, y - z)
           (%i6) ''%;
@@ -3699,16 +3724,7 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
               while r # 0 do (
                   uf : cons(q : 1/ceiling(1/r), uf),
                   r : r - q),
-              reverse(uf));
-          (%o1) unitfrac(r) := block([uf : [], q],
-          if not ratnump(r) then
-             error("The input to 'unitfrac' must be a rational number"),
-                                            1
-          while r # 0 do (uf : cons(q : ----------, uf), r : r - q),
-                                                1
-                                        ceiling(-)
-                                                r
-          reverse(uf))
+              reverse(uf))$
           (%i2) unitfrac (9/10);
                                       1  1  1
           (%o2)                      [-, -, --]
@@ -3751,11 +3767,20 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
 
  -- Function: signum (<x>)
-     For numeric <x>, returns 0 if <x> is 0, otherwise returns -1 or +1
-     as <x> is less than or greater than 0, respectively.
+     For either real or complex numbers <x>, the signum function returns
+     0 if <x> is zero; for a nonzero numeric input <x>, the signum
+     function returns `abs(x)/x'.
 
-     If <x> is not numeric then a simplified but equivalent form is
-     returned.  For example, `signum(-x)' gives `-signum(x)'.
+     For non-numeric inputs, Maxima attempts to determine the sign of
+     the input. When the sign is negative, zero, or positive, `signum'
+     returns -1,0, 1, respectively. For all other values for the sign,
+     `signum' a simplified but equivalent form. The simplifications
+     include reflection (`signum(-x)' gives `-signum(x)')and
+     multiplicative identity (`signum(x*y)' gives `signum(x) *
+     signum(y)').
+
+     The `signum' function distributes over a list, a matrix, or an
+     equation.  See `distribute_over'.
 
 
  -- Function: sort (<L>, <P>)
@@ -3817,8 +3842,9 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      magnitude, and all other elements in ascending sorting order:
 
           (%i8) sort([%i,1+%i,2*x,minf,inf,%e,sin(1),0,1,2,3,1.0,1.0b0],
-                ordermagnitudep);
-          (%o8)  [minf, 0, sin(1), 1, 1.0, 1.0b0, 2, %e, 3, inf, %i, %i + 1, 2 x]
+                     ordermagnitudep);
+          (%o8) [minf, 0, sin(1), 1, 1.0, 1.0b0, 2, %e, 3, inf, %i,
+                                                               %i + 1, 2 x]
 
 
  -- Function: sqrt (<x>)
@@ -3873,6 +3899,25 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      `ev' to get things to apply. `true' means do the application.
 
 
+ -- Option variable: subnumsimp
+     Default value: `false'
+
+     If `true' then the functions `subst' and `psubst' can substitute a
+     subscripted variable `f[x]' with a number, when only the symbol `f'
+     is given.
+
+     See also `subst'.
+
+          (%i1) subst(100,g,g[x]+2);
+
+          subst: cannot substitute 100 for operator g in expression g
+                                                                     x
+           -- an error. To debug this try: debugmode(true);
+
+          (%i2) subst(100,g,g[x]+2),subnumsimp:true;
+          (%o2)                          102
+
+
  -- Function: subst (<a>, <b>, <c>)
      Substitutes <a> for <b> in <c>.  <b> must be an atom or a complete
      subexpression of <c>.  For example, `x+y+z' is a complete
@@ -3890,12 +3935,12 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
      `subst' is an alias for `substitute'.
 
-     `subst (<eq_1>, <expr>)' or `subst ([<eq_1>, ..., <eq_k>],
-     <expr>)' are other permissible forms.  The <eq_i> are equations
-     indicating substitutions to be made.  For each equation, the right
-     side will be substituted for the left in the expression <expr>.
-     The equations are substituted in serial from left to right in
-     <expr>. See the functions `sublis' and `psubst' for making
+     The commands `subst (<eq_1>, <expr>)' or `subst ([<eq_1>, ...,
+     <eq_k>], <expr>)' are other permissible forms.  The <eq_i> are
+     equations indicating substitutions to be made.  For each equation,
+     the right side will be substituted for the left in the expression
+     <expr>. The equations are substituted in serial from left to right
+     in <expr>. See the functions `sublis' and `psubst' for making
      parallel substitutions.
 
      `exptsubst' if `true' permits substitutions like `y' for `%e^x' in
@@ -4072,10 +4117,11 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
           hazardous business, although the algorithm tries to minimize
           the potential for error.
 
-     For example `zeroequiv (sin(2*x) - 2*sin(x)*cos(x), x)' returns
-     `true' and `zeroequiv (%e^x + x, x)' returns `false'.  On the
-     other hand `zeroequiv (log(a*b) - log(a) - log(b), a)' returns
-     `dontknow' because of the presence of an extra parameter `b'.
+     For example `zeroequiv (sin(2 * x) - 2 * sin(x) * cos(x), x)'
+     returns `true' and `zeroequiv (%e^x + x, x)' returns `false'.  On
+     the other hand `zeroequiv (log(a * b) - log(a) - log(b), a)'
+     returns `dontknow' because of the presence of an extra parameter
+     `b'.
 
 
 
@@ -4487,11 +4533,11 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
      ..., <eqn_n>]' or the single equation <eqn>.
 
      If a subexpression depends on any of the variables for which a
-     value is specified but there is no atvalue specified and it can't
-     be otherwise evaluated, then a noun form of the `at' is returned
-     which displays in a two-dimensional form.
+     value is specified but there is no `atvalue' specified and it
+     can't be otherwise evaluated, then a noun form of the `at' is
+     returned which displays in a two-dimensional form.
 
-     `at' carries out multiple substitutions in series, not parallel.
+     `at' carries out multiple substitutions in parallel.
 
      See also `atvalue'.  For other functions which carry out
      substitutions, see also `subst' and `ev'.
@@ -4698,6 +4744,10 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
           Tells Maxima to consider <a_i> a nonscalar variable.  The
           usual application is to declare a variable as a symbolic
           vector or matrix.
+
+    `nonarray'
+          Tells Maxima to consider <a_i> not an array. This declaration
+          prevents multiple evaluation of a subscripted variable name.
 
     `mainvar'
           Tells Maxima to consider <a_i> a "main variable".  A main
@@ -5292,7 +5342,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
           (%i1) infix ("##", 100, 99, expr, expr, expr);
           (%o1)                          ##
           (%i2) if x ## y then 1 else 0;
-          Incorrect syntax: Found algebraic expression where logical expression expected
+          Incorrect syntax: Found algebraic expression where logical
+          expression expected
           if x ## y then
                        ^
           (%i2) infix ("##", 100, 99, expr, expr, clause);
@@ -5500,6 +5551,25 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
           (%o7)         a . f + a . c . e + a . c . d + a . b
 
 
+ -- Property: nonarray
+     The command `declare(a, nonarray)' tells Maxima to consider <a>
+     not an array. This declaration prevents multiple evaluation, if
+     <a> is a subscripted variable.
+
+     Example:
+
+          (%i1) a:'b$ b:'c$ c:'d$
+
+          (%i4) a[x];
+          (%o4)                          d
+                                          x
+          (%i5) declare(a, nonarray);
+          (%o5)                         done
+          (%i6) a[x];
+          (%o6)                          a
+                                          x
+
+
  -- Function: nounify (<f>)
      Returns the noun form of the function name <f>.  This is needed if
      one wishes to refer to the name of a verb function as if it were a
@@ -5652,7 +5722,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
           (%i1) stringdisp : true;
           (%o1)                         true
-          (%i2) sort ([%pi, 3b0, 3.0, x, X, "foo", 3, a, 4, "bar", 4.0, 4b0]);
+          (%i2) sort([%pi, 3b0, 3.0, x, X, "foo", 3, a, 4, "bar", 4.0, 4b0]);
           (%o2) [3, 3.0, 4, 4.0, 3.0b0, 4.0b0, %pi, "bar", "foo", a, x, X]
 
      Effect of `ordergreat' and `orderless' functions.
@@ -5681,7 +5751,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
      Ordering non-atomic expressions.
 
-          (%i1) sort ([1, 2, n, f(1), f(2), f(2, 1), g(1), g(1, 2), g(n), f(n, 1)]);
+          (%i1) sort([1, 2, n, f(1), f(2), f(2, 1), g(1), g(1, 2), g(n),
+                      f(n, 1)]);
           (%o1) [1, 2, f(1), g(1), g(1, 2), f(2), f(2, 1), n, g(n),
                                                                    f(n, 1)]
           (%i2) sort ([foo(1), X[1], X[k], foo(k), 1, k]);
@@ -6093,10 +6164,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
 
  -- Function: lsum (<expr>, <x>, <L>)
-     Represents the sum of <expr> for each element <x> in <L>.
-
-     A noun form `'lsum' is returned if the argument <L> does not
-     evaluate to a list.
+     Represents the sum of <expr> for each element <x> in <L>.  A noun
+     form `'lsum' is returned if the argument <L> does not evaluate to
+     a list.
 
      Examples:
 
@@ -6117,7 +6187,6 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
      Disables the aliasing created by the last use of the ordering
      commands `ordergreat' and `orderless'. `ordergreat' and `orderless'
      may not be used more than one time each without calling `unorder'.
-
      `unorder' does not substitute back in expressions the original
      symbols for the aliases introduced by `ordergreat' and
      `orderless'. Therefore, after execution of `unorder' the aliases
@@ -6153,9 +6222,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
 
  -- Function: verbify (<f>)
-     Returns the verb form of the function name <f>.
-
-     See also `verb', `noun', and `nounify'.
+     Returns the verb form of the function name <f>.  See also `verb',
+     `noun', and `nounify'.
 
      Examples:
 
@@ -6326,8 +6394,8 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
      The `expand' flag used with `ev' causes expansion.
 
-     The file `simplification/facexp.mac' contains several related
-     functions (in particular `facsum', `factorfacsum' and
+     The file `share/simplification/facexp.mac' contains several
+     related functions (in particular `facsum', `factorfacsum' and
      `collectterms', which are autoloaded) and variables
      (`nextlayerfactor' and `facsum_combine') that provide the user
      with the ability to structure expressions by controlled expansion.
@@ -6337,37 +6405,34 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
      Examples:
           (%i1) expr:(x+1)^2*(y+1)^3;
-                                                2        3
-          (%o1)                          (x + 1)  (y + 1)
+                                         2        3
+          (%o1)                   (x + 1)  (y + 1)
           (%i2) expand(expr);
                  2  3        3    3      2  2        2      2      2
           (%o2) x  y  + 2 x y  + y  + 3 x  y  + 6 x y  + 3 y  + 3 x  y
-                                                           2
-                                          + 6 x y + 3 y + x  + 2 x + 1
-
+                                                                2
+                                               + 6 x y + 3 y + x  + 2 x + 1
           (%i3) expand(expr,2);
-                                2        3              3          3
-          (%o3)                x  (y + 1)  + 2 x (y + 1)  + (y + 1)
-
+                         2        3              3          3
+          (%o3)         x  (y + 1)  + 2 x (y + 1)  + (y + 1)
           (%i4) expr:(x+1)^-2*(y+1)^3;
-                                                    3
-                                             (y + 1)
-          (%o4)                              --------
-                                                    2
-                                             (x + 1)
+                                             3
+                                      (y + 1)
+          (%o4)                       --------
+                                             2
+                                      (x + 1)
           (%i5) expand(expr);
-                           3               2
-                          y             3 y            3 y             1
-          (%o5)      ------------ + ------------ + ------------ + ------------
-                      2              2              2              2
-                     x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1
-
+                      3               2
+                     y             3 y            3 y             1
+          (%o5) ------------ + ------------ + ------------ + ------------
+                 2              2              2              2
+                x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1   x  + 2 x + 1
           (%i6) expand(expr,2,2);
-                                                    3
-                                             (y + 1)
-          (%o6)                            ------------
-                                            2
-                                           x  + 2 x + 1
+                                             3
+                                      (y + 1)
+          (%o6)                     ------------
+                                     2
+                                    x  + 2 x + 1
 
      Resimplify an expression without expansion:
 
@@ -6604,11 +6669,11 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      Examples:
 
           (%i1) [sqrt(2), sin(1), 1/(1+sqrt(3))];
-                                                         1
-          (%o1)                   [sqrt(2), sin(1), -----------]
-                                                    sqrt(3) + 1
+                                                  1
+          (%o1)            [sqrt(2), sin(1), -----------]
+                                             sqrt(3) + 1
           (%i2) [sqrt(2), sin(1), 1/(1+sqrt(3))],numer;
-          (%o2)      [1.414213562373095, .8414709848078965, .3660254037844387]
+          (%o2) [1.414213562373095, .8414709848078965, .3660254037844387]
 
 
  -- Function: numerval (<x_1>, <expr_1>, ..., <var_n>, <expr_n>)
@@ -6991,8 +7056,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      number of levels, it is necessary to specify a custom gnuplot
      preamble:
 
-          (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4], [legend,false],
-            [gnuplot_preamble, "set cntrparam levels 12"])$
+          (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4],
+                              [legend,false],
+                              [gnuplot_preamble, "set cntrparam levels 12"])$
 
 
  -- Function: get_plot_option (<keyword>, <index>)
@@ -7095,7 +7161,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      The aspect of the plot might be different depending on the plotting
      program used. For instance, when the plot box is disable, Xmaxima
      will plot the axes using arrows:
-          (%i1) plot2d ( x^2-1, [x, -3, 3], [y, -2, 10], [box, false], [plot_format, xmaxima])$
+
+          (%i1) plot2d ( x^2-1, [x, -3, 3], [y, -2, 10],
+                                [box, false], [plot_format, xmaxima])$
 
      A plot with a logarithmic scale:
           (%i1) plot2d (exp(3*s), [s, -2, 2], [logy])$
@@ -7109,11 +7177,13 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      A plot of the butterfly curve, defined parametrically:
           (%i1) r: (exp(cos(t))-2*cos(4*t)-sin(t/12)^5)$
-          (%i2) plot2d([parametric, r*sin(t), r*cos(t), [t, -8*%pi, 8*%pi], [nticks, 2000]])$
+          (%i2) plot2d([parametric, r*sin(t), r*cos(t),
+                       [t, -8*%pi, 8*%pi], [nticks, 2000]])$
 
      A "circle" with two turns, when plotted with only 7 points:
 
-          (%i1) plot2d ([parametric, cos(t), sin(t), [t, -2*%pi, 2*%pi], [nticks, 8]])$
+          (%i1) plot2d ([parametric, cos(t), sin(t),
+                        [t, -2*%pi, 2*%pi], [nticks, 8]])$
 
      Plot of a common function together with the parametric
      representation of a circle. The size of the plot has been adjusted
@@ -7122,23 +7192,27 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      terminal used to produce this plot; you might have to adjust the
      values for your screen.
 
-          (%i1) plot2d([[parametric, cos(t), sin(t) ,[t,0,2*%pi], [nticks, 80]],
+          (%i1) plot2d([[parametric, cos(t), sin(t),
+                        [t,0,2*%pi], [nticks, 80]],
                   abs(x)], [x,-2,2], [y, -1.5, 1.5])$
           plot2d: some values were clipped.
 
      A plot of a discrete set of points, defining x and y coordinates
      separately:
-          (%i1) plot2d ([discrete, [10, 20, 30, 40, 50], [.6, .9, 1.1, 1.3, 1.4]])$
+          (%i1) plot2d ([discrete, [10, 20, 30, 40, 50],
+                                   [.6, .9, 1.1, 1.3, 1.4]])$
 
      The same points shown in the previous example, defining each point
      separately and without any lines joining the points:
-          (%i1) plot2d([discrete, [[10, .6], [20, .9], [30, 1.1], [40, 1.3], [50, 1.4]]],
-                 [style, points])$
+          (%i1) plot2d([discrete, [[10, .6], [20, .9], [30, 1.1],
+                                   [40, 1.3], [50, 1.4]]],
+                                  [style, points])$
 
      In this example, a table with three columns is saved in a file
      "data.txt" which is then read and the second and third column are
      plotted on the two axes:
-          (%i1) with_stdout ("data.txt", for x:0 thru 10 do print (x, x^2, x^3))$
+          (%i1) with_stdout ("data.txt", for x:0 thru 10 do
+                                             print (x, x^2, x^3))$
           (%i2) data: read_matrix ("data.txt")$
           (%i3) plot2d ([discrete, transpose(data)[2], transpose(data)[3]],
             [style,points], [point_type,diamond], [color,red])$
@@ -7147,9 +7221,11 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      function that predicts the data:
           (%i1) xy: [[10, .6], [20, .9], [30, 1.1], [40, 1.3], [50, 1.4]]$
           (%i2) plot2d([[discrete, xy], 2*%pi*sqrt(l/980)], [l,0,50],
-                  [style, points, lines], [color, red, blue], [point_type, asterisk],
+                  [style, points, lines], [color, red, blue],
+                  [point_type, asterisk],
                   [legend, "experiment", "theory"],
-                  [xlabel, "pendulum's length (cm)"], [ylabel, "period (s)"])$
+                  [xlabel, "pendulum's length (cm)"],
+                  [ylabel, "period (s)"])$
 
      See also the section about Plotting Options.
 
@@ -7179,22 +7255,27 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      that does not fall on any asymptotes; this example also shows how
      to select one of the predefined palettes, in this case the fourth
      one:
-          (%i1) plot3d (log (x^2*y^2), [x, -2, 2], [y, -2, 2], [grid, 29, 29],
-                [palette, get_plot_option(palette,5)])$
+          (%i1) plot3d (log (x^2*y^2), [x, -2, 2], [y, -2, 2],
+                   [grid, 29, 29],
+                   [palette, get_plot_option(palette,5)])$
 
      Two surfaces in the same plot, sharing the same domain; in gnuplot
      the two surfaces will use the same palette:
-          (%i1) plot3d ([2^(-x^2 + y^2), 4*sin(3*(x^2+y^2))/(x^2+y^2), [x, -3, 3], [y, -2, 2]])$
+          (%i1) plot3d ([2^(-x^2 + y^2), 4*sin(3*(x^2+y^2))/(x^2+y^2),
+                        [x, -3, 3], [y, -2, 2]])$
 
      The same two surfaces, but now with different domains; in xmaxima
      each surface will use a different palette, chosen from the list
      defined by the option palette:
-          (%i1) plot3d ([[2^(-x^2 + y^2),[x,-2,2],[y,-2,2]], 4*sin(3*(x^2+y^2))/(x^2+y^2),
-                [x, -3, 3], [y, -2, 2]], [plot_format,xmaxima])$
+
+          (%i1) plot3d ([[2^(-x^2 + y^2),[x,-2,2],[y,-2,2]],
+                   4*sin(3*(x^2+y^2))/(x^2+y^2),
+                   [x, -3, 3], [y, -2, 2]], [plot_format,xmaxima])$
 
      Plot of a Klein bottle, defined parametrically:
-          (%i1) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0) - 10.0$
-          (%i2) expr_2: -5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0)$
+
+          (%i1) expr_1:5*cos(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0)-10.0$
+          (%i2) expr_2:-5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0)$
           (%i3) expr_3: 5*(-sin(x/2)*cos(y) + cos(x/2)*sin(2*y))$
           (%i4) plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi],
                   [y, -%pi, %pi], [grid, 40, 40])$
@@ -7203,28 +7284,37 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      transformations, `spherical_to_xyz', to transform from spherical
      to rectangular coordinates. See the documentation for
      `spherical_to_xyz'.
-          (%i1) plot3d (sin(2*theta)*cos(phi), [theta, 0, %pi], [phi, 0, 2*%pi],
-                  [transform_xy, spherical_to_xyz], [grid,30,60])$
+
+          (%i1) plot3d (sin(2*theta)*cos(phi), [theta, 0, %pi],
+                        [phi, 0, 2*%pi],
+                        [transform_xy, spherical_to_xyz], [grid,30,60])$
 
      Use of the predefined function `polar_to_xy' to transform from
      cylindrical to rectangular coordinates. See the documentation for
      `polar_to_xy'. This example also shows how to eliminate the
      bounding box and the legend.
-          (%i1) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi], [grid, 12, 80],
-                  [transform_xy, polar_to_xy], [box, false], [legend,false])$
+          (%i1) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
+                   [grid, 12, 80],
+                   [transform_xy, polar_to_xy], [box, false],
+                   [legend,false])$
 
      Plot of a sphere using the transformation from spherical to
      rectangular coordinates. In xmaxima the three axes are scaled in
      the same proportion, maintaining the symmetric shape of the
      sphere. A palette with different shades of a single color is used:
-          (%i1) plot3d ( 5, [theta, 0, %pi], [phi, 0, 2*%pi], [plot_format,xmaxima],
-            [transform_xy, spherical_to_xyz], [palette,[value,0.65,0.7,0.1,0.9]])$
+
+          (%i1) plot3d ( 5, [theta, 0, %pi], [phi, 0, 2*%pi],
+                   [plot_format,xmaxima],
+                   [transform_xy, spherical_to_xyz],
+                   [palette,[value,0.65,0.7,0.1,0.9]])$
 
      Definition of a function of two-variables using a matrix. Notice
      the single quote in the definition of the function, to prevent
      plot3d from failing when it realizes that the matrix will require
      integer indices.
-          (%i1) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],[1, 2, 3, 3])$
+
+          (%i1) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],
+                          [1, 2, 3, 3])$
           (%i2) f(x, y) := float('M [round(x), round(y)])$
           (%i3) plot3d (f(x,y), [x, 1, 4], [y, 1, 4], [grid, 4, 4])$
           apply: subscript must be an integer; found: round(x)
@@ -7707,7 +7797,7 @@ specific option.
 
  -- Plot option: gnuplot_ps_term_command
      The gnuplot command to set the terminal type for the PostScript
-     terminal. The default value is `"set size 1.5, 1.5;set term
+     terminal. The default value is `"set size 1.5, 1.5; set term
      postscript eps enhanced color solid 24"', which sets the size to
      1.5 times gnuplot's default, and the font size to 24, among other
      things. See the gnuplot documentation for `set term postscript' for
@@ -7800,12 +7890,17 @@ File: maxima.info,  Node: Files,  Next: Functions and Variables for Input and Ou
 =========
 
 A file is simply an area on a particular storage device which contains
-data or text.  Files on the disks are figuratively grouped into
-"directories".  A directory is just a list of files.  Commands which
-deal with files are: `save', `load',
+data or text. Files on the disks are figuratively grouped into
+"directories".  A directory is just a list of files. Commands which
+deal with files are:
 
-   `loadfile', `stringout', `batch', `demo', `writefile', `closefile',
-and `appendfile'.
+   `save', `load', `loadfile', `stringout', `batch', `demo',
+`writefile', `closefile', and `appendfile'.
+
+   When a file name is passed to functions like `plot2d', `save', or
+`writefile' and the file name does not include a path, Maxima stores
+the file in the current working directory. The current working directory
+depends on the system like Windows or Linux and on the installation.
 
 
 File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: Files,  Up: Input and Output
@@ -8040,9 +8135,23 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
 
 
  -- Function: batch (<filename>)
-     Reads Maxima expressions from <filename> and evaluates them.
-     `batch' searches for <filename> in the list `file_search_maxima'.
-     See `file_search'.
+ -- Function: batch (<filename>, `option')
+     `batch(<filename>)' reads Maxima expressions from <filename> and
+     evaluates them. `batch' searches for <filename> in the list
+     `file_search_maxima'. See `file_search'.
+
+     `batch(<filename>, `demo')' is like `demo(<filename>)'.  In this
+     case `batch' searches for <filename> in the list
+     `file_search_demo'. See `demo'.
+
+     `batch(<filename>, `test')' is like `run_testsuite' with the
+     option `display_all=true'. For this case `batch' searches
+     <filename> in the list `file_search_maxima' and not in the list
+     `file_search_tests' like `run_testsuite'. Furthermore,
+     `run_testsuite' runs tests which are in the list `testsuite_files'.
+     With `batch' it is possible to run any file in a test mode, which
+     can be found in the list `file_search_maxima'. This is useful,
+     when writing a test file.
 
      <filename> comprises a sequence of Maxima expressions, each
      terminated with `;' or `$'.  The special variable `%' and the
@@ -8068,7 +8177,11 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      working command lines, to give error-free demonstrations, or to
      help organize one's thinking in solving complex problems.
 
-     `batch' evaluates its argument.  `batch' has no return value.
+     `batch' evaluates its argument. `batch' returns the path of
+     <filename> as a string, when called with no second argument or
+     with the option `demo'. When called with the option `test', the
+     return value is a an empty list `[]' or a list with <filename> and
+     the numbers of the tests which have failed.
 
      See also `load', `batchload', and `demo'.
 
@@ -8423,14 +8536,41 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
 
  -- Function: file_type (<filename>)
      Returns a guess about the content of <filename>, based on the
-     filename extension.  <filename> need not refer to an actual file;
+     filename extension. <filename> need not refer to an actual file;
      no attempt is made to open the file and inspect the content.
 
-     The return value is a symbol, either `object', `lisp', or `maxima'.
-     If the extension starts with `m' or `d', `file_type' returns
-     `maxima'.  If the extension starts with `l', `file_type' returns
-     `lisp'.  If none of the above, `file_type' returns `object'.
+     The return value is a symbol, either `object', `lisp', or
+     `maxima'. If the extension is matches one of the values in
+     `file_type_maxima' `file_type' returns `maxima'. If the extension
+     matchees one of the values in `file_type_lisp', `file_type'
+     returns `lisp'. If none of the above, `file_type' returns `object'.
 
+     See also `pathname_type'.
+
+     See `file_type_maxima' and `file_type_lisp' for the default values.
+
+     Examples:
+
+          (%i2) map('file_type,
+                    ["test.lisp", "test.mac", "test.dem", "test.txt"]);
+          (%o2)            [lisp, maxima, maxima, object]
+
+
+ -- Option variable: file_type_lisp
+     Default value:  `[l, lsp, lisp]'
+
+     `file_type_lisp' is a list of file extensions that maxima
+     recognizes as denoting a Lisp source file.
+
+     See also `file_type'.
+
+ -- Option variable: file_type_maxima
+     Default value:  `[mac, mc, demo, dem, dm1, dm2, dm3, dmt]'
+
+     `file_type_maxima' is a list of file extensions that maxima
+     recognizes as denoting a Maxima source file.
+
+     See also `file_type'.
 
  -- Function: grind (<expr>)
  -- Option variable: grind
@@ -8750,6 +8890,32 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      `load' evaluates its argument.
 
 
+ -- System variable: load_pathname
+     Default value: `false'
+
+     When a file is loaded with the functions `load', `loadfile' or
+     `batchload' the system variable `load_pathname' is bound to the
+     pathname of the file which is processed.
+
+     The variable `load_pathname' can be accessed from the file during
+     the loading.
+
+     Example:
+
+     Suppose we have a batchfile `test.mac' in the directory
+     `"/home/dieter/workspace/mymaxima/temp/"' with the following commands
+
+          print("The value of load_pathname is: ", load_pathname)$
+          print("End of batchfile")$
+
+     then we get the following output
+
+          (%i1) load("/home/dieter/workspace/mymaxima/temp/test.mac")$
+          The value of load_pathname is:
+                             /home/dieter/workspace/mymaxima/temp/test.mac
+          End of batchfile
+
+
  -- Function: loadfile (<filename>)
      Evaluates Lisp expressions in <filename>.  `loadfile' does not
      invoke `file_search', so `filename' must include the file
@@ -8848,6 +9014,21 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      that the flag simply affects what is output to the package file.
      Setting the flag to `true' is also useful for creating Maxima init
      files.
+
+
+ -- Function: pathname_directory (<pathname>)
+ -- Function: pathname_name (<pathname>)
+ -- Function: pathname_type (<pathname>)
+     These functions return the components of <pathname>.
+
+     Examples:
+
+          (%i1) pathname_directory("/home/dieter/maxima/changelog.txt");
+          (%o1)                 /home/dieter/maxima/
+          (%i2) pathname_name("/home/dieter/maxima/changelog.txt");
+          (%o2)                       changelog
+          (%i3) pathname_type("/home/dieter/maxima/changelog.txt");
+          (%o3)                          txt
 
 
  -- Option variable: pfeformat
@@ -9011,6 +9192,9 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
         * Quotients are replaced by `Quotient'.
 
         * Unary negation is replaced by `Negterm'.
+
+        * Lists are replaced by `List(<n>)' where <n> ist the number of
+          elements of the list.
 
      When <depth> is greater than or equal to the maximum depth of
      <expr>, `reveal (<expr>, <depth>)' returns <expr> unmodified.
@@ -9353,7 +9537,7 @@ File: maxima.info,  Node: Functions and Variables for Input and Output,  Prev: F
      Call a function to generate TeX output.
 
           (%i1) texfoo (e) := block ([a, b], [a, b] : args (e),
-            concat ("\\left[\\stackrel{", tex1 (b), "}{", tex1 (a), "}\\right]"))$
+            concat("\\left[\\stackrel{",tex1(b),"}{",tex1(a),"}\\right]"))$
           (%i2) texput (foo, texfoo);
           (%o2)                        texfoo
           (%i3) tex (foo (2^x, %pi));
@@ -9678,11 +9862,11 @@ File: maxima.info,  Node: Functions and Variables for Floating Point,  Prev: Flo
 
 
  -- Option variable: float2bf
-     Default value: `false'
+     Default value: `true'
 
      When `float2bf' is `false', a warning message is printed when a
      floating point number is converted into a bigfloat number (since
-     this may lead to loss of precision).
+     this may lead to loss of precision). The default value is `true'.
 
 
  -- Function: floatnump (<expr>)
@@ -10035,10 +10219,11 @@ File: maxima.info,  Node: Functions and Variables for Contexts,  Prev: Contexts,
      the <foo> property, and `false' otherwise.
 
      The infolist `features' is a list of known features.  These are
-     `integer', `noninteger', `even', `odd', `rational', `irrational',
-     `real', `imaginary', `complex', `analytic', `increasing',
-     `decreasing', `oddfun', `evenfun', `posfun', `commutative',
-     `lassociative', `rassociative', `symmetric', and `antisymmetric',
+     `integer', `noninteger', `even', `odd', `rational',
+     `irrational', `real', `imaginary', `complex',
+     `analytic', `increasing', `decreasing', `oddfun',
+     `evenfun', `posfun', `commutative', `lassociative',
+     `rassociative', `symmetric', and `antisymmetric',
      plus any user-defined features.
 
      `features' is a list of mathematical features.  There is also a
@@ -10244,7 +10429,7 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
           (%o1)                        - 2 %pi
           (%i2) coeff (v[1]^4 - 2*%pi*v[1]^2 + 1, v[1], 2);
           (%o2)                        - 2 %pi
-          (%i3) coeff (sin(1 + x)*sin(x) + sin(1 + x)^3*sin(x)^3, sin(1 + x)^3);
+          (%i3) coeff (sin(1+x)*sin(x) + sin(1+x)^3*sin(x)^3, sin(1+x)^3);
                                           3
           (%o3)                        sin (x)
           (%i4) coeff ((d - a)^2*(b + c)^3 + (a + b)^4*(c - d), a + b, 4);
@@ -11357,6 +11542,58 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      function `ratvars' resets the list.  `ratvars ()' clears the list.
 
 
+ -- Option variable: ratvarswitch
+     Default value: `true'
+
+     Maxima keeps an internal list in the Lisp variable `VARLIST' of
+     the main variables for rational expressions. If `ratvarswitch' is
+     `true', every evaluation starts with a fresh list `VARLIST'. This
+     is the default behavior. Otherwise, the main variables from
+     previous evaluations are not removed from the internal list
+     `VARLIST'.
+
+     The main variables, which are declared with the function `ratvars'
+     are not affected by the option variable `ratvarswitch'.
+
+     Examples:
+
+     If `ratvarswitch' is `true', every evaluation starts with a fresh
+     list `VARLIST'.
+
+          (%i1) ratvarswitch:true$
+
+          (%i2) rat(2*x+y^2);
+                                       2
+          (%o2)/R/                    y  + 2 x
+          (%i3) :lisp varlist
+          ($X $Y)
+
+          (%i3) rat(2*a+b^2);
+                                       2
+          (%o3)/R/                    b  + 2 a
+
+          (%i4) :lisp varlist
+          ($A $B)
+
+     If `ratvarswitch' is `false', the main variables from the last
+     evaluation are still present.
+
+          (%i4) ratvarswitch:false$
+
+          (%i5) rat(2*x+y^2);
+                                       2
+          (%o5)/R/                    y  + 2 x
+          (%i6) :lisp varlist
+          ($X $Y)
+
+          (%i6) rat(2*a+b^2);
+                                       2
+          (%o6)/R/                    b  + 2 a
+
+          (%i7) :lisp varlist
+          ($A $B $X $Y)
+
+
  -- Function: ratweight (<x_1>, <w_1>, ..., <x_n>, <w_n>)
  -- Function: ratweight ()
      Assigns a weight <w_i> to the variable <x_i>.  This causes a term
@@ -11657,7 +11894,7 @@ File: maxima.info,  Node: Functions and Variables for Constants,  Prev: Constant
 
      Example:
 
-          (%i1) limit (1/x, x, 0);
+          (%i1) limit (x*sin(x), x, inf);
           (%o1)                          und
 
 
@@ -11807,11 +12044,11 @@ File: maxima.info,  Node: Functions and Variables for Logarithms,  Prev: Logarit
 
     ``%e_to_numlog''
           when `true', `r' some rational number, and `x' some
-          expression, `%e^(r*log(x))' will be simplified into `x^r' .
-          It should be noted that the `radcan' command also does this
-          transformation, and more complicated transformations of this
-          as well. The `logcontract' command "contracts" expressions
-          containing `log'.
+          expression, the expression `%e^(r*log(x))' will be simplified
+          into `x^r'.  It should be noted that the `radcan' command
+          also does this transformation, and more complicated
+          transformations of this as well. The `logcontract' command
+          "contracts" expressions containing `log'.
 
 
  -- Option variable: logabs
@@ -11856,15 +12093,16 @@ File: maxima.info,  Node: Functions and Variables for Logarithms,  Prev: Logarit
                                            2  4
           (%o2)                     a log(x  y )
 
-     If you do `declare(n,integer);' then `logcontract(2*a*n*log(x));'
-     gives `a*log(x^(2*n))'.  The coefficients that "contract" in this
-     manner are those such as the 2 and the `n' here which satisfy
-     `featurep(coeff,integer)'.  The user can control which
-     coefficients are contracted by setting the option `logconcoeffp'
-     to the name of a predicate function of one argument.  E.g. if you
-     like to generate SQRTs, you can do `logconcoeffp:'logconfun$
-     logconfun(m):=featurep(m,integer) or ratnump(m)$' .  Then
-     `logcontract(1/2*log(x));' will give `log(sqrt(x))'.
+     The declaration `declare(n,integer)' causes
+     `logcontract(2*a*n*log(x))' to simplify to `a*log(x^(2*n))'.  The
+     coefficients that "contract" in this manner are those such as the
+     2 and the `n' here which satisfy `featurep(coeff,integer)'.  The
+     user can control which coefficients are contracted by setting the
+     option `logconcoeffp' to the name of a predicate function of one
+     argument.  E.g. if you like to generate SQRTs, you can do
+     `logconcoeffp:'logconfun$ logconfun(m):=featurep(m,integer) or
+     ratnump(m)$' .  Then `logcontract(1/2*log(x));' will give
+     `log(sqrt(x))'.
 
 
  -- Option variable: logexpand
@@ -12121,15 +12359,16 @@ File: maxima.info,  Node: Functions and Variables for Trigonometric,  Prev: Intr
      A complicated factor is needed to make this formula correct for
      all complex arguments <z>:
 
-                     realpart(z)
-               floor(-----------)
-                        2 %pi
-          (- 1)                   (1 - unit_step(- imagpart(z))
 
-                                      realpart(z)            realpart(z)
-                                floor(-----------) - ceiling(-----------)
-                                         2 %pi                  2 %pi
-                          ((- 1)                                          + 1))
+                realpart(z)
+          floor(-----------)
+                   2 %pi
+     (- 1)                   (1 - unit_step(- imagpart(z))
+
+                                 realpart(z)            realpart(z)
+                           floor(-----------) - ceiling(-----------)
+                                    2 %pi                  2 %pi
+                     ((- 1)                                          + 1))
 
      Maxima knows this factor and similar factors for the functions
      `sin', `cos', `sinh', and `cosh'. For special values of the
@@ -12653,13 +12892,13 @@ Mathematical Functions, Chapter 6.
  -- Function: gamma (<z>)
      The basic definition of the gamma function (A&S 6.1.1) is
 
-                                         inf
-                                        /
-                                        [     z - 1   - t
-                             gamma(z) = I    t      %e    dt
-                                        ]
-                                        /
-                                         0
+                                   inf
+                                  /
+                                  [     z - 1   - t
+                       gamma(z) = I    t      %e    dt
+                                  ]
+                                  /
+                                   0
 
      Maxima simplifies `gamma' for positive integer and positive and
      negative rational numbers. For half integral values the result is
@@ -12687,49 +12926,47 @@ Mathematical Functions, Chapter 6.
      Simplification for integer, half integral, and rational numbers:
 
           (%i1) map('gamma,[1,2,3,4,5,6,7,8,9]);
-          (%o1)               [1, 1, 2, 6, 24, 120, 720, 5040, 40320]
-
+          (%o1)        [1, 1, 2, 6, 24, 120, 720, 5040, 40320]
           (%i2) map('gamma,[1/2,3/2,5/2,7/2]);
-                                     sqrt(%pi)  3 sqrt(%pi)  15 sqrt(%pi)
-          (%o2)          [sqrt(%pi), ---------, -----------, ------------]
-                                         2           4            8
-
+                              sqrt(%pi)  3 sqrt(%pi)  15 sqrt(%pi)
+          (%o2)   [sqrt(%pi), ---------, -----------, ------------]
+                                  2           4            8
           (%i3) map('gamma,[2/3,5/3,7/3]);
-                                                  2           1
-                                          2 gamma(-)  4 gamma(-)
-                                      2           3           3
-          (%o3)                [gamma(-), ----------, ----------]
-                                      3       3           9
+                                            2           1
+                                    2 gamma(-)  4 gamma(-)
+                                2           3           3
+          (%o3)          [gamma(-), ----------, ----------]
+                                3       3           9
 
      Numerical evaluation for real and complex values:
 
           (%i4) map('gamma,[2.5,2.5b0]);
-          (%o4)             [1.329340388179137, 1.329340388179137b0]
-
+          (%o4)     [1.329340388179137, 1.3293403881791370205b0]
           (%i5) map('gamma,[1.0+%i,1.0b0+%i]);
-          (%o5) [.4980156681183558 - .1549498283018108 %i,
-                                4.980156681183561b-1 - 1.549498283018107b-1 %i]
+          (%o5) [0.498015668118356 - .1549498283018107 %i,
+                    4.9801566811835604272b-1 - 1.5494982830181068513b-1 %i]
 
      `gamma' has mirror symmetry:
 
-          (%i8) declare(z,complex)$
-          (%i9) conjugate(gamma(z));
-          (%o9)                         gamma(conjugate(z))
+          (%i6) declare(z,complex)$
+          (%i7) conjugate(gamma(z));
+          (%o7)                  gamma(conjugate(z))
 
      Maxima expands `gamma(z+n)' and `gamma(z-n)', when `gamma_expand'
      is `true':
 
-          (%i10) gamma_expand:true$
-          (%i11) [gamma(z+1),gamma(z-1),gamma(z+2)/gamma(z+1)];
-                                                gamma(z)
-          (%o11)                   [z gamma(z), --------, z + 1]
-                                                 z - 1
+          (%i8) gamma_expand:true$
+
+          (%i9) [gamma(z+1),gamma(z-1),gamma(z+2)/gamma(z+1)];
+                                         gamma(z)
+          (%o9)             [z gamma(z), --------, z + 1]
+                                          z - 1
 
      The deriviative of `gamma':
 
-          (%i12) diff(gamma(z),z);
-          (%o12)                         psi (z) gamma(z)
-                                            0
+          (%i10) diff(gamma(z),z);
+          (%o10)                  psi (z) gamma(z)
+                                     0
 
      See also `makegamma'.
 
@@ -12741,22 +12978,37 @@ Mathematical Functions, Chapter 6.
 
 
  -- Function: gamma_incomplete (<a>, <z>)
-     The incomplete upper gamma function A&S 6.5.2: gamma_incomplete(a,
-     z) = integrate(exp(-t)*t^(a-1), t, z, inf)
+     The incomplete upper gamma function A&S 6.5.2:
+
+                                        inf
+                                       /
+                                       [     a - 1   - t
+              gamma_incomplete(a, z) = I    t      %e    dt
+                                       ]
+                                       /
+                                        z
 
 
- -- Function: gamma_incomplete_regularized (<a>,<z>)
-     The regularized incomplete upper gamma function A&S 6.5.1.
+ -- Function: gamma_incomplete_regularized (<a>, <z>)
+     The regularized incomplete upper gamma function A&S 6.5.1:
 
-     `gamma_incomplete_regularized(a,z) =
-     gamma_incomplete(a,z)/gamma(a)'
+          gamma_incomplete_regularized(a, z) =
+                                                  gamma_incomplete(a, z)
+                                                  ----------------------
+                                                         gamma(a)
 
 
- -- Function: gamma_incomplete_generalized (<a>,<z1>,<z1> )
+ -- Function: gamma_incomplete_generalized (<a>, <z1>, <z1>)
      The generalized incomplete gamma function.
 
-     `gamma_incomplete_generalized(a,z) = integrate(t^(a-1)*exp(-t), z,
-     z1,z2) '
+          gamma_incomplete_generalized(a, z1, z2) =
+                                                         z2
+                                                        /
+                                                        [    a - 1   - t
+                                                        I   t      %e    dt
+                                                        ]
+                                                        /
+                                                         z1
 
 
  -- Option variable: gammalim
@@ -12895,13 +13147,13 @@ Mathematical Functions, Chapter 6.
  -- Function: beta_incomplete (<a>, <b>, <z>)
      The basic definition of the incomplete beta function (A&S 6.6.1) is
 
-                                 z
-                                /
-                                [         b - 1  a - 1
-                                I  (1 - t)      t      dt
-                                ]
-                                /
-                                 0
+                  z
+                 /
+                 [         b - 1  a - 1
+                 I  (1 - t)      t      dt
+                 ]
+                 /
+                  0
 
      This definition is possible for realpart(a)>0 and realpart(b)>0
      and abs(z)<1. For other values the incomplete beta function can be
@@ -12939,9 +13191,9 @@ Mathematical Functions, Chapter 6.
      evaluation an expansion of the incomplete beta function in
      continued fractions is used.
 
-     When `beta_expand' is `true', Maxima expands expressions like
-     `beta_incomplete(a+n,b,z)' and `beta_incomplete(a-n,b,z)' where n
-     is a positive integer.
+     When the option variable `beta_expand' is `true', Maxima expands
+     expressions like `beta_incomplete(a+n,b,z)' and
+     `beta_incomplete(a-n,b,z)' where n is a positive integer.
 
      Maxima knows the derivatives of `beta_incomplete' with respect to
      the variables <a>, <b> and <z> and the integral with respect to the
@@ -13026,18 +13278,28 @@ Mathematical Functions, Chapter 6.
 
      Derivative and integral for `beta_incomplete':
 
-          (%i34) diff(beta_incomplete(a,b,z),z);
-                                               b - 1  a - 1
-          (%o34)                        (1 - z)      z
-          (%i35) integrate(beta_incomplete(a,b,z),z);
-          (%o35)     beta_incomplete(a, b, z) z - beta_incomplete(a + 1, b, z)
-          (%i36) diff(%,z);
-          (%o36)                     beta_incomplete(a, b, z)
+          (%i34) diff(beta_incomplete(a, b, z), z);
+                                        b - 1  a - 1
+          (%o34)                 (1 - z)      z
+          (%i35) integrate(beta_incomplete(a, b, z), z);
+                        b  a
+                 (1 - z)  z
+          (%o35) ----------- + beta_incomplete(a, b, z) z
+                    b + a
+                                                 a beta_incomplete(a, b, z)
+                                               - --------------------------
+                                                           b + a
+          (%i36) factor(diff(%, z));
+          (%o36)              beta_incomplete(a, b, z)
 
 
  -- Function: beta_incomplete_regularized (<a>, <b>, <z>)
      The regularized incomplete beta function A&S 6.6.2, defined as
-     `beta_incomplete(a,b,z)/beta(a,b)'.
+
+          beta_incomplete_regularized(a, b, z) =
+                                                beta_incomplete(a, b, z)
+                                                ------------------------
+                                                       beta(a, b)
 
      As for `beta_incomplete' this definition is not complete. See
      functions.wolfram.com for a complete definition of
@@ -13102,41 +13364,44 @@ Mathematical Functions, Chapter 6.
      Expansion, when `beta_expand' is `true':
 
           (%i13) beta_incomplete_regularized(a+1,b,z);
-                                                                      b  a
-                                                               (1 - z)  z
-          (%o13)        beta_incomplete_regularized(a, b, z) - ------------
-                                                               a beta(a, b)
+                                                               b  a
+                                                        (1 - z)  z
+          (%o13) beta_incomplete_regularized(a, b, z) - ------------
+                                                        a beta(a, b)
           (%i14) beta_incomplete_regularized(a-1,b,z);
-                                                                    b  a - 1
-                                                             (1 - z)  z
-          (%o14)   beta_incomplete_regularized(a, b, z) - ----------------------
-                                                          beta(a, b) (b + a - 1)
+          (%o14) beta_incomplete_regularized(a, b, z)
+                                                               b  a - 1
+                                                        (1 - z)  z
+                                                   - ----------------------
+                                                     beta(a, b) (b + a - 1)
 
      The derivative and the integral wrt <z>:
 
           (%i15) diff(beta_incomplete_regularized(a,b,z),z);
-                                               b - 1  a - 1
-                                        (1 - z)      z
-          (%o15)                        -------------------
-                                            beta(a, b)
-
+                                        b - 1  a - 1
+                                 (1 - z)      z
+          (%o15)                 -------------------
+                                     beta(a, b)
           (%i16) integrate(beta_incomplete_regularized(a,b,z),z);
           (%o16) beta_incomplete_regularized(a, b, z) z
-                                     a beta_incomplete_regularized(a + 1, b, z)
-                                   - ------------------------------------------
-                                                       b + a
+                                                                     b  a
+                                                              (1 - z)  z
+                    a (beta_incomplete_regularized(a, b, z) - ------------)
+                                                              a beta(a, b)
+                  - -------------------------------------------------------
+                                             b + a
 
 
  -- Function: beta_incomplete_generalized (<a>, <b>, <z1>, <z2>)
      The basic definition of the generalized incomplete beta function is
 
-                                z2
-                               /
-                               [          b - 1  a - 1
-                               I   (1 - t)      t      dt
-                               ]
-                               /
-                                z1
+                       z2
+                     /
+                     [          b - 1  a - 1
+                     I   (1 - t)      t      dt
+                     ]
+                     /
+                      z1
 
      Maxima simplifies `beta_incomplete_regularized' for <a> and <b> a
      positive integer.
@@ -13163,22 +13428,20 @@ Mathematical Functions, Chapter 6.
      positive integer:
 
           (%i1) beta_incomplete_generalized(2,b,z1,z2);
-                                    b                      b
-                            (1 - z1)  (b z1 + 1) - (1 - z2)  (b z2 + 1)
-          (%o1)             -------------------------------------------
-                                             b (b + 1)
-
+                             b                      b
+                     (1 - z1)  (b z1 + 1) - (1 - z2)  (b z2 + 1)
+          (%o1)      -------------------------------------------
+                                      b (b + 1)
           (%i2) beta_incomplete_generalized(a,2,z1,z2);
-                                               a                      a
-                            (a (1 - z2) + 1) z2  - (a (1 - z1) + 1) z1
-          (%o2)             -------------------------------------------
-                                             a (a + 1)
-
+                                        a                      a
+                     (a (1 - z2) + 1) z2  - (a (1 - z1) + 1) z1
+          (%o2)      -------------------------------------------
+                                      a (a + 1)
           (%i3) beta_incomplete_generalized(3,2,z1,z2);
-                            2      2                       2      2
-                    (1 - z1)  (3 z1  + 2 z1 + 1) - (1 - z2)  (3 z2  + 2 z2 + 1)
-          (%o3)     -----------------------------------------------------------
-                                                12
+                        2      2                       2      2
+                (1 - z1)  (3 z1  + 2 z1 + 1) - (1 - z2)  (3 z2  + 2 z2 + 1)
+          (%o3) -----------------------------------------------------------
+                                            12
 
      Simplification for specific values z1=0, z2=0, z1=1, or z2=1:
 
@@ -13218,37 +13481,37 @@ Mathematical Functions, Chapter 6.
      `beta_expand' is `true':
 
           (%i14) beta_expand:true$
+
           (%i15) beta_incomplete_generalized(a+1,b,z1,z2);
+
                          b   a           b   a
                  (1 - z1)  z1  - (1 - z2)  z2
           (%o15) -----------------------------
                              b + a
-                                      a beta_incomplete_generalized(a, b, z1, z2)
-                                    + -------------------------------------------
-                                                         b + a
-
+                                a beta_incomplete_generalized(a, b, z1, z2)
+                              + -------------------------------------------
+                                                   b + a
           (%i16) beta_incomplete_generalized(a-1,b,z1,z2);
+
                  beta_incomplete_generalized(a, b, z1, z2) (- b - a + 1)
           (%o16) -------------------------------------------------------
                                           1 - a
-                                                    b   a - 1           b   a - 1
-                                            (1 - z2)  z2      - (1 - z1)  z1
-                                          - -------------------------------------
-                                                            1 - a
+                                              b   a - 1           b   a - 1
+                                      (1 - z2)  z2      - (1 - z1)  z1
+                                    - -------------------------------------
+                                                      1 - a
 
      Derivative wrt the variable <z1> and integrals wrt <z1> and <z2>:
 
           (%i17) diff(beta_incomplete_generalized(a,b,z1,z2),z1);
-                                                b - 1   a - 1
-          (%o17)                      - (1 - z1)      z1
-
+                                         b - 1   a - 1
+          (%o17)               - (1 - z1)      z1
           (%i18) integrate(beta_incomplete_generalized(a,b,z1,z2),z1);
           (%o18) beta_incomplete_generalized(a, b, z1, z2) z1
-                                                  + beta_incomplete(a + 1, b, z1)
-
+                                            + beta_incomplete(a + 1, b, z1)
           (%i19) integrate(beta_incomplete_generalized(a,b,z1,z2),z2);
           (%o19) beta_incomplete_generalized(a, b, z1, z2) z2
-                                                  - beta_incomplete(a + 1, b, z2)
+                                            - beta_incomplete(a + 1, b, z2)
 
 
  -- Option variable: beta_expand
@@ -13523,24 +13786,28 @@ returned from function `hgfred'.
      polynomial.
 
      Examples:
-           (%i1)  hypergeometric([],[],x);
-           (%o1) %e^x
+
+          (%i1)  hypergeometric([],[],x);
+          (%o1) %e^x
+
      Polynomial cases automatically expand when `expand_hypergeometric'
      is true:
-           (%i2) hypergeometric([-3],[7],x);
-           (%o2) hypergeometric([-3],[7],x)
 
-           (%i3) hypergeometric([-3],[7],x), expand_hypergeometric : true;
-           (%o3) -x^3/504+3*x^2/56-3*x/7+1
+          (%i2) hypergeometric([-3],[7],x);
+          (%o2) hypergeometric([-3],[7],x)
+
+          (%i3) hypergeometric([-3],[7],x), expand_hypergeometric : true;
+          (%o3) -x^3/504+3*x^2/56-3*x/7+1
+
      Both double float and big float evaluation is supported:
-           (%i4) hypergeometric([5.1],[7.1 + %i],0.42);
-           (%o4) 1.346250786375334-0.0559061414208204*%i
 
-           (%i5) hypergeometric([5,6],[8], 5.7 - %i);
-           (%o5) 0.00737582400977495-0.00104981368857867*%i
-
-           (%i6) hypergeometric([5,6],[8], 5.7b0 - %i), fpprec : 30;
-           (%o6) 7.37582400977494674506442010824b-3-1.04981368857867315858055393376b-3*%i
+          (%i4) hypergeometric([5.1],[7.1 + %i],0.42);
+          (%o4)       1.346250786375334 - 0.0559061414208204 %i
+          (%i5) hypergeometric([5,6],[8], 5.7 - %i);
+          (%o5)     .007375824009774946 - .001049813688578674 %i
+          (%i6) hypergeometric([5,6],[8], 5.7b0 - %i), fpprec : 30;
+          (%o6) 7.37582400977494674506442010824b-3
+                                    - 1.04981368857867315858055393376b-3 %i
 
 
 File: maxima.info,  Node: Parabolic Cylinder Functions,  Next: Functions and Variables for Special Functions,  Prev: Hypergeometric Functions,  Up: Special Functions
@@ -13610,27 +13877,28 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
      Examples for exponential integrals:
 
           (%i4) assume(s>0,a>0,s-a>0)$
-          (%i5) ratsimp(specint(%e^(a*t)*(log(a)+expintegral_e1(a*t))*%e^(-s*t),t));
-                                              log(s)
-          (%o5)                               ------
-                                              s - a
-
+          (%i5) ratsimp(specint(%e^(a*t)
+                                *(log(a)+expintegral_e1(a*t))*%e^(-s*t),t));
+                                       log(s)
+          (%o5)                        ------
+                                       s - a
           (%i6) logarc:true$
-          (%i7) gamma_expand:true$
-          (%i8) radcan(specint((cos(t)*expintegral_si(t)
-                               -sin(t)*expintegral_ci(t))*%e^(-s*t),t));
-                                              log(s)
-          (%o8)                               ------
-                                               2
-                                              s  + 1
 
-          (%i9) ratsimp(specint((2*t*log(a)+2/a*sin(a*t)
+          (%i7) gamma_expand:true$
+
+          radcan(specint((cos(t)*expintegral_si(t)
+                               -sin(t)*expintegral_ci(t))*%e^(-s*t),t));
+                                       log(s)
+          (%o8)                        ------
+                                        2
+                                       s  + 1
+          ratsimp(specint((2*t*log(a)+2/a*sin(a*t)
                                 -2*t*expintegral_ci(a*t))*%e^(-s*t),t));
-                                                2    2
-                                           log(s  + a )
-          (%o9)                            ------------
-                                                 2
-                                                s
+                                         2    2
+                                    log(s  + a )
+          (%o9)                     ------------
+                                          2
+                                         s
 
      Results when using the expansion of `gamma_incomplete' and when
      changing the representation to `expintegral_e1':
@@ -13705,7 +13973,6 @@ File: maxima.info,  Node: Functions and Variables for Special Functions,  Prev: 
                                            z        2 z
           (%o7)                         --------- - --- + 1
                                         a (a + 1)    a
-
 
  -- Function: lambert_w (<z>)
      The principal branch of Lambert's W funtion W(z), the solution of
@@ -14697,7 +14964,8 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
                                          s    sqrt(-----)
                                                      s
           (%i8) assume(exp(%pi*s)>1)$
-          (%i9) laplace(sum((-1)^n*unit_step(t-n*%pi)*sin(t),n,0,inf),t,s),simpsum;
+          (%i9) laplace(sum((-1)^n*unit_step(t-n*%pi)*sin(t),n,0,inf),t,s),
+                   simpsum;
                                    %i                         %i
                         ------------------------ - ------------------------
                                         - %pi s                    - %pi s
@@ -16325,7 +16593,6 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
                                                         sqrt(3) %i   1    1
                                                      (- ---------- - -) - -
                                                             2        2    3
-
                      sqrt(23)    25 1/3  sqrt(3) %i   1
           (%t8) x = (--------- + --)    (---------- - -)
                      6 sqrt(3)   54          2        2
@@ -16337,7 +16604,6 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
                                                      sqrt(23)    25 1/3   3
                                                   9 (--------- + --)
                                                      6 sqrt(3)   54
-
                       sqrt(23)    25 1/3             1             1
           (%t9)  x = (--------- + --)    + --------------------- - -
                       6 sqrt(3)   54          sqrt(23)    25 1/3   3
@@ -16905,7 +17171,7 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
 
           (%i1) solve (asin (cos (3*x))*(f(x) - 1), x);
 
-          SOLVE is using arc-trig functions to get a solution.
+          solve: using arc-trig functions to get a solution.
           Some solutions will be lost.
                                       %pi
           (%o1)                  [x = ---, f(x) = 1]
@@ -16917,19 +17183,17 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
           (%i3) [4*x^2 - y^2 = 12, x*y - x = 2];
                                 2    2
           (%o3)             [4 x  - y  = 12, x y - x = 2]
+
           (%i4) solve (%, [x, y]);
           (%o4) [[x = 2, y = 2], [x = .5202594388652008 %i
-
-           - .1331240357358706, y = .0767837852378778
-
+           - .1331240357358706, y = .07678378523787788
            - 3.608003221870287 %i], [x = - .5202594388652008 %i
-
            - .1331240357358706, y = 3.608003221870287 %i
-
-           + .0767837852378778], [x = - 1.733751846381093,
-
+           + .07678378523787788], [x = - 1.733751846381093,
           y = - .1535675710019696]]
+
           (%i5) solve (1 + a*x + x^3, x);
+
                                                  3
                         sqrt(3) %i   1   sqrt(4 a  + 27)   1 1/3
           (%o5) [x = (- ---------- - -) (--------------- - -)
@@ -16991,6 +17255,16 @@ File: maxima.info,  Node: Functions and Variables for Equations,  Prev: Equation
           (%o11)                  [x = - 1, x = 1]
           (%i12) ev (%th(2), %[1]);
           (%o12)                          0
+
+     The symbols `%r' are used to denote arbitrary constants in a
+     solution.
+
+          (%i1) solve([x+y=1,2*x+2*y=2],[x,y]);
+
+          solve: dependent equations eliminated: (2)
+          (%o1)                      [[x = 1 - %r1, y = %r1]]
+
+     *Note algsys::, and *Note %rnum_list::, for more information.
 
 
  -- Option variable: solvedecomposes
@@ -17378,7 +17652,7 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      When the data <x> are real, real coefficients `a' and `b' can be
      computed such that
 
-          x[j] = sum (a[k] * cos (2*%pi*j*k / n) + b[k] * sin (2*%pi*j*k / n), k, 0, n/2)
+          x[j] = sum(a[k]*cos(2*%pi*j*k/n)+b[k]*sin(2*%pi*j*k/n), k, 0, n/2)
 
      with
 
@@ -17456,7 +17730,8 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           (%o15)          [4.5, - 1.0, - 1.0, - 1.0, - 0.5]
           (%i16) listarray (b);
           (%o16)           [0, - 2.414, - 1.0, - .4142, 0]
-          (%i17) f(j) := sum (a[k] * cos (2*%pi*j*k / n) + b[k] * sin (2*%pi*j*k / n), k, 0, n/2) $
+          (%i17) f(j) := sum (a[k]*cos(2*%pi*j*k/n) + b[k]*sin(2*%pi*j*k/n),
+                              k, 0, n/2) $
           (%i18) makelist (float (f (j)), j, 0, n - 1);
           (%o18)      [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
 
@@ -17558,8 +17833,10 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           (%o4)                       7.0E+154
 
 
- -- Function: find_root (<expr>, <x>, <a>, <b>)
- -- Function: find_root (<f>, <a>, <b>)
+ -- Function: find_root (<expr>, <x>, <a>, <b>, [<abserr>, <relerr>])
+ -- Function: find_root (<f>, <a>, <b>, [<abserr>, <relerr>])
+ -- Function: bf_find_root (<expr>, <x>, <a>, <b>, [<abserr>, <relerr>])
+ -- Function: bf_find_root (<f>, <a>, <b>, [<abserr>, <relerr>])
  -- Option variable: find_root_error
  -- Option variable: find_root_abs
  -- Option variable: find_root_rel
@@ -17576,12 +17853,29 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
      question appears to be smooth enough, `find_root' applies linear
      interpolation instead.
 
-     The accuracy of `find_root' is governed by `find_root_abs' and
-     `find_root_rel'.  `find_root' stops when the function in question
-     evaluates to something less than or equal to `find_root_abs', or
-     if successive approximants <x_0>, <x_1> differ by no more than
-     `find_root_rel * max(abs(x_0), abs(x_1))'.  The default values of
-     `find_root_abs' and `find_root_rel' are both zero.
+     `bf_find_root' is a bigfloat version of `find_root'.  The function
+     is computed using bigfloat arithmetic and a bigfloat result is
+     returned.  Otherwise, `bf_find_root' is identical to `find_root',
+     and the following description is equally applicable to
+     `bf_find_root'.
+
+     The accuracy of `find_root' is governed by `abserr' and `relerr',
+     which are optional keyword arguments to `find_root'.  These
+     keyword arguments take the form `key=val'.  The keyword arguments
+     are
+
+    <abserr>
+          Desired absolute error of function value at root.  Default is
+          `find_root_abs'.
+
+    <relerr>
+          Desired relative error of root.  Default is `find_root_rel'.
+
+     `find_root' stops when the function in question evaluates to
+     something less than or equal to `abserr', or if successive
+     approximants <x_0>, <x_1> differ by no more than `relerr *
+     max(abs(x_0), abs(x_1))'.  The default values of `find_root_abs'
+     and `find_root_rel' are both zero.
 
      `find_root' expects the function in question to have a different
      sign at the endpoints of the search interval.  When the function
@@ -17620,6 +17914,12 @@ File: maxima.info,  Node: Functions and Variables for fast Fourier transform,  N
           (%o7)                   2.302585092994046
           (%i8) log (10.0);
           (%o8)                   2.302585092994046
+          (%i9) fpprec:32;
+          (%o9)                           32
+          (%i10) bf_find_root (exp(x) = y, x, 0, 100), y = 10;
+          (%o10)                  2.3025850929940456840179914546844b0
+          (%i11) log(10b0);
+          (%o11)                  2.3025850929940456840179914546844b0
 
 
  -- Function: newton (<expr>, <x>, <x_0>, <eps>)
@@ -18207,6 +18507,8 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
 
      `remarray' returns the list of arrays removed.
 
+     `remarray' quotes its arguments.
+
 
  -- Function: subvar (<x>, <i>)
      Evaluates the subscripted expression `<x>[<i>]'.
@@ -18336,8 +18638,9 @@ field.
    The `vect' package contains these functions: `vectorsimp',
 `scalefactors', `express', `potential', and `vectorpotential'.
 
-   Warning: the `vect' package declares the dot operator `.' to be a
-commutative operator.
+   By default the `vect' package does not declare the dot operator to
+be a commutative operator.  To get a commutative dot operator `.', the
+command `declare(".", commutative)' must be executed.
 
 
 File: maxima.info,  Node: eigen,  Prev: Vectors,  Up: Introduction to Matrices and Linear Algebra
@@ -18354,8 +18657,8 @@ is invoked.  The package may be loaded explicitly as `load ("eigen")'.
 this package.  `batch ("eigen")' executes the same demonstration, but
 without the user prompt between successive computations.
 
-   The functions in the `eigen' package are `innerproduct',
-`unitvector', `columnvector', `gramschmidt', `eigenvalues',
+   The functions in the `eigen' package are
+`innerproduct', `unitvector', `columnvector', `gramschmidt', `eigenvalues',
 `eigenvectors', `uniteigenvectors', and `similaritytransform'.
 
 
@@ -18392,6 +18695,38 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
                                  [ 2  1 - a  - 5 b ]
           (%o2)                  [                 ]
                                  [ a    b      c   ]
+
+
+ -- Function: cauchy_matrix ([<x_1>,<x_2>, ..., <x_m>], [<y_1>,<y_2>,
+          ..., <y_n>])
+ -- Function: cauchy_matrix ([<x_1>,<x_2>, ..., <x_n>])
+     Returns a `n' by <m> Cauchy matrix with the elements <a[i,j]> =
+     1/(<x_i>+<y_i>). The second argument of `cauchy_matrix' is
+     optional. For this case the elements of the Cauchy matrix are
+     <a[i,j]> = 1/(<x_i>+<x_j>).
+
+     Remark: In the literature the Cauchy matrix can be found defined
+     in two forms.  A second definition is <a[i,j]> = 1/(<x_i>-<y_i>).
+
+     Examples:
+
+          (%i1) cauchy_matrix([x1,x2],[y1,y2]);
+                                [    1        1    ]
+                                [ -------  ------- ]
+                                [ y1 + x1  y2 + x1 ]
+          (%o1)                 [                  ]
+                                [    1        1    ]
+                                [ -------  ------- ]
+                                [ y1 + x2  y2 + x2 ]
+
+          (%i2) cauchy_matrix([x1,x2]);
+                                [   1         1    ]
+                                [  ----    ------- ]
+                                [  2 x1    x2 + x1 ]
+          (%o2)                 [                  ]
+                                [    1       1     ]
+                                [ -------   ----   ]
+                                [ x2 + x1   2 x2   ]
 
 
  -- Function: charpoly (<M>, <x>)
@@ -18835,7 +19170,8 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
      A matrix which has two eigenvectors for one eigenvalue (namely 2).
 
-          (%i1) M1 : matrix ([0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]);
+          (%i1) M1 : matrix ([0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0],
+                             [0, 0, 0, 2]);
                                    [ 0  1  0  0 ]
                                    [            ]
                                    [ 0  0  0  0 ]
@@ -19019,11 +19355,12 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
           (%i1) load (eigen)$
           (%i2) ip (f, g) := integrate (f * g, u, a, b);
           (%o2)          ip(f, g) := integrate(f g, u, a, b)
-          (%i3) y : gramschmidt ([1, sin(u), cos(u)], ip), a= -%pi/2, b=%pi/2;
+          (%i3) y : gramschmidt([1, sin(u), cos(u)], ip), a= -%pi/2, b=%pi/2;
                                          %pi cos(u) - 2
           (%o3)              [1, sin(u), --------------]
                                               %pi
-          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]), a= -%pi/2, b=%pi/2;
+          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]),
+                                                          a= -%pi/2, b=%pi/2;
           (%o4)                       [0, 0, 0]
 
 
@@ -19073,6 +19410,15 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
 
      See `^^' (noncommutative exponent) for another method of inverting
      a matrix.
+
+
+ -- Function: list_matrix_entries (<M>)
+     Returns a list containing the elements of the matrix <M>.
+
+     Example:
+
+          (%i1) list_matrix_entries(matrix([a,b],[c,d]));
+          (%o1)                     [a, b, c, d]
 
 
  -- Option variable: lmxchar
@@ -19625,12 +19971,11 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      Applies simplifications and expansions according to the following
      global flags:
 
-     `expandall', `expanddot', `expanddotplus', `expandcross',
-     `expandcrossplus', `expandcrosscross', `expandgrad',
-     `expandgradplus', `expandgradprod', `expanddiv', `expanddivplus',
-     `expanddivprod', `expandcurl', `expandcurlplus', `expandcurlcurl',
-     `expandlaplacian', `expandlaplacianplus', and
-     `expandlaplacianprod'.
+     `expandall', `expanddot', `expanddotplus', `expandcross', `expandcrossplus',
+     `expandcrosscross', `expandgrad', `expandgradplus', `expandgradprod',
+     `expanddiv', `expanddivplus', `expanddivprod', `expandcurl', `expandcurlplus',
+     `expandcurlcurl', `expandlaplacian', `expandlaplacianplus',
+     and `expandlaplacianprod'.
 
      All these flags have default value `false'. The `plus' suffix
      refers to employing additivity or distributivity.  The `prod'
@@ -20236,7 +20581,6 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
           g([],[%4,%5])*g([],[%6,%7])*ichr2([%1,%2],[u])*
           ichr2([%3,%5],[%1])*ichr2([%4,%6],[%3])*ichr2([%7,r],[%2]),noeval$
           (%i4) expr:ishow(%)$
-
                  %4 %5  %6 %7      %3         u          %1         %2
           (%t4) g      g      ichr2      ichr2      ichr2      ichr2
                                    %1 %4      %2 %3      %5 %6      %7 r
@@ -20345,7 +20689,6 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 
      1) As an indexed expression. For instance:
 
-
           (%i2) components(g([],[i,j]),e([],[i])*p([],[j]))$
           (%i3) ishow(g([],[i,j]))$
                                                 i  j
@@ -20362,7 +20705,6 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
                                       [ 0   0   - 1   0  ]
                                       [                  ]
                                       [ 0   0    0   - 1 ]
-
           (%i6) components(g([i,j],[]),lg);
           (%o6)                                done
           (%i7) ishow(g([i,j],[]))$
@@ -20502,7 +20844,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 
 
  -- Function: kdels (<L1>, <L2>)
-     Symmetricized Kronecker delta, used in some calculations. For
+     Symmetrized Kronecker delta, used in some calculations. For
      instance:
 
 
@@ -20770,9 +21112,9 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 
      `idiff' can also differentiate the determinant of the metric
      tensor. Thus, if `imetric' has been bound to `G' then
-     `idiff(determinant(g),k)' will return
-     `2*determinant(g)*ichr2([%i,k],[%i])' where the dummy index `%i'
-     is chosen appropriately.
+     `idiff(determinant(g),k)' will return `2 * determinant(g) *
+     ichr2([%i,k],[%i])' where the dummy index `%i' is chosen
+     appropriately.
 
 
  -- Function: liediff (<v>, <ten>)
@@ -21024,7 +21366,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
  -- System variable: imetric
      Specifies the metric by assigning the variable `imetric:<g>' in
      addition, the contraction properties of the metric <g> are set up
-     by executing the commands `defcon(<g>),defcon(<g>,<g>,kdelta)'.
+     by executing the commands `defcon(<g>), defcon(<g>, <g>, kdelta)'.
      The variable `imetric' (unbound by default), is bound to the
      metric, assigned by the `imetric(<g>)' command.
 
@@ -21305,9 +21647,9 @@ the `iframe_bracket_form' flag is set to `false':
 
 
  -- Variable: ifc2
-     Frame coefficient of the first kind. This tensor represents the
+     Frame coefficient of the second kind. This tensor represents the
      contribution of the frame metric to the connection coefficient of
-     the first kind. Defined as a permutation of the frame bracket
+     the second kind. Defined as a permutation of the frame bracket
      (`ifb') with the appropriate indices raised and lowered as
      necessary:
 
@@ -21677,7 +22019,6 @@ translate tensor expressions into appropriately indexed TeX objects.
  -- Function: tentex (<expr>)
      To use the `tentex' function, you must first load `tentex', as in
      the following example:
-
 
           (%i1) load(itensor);
           (%o1)      /share/tensor/itensor.lisp
@@ -22393,7 +22734,7 @@ For a demonstration of this capability, see the file
      counterpart (`npi'). See `petrov' for an example.
 
      The null tetrad is constructed on the assumption that a
-     four-diemensional orthonormal frame metric with metric signature
+     four-dimensional orthonormal frame metric with metric signature
      (-,+,+,+) is being used.  The components of the null tetrad are
      related to the inverse frame matrix as follows:
 
@@ -22413,7 +22754,7 @@ For a demonstration of this capability, see the file
 
  -- Function: psi (<dis>)
      Computes the five Newman-Penrose coefficients `psi[0]'...`psi[4]'.
-     If `psi' is set to `true', the coefficients are displayed.  See
+     If `dis' is set to `true', the coefficients are displayed.  See
      `petrov' for an example.
 
      These coefficients are computed from the Weyl-tensor in a
@@ -22554,9 +22895,9 @@ nonmetricity vector `nm'. From this, the nonmetricity coefficients
    where D stands for the Kronecker-delta.
 
    When `ctorsion_flag' is set to `true', the values of `kt' are
-substracted from the mixed-indexed connection coefficients computed by
+subtracted from the mixed-indexed connection coefficients computed by
 `christof' and stored in `mcs'. Similarly, if `cnonmet_flag' is set to
-`true', the values of `nmc' are substracted from the mixed-indexed
+`true', the values of `nmc' are subtracted from the mixed-indexed
 connection coefficients.
 
    If necessary, `christof' calls the functions `contortion' and
@@ -22639,7 +22980,6 @@ connection coefficients.
      Computes the contravariant gradient of a scalar function allowing
      the user to choose the corresponding vector name as the example
      below for the Schwarzschild metric illustrates:
-
 
           (%i1) load(ctensor);
           (%o1)       /share/tensor/ctensor.mac
@@ -23282,7 +23622,6 @@ vectors and their product, i.e.:
 quaternion algebra, it is not used in this example, in which we
 endeavour to build the quaternion multiplication table as a matrix:
 
-
      (%i1) load(atensor);
      (%o1)       /share/tensor/atensor.mac
      (%i2) init_atensor(clifford,0,0,2);
@@ -23392,8 +23731,8 @@ File: maxima.info,  Node: Functions and Variables for atensor,  Prev: Introducti
      equivalent to `init_atensor(clifford,0,0,1)'.
 
      `quaternion' implements the algebra of quaternions. The call
-     `init_atensor(quaternion)' is equivalent to
-     `init_atensor(clifford,0,0,2)'.
+     `init_atensor (quaternion)' is equivalent to `init_atensor
+     (clifford,0,0,2)'.
 
      `pauli' implements the algebra of Pauli-spinors as the
      Clifford-algebra Cl(3,0). A call to `init_atensor(pauli)' is
@@ -24366,16 +24705,23 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
 
  -- Function: burn (<n>)
-     Returns the <n>'th Bernoulli number for integer <n>.  `burn' may
-     be more efficient than `bern' for large, isolated <n> (perhaps <n>
-     greater than 105 or so), as `bern' computes all the Bernoulli
-     numbers up to index <n> before returning.
+     Returns a rational number, which is an approximation of the <n>'th
+     Bernoulli number for integer <n>. `burn' exploits the observation
+     that (rational) Bernoulli numbers can be approximated by
+     (transcendental) zetas with tolerable efficiency:
 
-     `burn' exploits the observation that (rational) Bernoulli numbers
-     can be approximated by (transcendental) zetas with tolerable
-     efficiency.
+                             n - 1  1 - 2 n
+                        (- 1)      2        zeta(2 n) (2 n)!
+               B(2 n) = ------------------------------------
+                                          2 n
+                                       %pi
 
-     `load ("bffac")' loads this function.
+     `burn' may be more efficient than `bern' for large, isolated <n>
+     as `bern' computes all the Bernoulli numbers up to index <n> before
+     returning. `burn' invokes the approximation for even integers <n> >
+     255. For odd integers and <n> <= 255 the function `bern' is called.
+
+     `load ("bffac")' loads this function. See also `bern'.
 
 
  -- Function: cf (<expr>)
@@ -24764,16 +25110,16 @@ File: maxima.info,  Node: Functions and Variables for Number Theory,  Prev: Numb
 
      Examples:
 
-          (%i1) zeta([-2,-1,0,0.5,2,3,1+%i]);
-                                                        2
-                       1     1                       %pi
-          (%o1)  [0, - --, - -, - 1.460354508809587, ----, zeta(3), zeta(%i + 1)]
-                       12    2                        6
-
+          (%i1) zeta([-2, -1, 0, 0.5, 2, 3, 1+%i]);
+                                                       2
+                      1     1                       %pi
+          (%o1) [0, - --, - -, - 1.460354508809586, ----, zeta(3),
+                      12    2                        6
+                                                              zeta(%i + 1)]
           (%i2) limit(zeta(x),x,1,plus);
-          (%o2)                                 inf
+          (%o2)                          inf
           (%i3) limit(zeta(x),x,1,minus);
-          (%o3)                                minf
+          (%o3)                         minf
 
 
  -- Option variable: zeta%pi
