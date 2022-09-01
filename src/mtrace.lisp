@@ -427,7 +427,7 @@
 
 (defun trace-option-p (function keyword)
   (do ((options
-	(let ((options (trace-options (getop function))))
+	(let ((options (trace-options function)))
 	  (cond ((null options) nil)
 		(($listp options) (cdr options))
 		(t
@@ -442,7 +442,7 @@
 	  ((eq (caar option) keyword)
 	   (let ((return-to-trace-handle $trace_safety))
 	     (return (mapply (cadr option) predicate-arglist
-			     (make-mstring "A trace option predicate"))))))))
+			     "A trace option predicate")))))))
 
 
 (defun trace-enter-print (fun lev largs &aux (mlargs `((mlist) ,@largs)))
@@ -475,7 +475,7 @@
   (if (trace-option-p fun '$break)
       (do ((return-to-trace-handle nil)
 	   ($trace_break_arg `((mlist) ,@largs)))(nil)
-	($break (make-mstring "Trace entering") fun (make-mstring "level") lev)
+	($break "Trace entering" fun "level" lev)
 	(cond (($listp $trace_break_arg)
 	       (return (cdr $trace_break_arg)))
 	      (t
@@ -487,7 +487,7 @@
   (if (trace-option-p fun '$break)
       (let (($trace_break_arg ret-val)
 	    (return-to-trace-handle nil))
-	($break (make-mstring "Trace exiting") fun (make-mstring "level") lev)
+	($break "Trace exiting" fun "level" lev)
 	$trace_break_arg)
       ret-val))
 
@@ -593,7 +593,7 @@
 	(return-to-trace-handle nil))
     (case type
       ((mexpr)
-       (mapply prop largs (make-mstring "A traced function")))
+       (mapply prop largs "A traced function"))
       ((expr)
        (apply prop largs))
       ((subr lsubr)
@@ -664,9 +664,11 @@
 	 ((mlist simp) $function $time//call $calls $runtime $gctime)
 	 ,.(nreverse v)
 	 ,(timer-mlist '$total total-calls total-runtime total-gctime)))
-    (let ((runtime ($get (car l) '$runtime))
-	  (gctime  ($get (car l) '$gctime))
-	  (calls   ($get (car l) '$calls)))
+    (let*
+      ((fun-opr (getopr (car l)))
+       (runtime ($get fun-opr '$runtime))
+       (gctime  ($get fun-opr '$gctime))
+       (calls   ($get fun-opr '$calls)))
       (when runtime
 	(incf total-calls calls)
 	(incf total-runtime runtime)
@@ -676,9 +678,10 @@
 (defun macsyma-timer (fun)
   (prog1
       (macsyma-trace-sub fun 'timer-handler $timer)
-    ($put fun 0 '$runtime)
-    ($put fun 0 '$gctime)
-    ($put fun 0 '$calls)))
+      (let ((fun-opr (getopr fun)))
+        ($put fun-opr 0 '$runtime)
+        ($put fun-opr 0 '$gctime)
+        ($put fun-opr 0 '$calls))))
 
 (defun macsyma-untimer (fun) (macsyma-untrace-sub fun 'timer-handler $timer))
 

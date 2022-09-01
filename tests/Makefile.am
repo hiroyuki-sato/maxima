@@ -49,6 +49,13 @@ check-openmcl:
 	$(MAXIMA) --lisp=openmcl --batch-string="run_testsuite();" < /dev/null
 endif
 
+if ECL
+check: check-ecl
+check-ecl:
+	echo "Running test suite with ecl..."; \
+	$(MAXIMA) --lisp=ecl --batch-string="run_testsuite();" < /dev/null
+endif
+
 genericdir = $(insttestsdir)
 genericdirDATA = rexamples.mac \
 rtest10.mac \
@@ -99,6 +106,11 @@ rtest_boolean.mac \
 rtest_round.mac \
 rtest_map.mac \
 rtest_sign.mac \
+rtest_algebraic.mac \
+rtest_gamma.mac \
+rtest_expintegral.mac \
+rtest_hypgeo.mac \
+rtest_signum.mac \
 README.how-to \
 testsuite.lisp \
 wester_problems/wester-gpl-permission-message.txt \

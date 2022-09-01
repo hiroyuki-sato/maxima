@@ -124,11 +124,9 @@
 ;; is NIL to keep a message from being printed when the file containing MSTRING
 ;; is loaded.  (MRG;GRIND)
 
-(defprop mexpt (#/* #/*) dissym)
+(defprop mexpt (#\* #\*) dissym)
 
-(defun fortran-print (x &optional bypass
-                        (stream #+MACLISP nil #-MACLISP standard-output)
-                        &aux #+pdp10 (terpri t) #+pdp10 ($loadprint nil)
+(defun fortran-print (x &optional bypass (stream standard-output)
                         ;; this is a poor way of saying that array references
                         ;; are to be printed with parens instead of brackets.
                         (lb #/( ) (rb #/) ))
@@ -234,7 +232,7 @@
 
 (defun fortscan (e)
  (cond ((atom e)
-        (cond ((and $fort_float (fixp e)) (float e))
+        (cond ((and $fort_float (fixnump e)) (float e))
               ((eq e '$%i) (list '(mprogn) 0.0 1.0)) ;; %I is (0,1)
               (t e)))
        ((member 'array (cdar e) :test #'eq) e)
@@ -248,7 +246,7 @@
                             (list '(mquotient simp) 1 (list '(%sqrt simp) (fortscan mybase))))
                            (t (list (car e)
                                     (fortscan mybase)
-                                    (cond ((fixp expon)
+                                    (cond ((fixnump expon)
                                            (cond ($fort_power_float (float expon))
                                                  (t expon)))
                                           (t (fortscan expon))))))))
@@ -279,8 +277,7 @@
 ;; statements of the form
 ;;  NAME(I,J) = <corresponding matrix element>
 
-(defmfun $fortmx (name mat &optional (stream #+MACLISP nil #-MACLISP standard-output)
-                         &aux ($loadprint nil))
+(defmfun $fortmx (name mat &optional (stream standard-output) &aux ($loadprint nil))
   (declare (fixnum i j))
   (cond ((not (eq (typep name) 'symbol))
          (merror "~%First argument to FORTMX must be a symbol."))
@@ -306,7 +303,7 @@
                    ((null mp)
                     (and (> sm $labelength) 
                          (let ((len-q (last (car x)))) 
-                           (cond ((fixp (car len-q)) (rplaca len-q sm))
+                           (cond ((fixnump (car len-q)) (rplaca len-q sm))
                                  (t (rplaca x `(,(caar x) simp ,sm))))))
                     sm)
                  (declare (fixnum sm negexps))
@@ -349,7 +346,7 @@
             (cond ((member opr '(mtimes mplus) :test #'eq)
                    (do ((newlen (+ 2 (+ prefix-psize suffix-psize
                                         (flatc $fbreak_temp_counter))))
-                        (threshold (// size 2))
+                        (threshold (truncate size 2))
                         (newobj)
                         (big-ones)
                         (scan (cdr x) (cdr scan)))
@@ -387,7 +384,7 @@
    (cond ((atom x) 0)
          (t
           (let ((lenf (car (last (car x)))))
-            (cond ((not (fixp lenf)) 0)
+            (cond ((not (fixnump lenf)) 0)
                   (t
                    (do ((est lenf))
                        ((< est $allowed_length) est)
@@ -402,7 +399,7 @@
                                  (cond ((< $labelength halfing-floor)
                                         (break-p-t x est))
                                        (t
-                                        (setq $labelength (// $labelength 2))))
+                                        (setq $labelength (truncate $labelength 2))))
                                  (setq est (fort-len x)))
                                 (t
                                  (let ((prt (car posit)))
@@ -420,7 +417,7 @@
                                    (cond ((atom potl-atom) 0)
                                          (t
                                           (let ((pnum (car (last (car potl-atom)))))
-                                            (cond ((fixp pnum) pnum)
+                                            (cond ((fixnump pnum) pnum)
                                                   (t 0)))))))))))))))
 
 (defun $fortranbreak (x)
@@ -432,7 +429,7 @@
           (pre-compile x)))
    x)
 
-(defmacro tablen () #-(or Franz LISPM) (status tabsize) #+(or Franz LISPM) 8)
+(defmacro tablen () 8)
 
 (defvar eliminate-space nil)
 
@@ -462,7 +459,7 @@
 			      (tyo arg out-designate)
 			      (setq eliminate-space nil))
 			    (if (= left (1- tabsz)) (setq eliminate-space t)))
-			(setq pure-col (+ tabsz (* tabsz (// pure-col tabsz)))
+			(setq pure-col (+ tabsz (* tabsz (truncate pure-col tabsz)))
 			      tab-encounter t)))
                      (t
                       (if (and comment-fortran tab-encounter)
@@ -494,7 +491,7 @@
 				       (setq eliminate-space t))
 				   (setq rst follow)))
 			      (if tab-encounter (setq eliminate-space nil))
-			      (setq pure-col (+ tabsize (* tabsize (// pure-col tabsize)))
+			      (setq pure-col (+ tabsize (* tabsize (truncate pure-col tabsize)))
 				    tab-encounter t)))
 			   (t
 			    (if (and comment-fortran tab-encounter)
@@ -537,8 +534,7 @@
 
 (defun zconcat (a b) (format NIL "~A~A" a b))
 
-(defun $generate_data_section (&optional (stream #+MACLISP nil
-                                                 #-MACLISP standard-output))
+(defun $generate_data_section (&optional (stream standard-output))
    (if data-info
        (do ((step 15)
             (contin -1 -1)

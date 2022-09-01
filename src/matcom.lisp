@@ -77,7 +77,7 @@
 		 (makepreds (cdr l) nil)))))
 
 (defun defmatch1 (pt e) 
-  (prog (topreflist program) 
+  (prog (topreflist program prog-variables) 
      (setq topreflist (list e))
      (cond ((atom (errset (compilematch e pt)))
 	    (merror "Match processing aborted~%"))
@@ -87,7 +87,8 @@
 			    `(declare (special ,e))
 			    (list 'catch ''match
 				  (nconc (list 'prog)
-					 (list (cdr (reverse topreflist)))
+					 (list (setq prog-variables (cdr (reverse topreflist))))
+                     `((declare (special ,@ prog-variables)))
 					 program
 					 (list (list 'return t))))))))))
 
@@ -477,7 +478,9 @@
       (list
        'lambda
        '(x ans a3)
-       (if oldstuff (list 'setq 'x (list oldstuff 'x 'ans 'a3)))
+       (if oldstuff
+         (list 'setq 'x (list oldstuff 'x 'ans 'a3))
+         '(declare (ignore a3)))
        (list
 	'cond
 	'(*afterflag x)
@@ -518,7 +521,7 @@
 
 (defun announce-rule-firing (rulename expr simplified-expr)
   (let (($display2d nil) ($stringdisp nil))
-    ($print (make-mstring "By") rulename '|&,| expr '|&-->| simplified-expr))
+    ($print "By" rulename "," expr "-->" simplified-expr))
   simplified-expr)
 
 (defmspec $defrule (form)

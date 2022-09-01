@@ -205,9 +205,9 @@
 			(among var ll))
 		    (setq var (stripdollar var))
 		    (setq exp ($substitute var orig-var exp))))
-	     (cond ((not (equal ($ratsimp ($imagpart ll)) 0))
+	     (cond ((not (equal (sratsimp ($imagpart ll)) 0))
 		    (merror "Defint: Lower limit of integration must be real."))
-		   ((not (equal ($ratsimp ($imagpart ul)) 0))
+		   ((not (equal (sratsimp ($imagpart ul)) 0))
 		    (merror
 		     "Defint: Upper limit of integration must be real.")))
 
@@ -378,7 +378,7 @@
 	   ans))))
 
 (defun intcv3 (d ind nv)
-  (setq nn* ($ratsimp (sdiff d var)))
+  (setq nn* (sratsimp (sdiff d var)))
   (setq exp1 (subst 'yx nv exp))
   (setq exp1 (m* nn* (cond (ind exp)
 			   (t (subst d var exp1)))))
@@ -551,10 +551,13 @@
 		  (cond ((take-principal anti-deriv ll ul poles))
 			(t ()))))))))
 
+;; adds up integrals of ranges between each pair of poles.
+;; checks if whole thing is divergent as limits of integration approach poles.
 (defun take-principal (anti-deriv ll ul poles &aux ans merged-list)
-  (setq anti-deriv (cond ((involve anti-deriv '(%log))
-			  ($logcontract anti-deriv))
-			 (t anti-deriv)))
+  ;;; calling $logcontract causes antiderivative of 1/(1-x^5) to blow up
+  ;;  (setq anti-deriv (cond ((involve anti-deriv '(%log))
+  ;;			  ($logcontract anti-deriv))
+  ;;			 (t anti-deriv)))
   (setq ans 0.)
   (setq merged-list (interval-list poles ll ul))
   (do ((current-pole (cdr merged-list) (cdr current-pole))
@@ -568,7 +571,7 @@
   (cond ((not (freeof '%log ans))
 	 (setq ans ($logcontract ans))))
   (setq ans (get-limit (get-limit ans 'epsilon 0 '$plus) 'prin-inf '$inf))
-  ;;Return setion.
+  ;;Return section.
   (cond ((or (null ans)
 	     (not (free ans '$infinity))
 	     (not (free ans '$ind)))  ())
@@ -640,17 +643,31 @@
   (let ((e (pqr exp)))
     ;; PQR divides the rational expression and returns the quotient
     ;; and remainder
-    (cond ((equal 0. (car e))
-	   ;; No polynomial part
-	   (cv exp))
-	  ((equal 0. (cdr e))
-	   ;; Only polynomial part
-	   (eezz (car e) ll ul))
-	  (t
-	   ;; A non-zero quotient and remainder.  Combine the results
-	   ;; together.
-	   (m+t (eezz (car e) ll ul)
-		(cv (m// (cdr e) dn*)))))))
+    (flet ((try-antideriv (e lo hi)
+	     (let ((ans (antideriv e)))
+	       (when ans
+		 (m- ($substitute hi var ans)
+		     ($substitute lo var ans))))))
+
+      (cond ((equal 0. (car e))
+	     ;; No polynomial part
+	     (let ((ans (try-antideriv exp ll ul)))
+	       (if ans
+		   ans
+		   (cv exp))))
+	    ((equal 0. (cdr e))
+	     ;; Only polynomial part
+	     (eezz (car e) ll ul))
+	    (t
+	     ;; A non-zero quotient and remainder.  Combine the results
+	     ;; together.
+	     (let ((ans (try-antideriv (m// (cdr e) dn*) ll ul)))
+	       (cond (ans
+		      (m+t (eezz (car e) ll ul)
+			   ans))
+		     (t
+		      (m+t (eezz (car e) ll ul)
+			   (cv (m// (cdr e) dn*)))))))))))
 
 ;; I think this takes a rational expression E, and finds the
 ;; polynomial part.  A cons is returned.  The car is the quotient and
@@ -998,7 +1015,7 @@
 	      (eq ($sign (m+ (deg (setq nn* ($imagpart (caddr term))))
 			     -2.))
 		  '$neg))
-	 (cond ((eq ($asksign (ratcoef nn* var)) '$pos)
+	 (cond ((eq ($asksign (ratdisrep (ratcoef nn* var))) '$pos)
 		(setq *updn t))
 	       (t (setq *updn nil)))
 	 term)
@@ -1090,7 +1107,7 @@
     (cond ((not (or (polyinx d var nil)
 		    (and (setq grand (%einvolve d))
 			 (among '$%i grand)
-			 (polyinx (setq d ($ratsimp (m// d (m^t '$%e grand))))
+			 (polyinx (setq d (sratsimp (m// d (m^t '$%e grand))))
 				  var
 				  nil)
 			 (setq n (m// n (m^t '$%e grand))))))  nil)
@@ -1130,7 +1147,7 @@
 			(t ($ratsubst (m- var) var e))))))
     (cond ((zerop1 temp)
 	   t)
-	  ((zerop1 ($ratsimp temp))
+	  ((zerop1 (sratsimp temp))
 	   t)
 	  (t nil))))
 
@@ -1140,7 +1157,7 @@
 			  (t ($ratsubst (m- var) var e))))))
     (cond ((zerop1 temp)
 	   t)
-	  ((zerop1 ($ratsimp temp))
+	  ((zerop1 (sratsimp temp))
 	   t)
 	  (t nil))))
 
@@ -1184,7 +1201,7 @@
 		 (eq (ask-integer r '$integer) '$yes)
 		 (setq test-var (bxm d s))
 		 (setq ans (apply 'fan (cons (m+ 1. r) test-var))))
-	    (return (m* (m// nc dc) ($ratsimp ans))))
+	    (return (m* (m// nc dc) (sratsimp ans))))
 	   ((and (ratp grand var)
 		 (setq ans (zmtorat n (cond ((mtimesp d) d)
 					    (t ($sqfr d)))
@@ -1223,7 +1240,7 @@
 
 (defun ztorat (n d s)
   (cond ((and (null *dflag)
-	      (setq s (difapply n d nn* #'ztorat)))
+	      (setq s (difapply n d s #'ztorat)))
 	 s)
 	((setq n (let ((plogabs ()))
 		   (keyhole (m* `((%plog) ,(m- var)) n) d var)))
@@ -1275,7 +1292,8 @@
 	    (cond ((setq temp (mtosc grand))
 		   (return temp))
 		  (t (go en)))))
-     (cond ((polyinx grand var nil)
+     (setq grand ($exponentialize grand))	; exponentializing before numden 
+     (cond ((polyinx grand var nil)		;  avoids losing multiplicities [ 1309432 ]
 	    (diverg))
 	   ((and (ratp grand var)
 		 (mtimesp grand)
@@ -1374,10 +1392,10 @@
 ;;;diff down to linear.
 			(setq lc (sdiff linpart var))
 ;;;all the way to constant.
-			(setq linpart ($ratsimp (m// linpart lc)))
-			(setq lc ($ratsimp (m// lc `((mfactorial) ,deg))))
+			(setq linpart (sratsimp (m// linpart lc)))
+			(setq lc (sratsimp (m// lc `((mfactorial) ,deg))))
 ;;;get rid of factorial from differentiation.
-			(setq c ($ratsimp (m+ exp (m* (m- lc)
+			(setq c (sratsimp (m+ exp (m* (m- lc)
 						      (m^ linpart deg)))))))
 ;;;Sees if can be expressed as (a*x+b)^n + part freeof x.
 	       (cond ((not (among var c))
@@ -1461,7 +1479,7 @@
      (setq varlist (list var))
      (setq *mtoinf* t)
      (cond ((and (setq expo (%einvolve e))
-		 (polyp (setq poly ($ratsimp (m// e (m^t '$%e expo)))))
+		 (polyp (setq poly (sratsimp (m// e (m^t '$%e expo)))))
 		 (setq l (catch 'ggrm (ggr (m^t '$%e expo) nil))))
 	    (setq *mtoinf* nil)
 	    (setq mb (m- (subin 0. (cadr l))))
@@ -1769,9 +1787,10 @@
 	($trigsign t)
 	(*sin-cos-recur* t))		;recursion stopper
     (prog (ans d nzp2 l int-zero-to-d int-nzp2 int-zero-to-c)
-       (when (or (not ($constantp limit-diff))
-		 (not (period %pi2 e var)))
-	 ;; Exit if b-a is not a constant or if the integrand
+       (when (or (not (period %pi2 e var))
+		 (not (and ($constantp a)
+			   ($constantp b))))
+	 ;; Exit if b or a is not a constant or if the integrand
 	 ;; doesn't appear to have a period of 2 pi.
 	 (return nil))
        ;; Multiples of 2*%pi in limits.
@@ -1786,8 +1805,9 @@
 	      (cond ((setq ans (intsc e %pi2 var))
 		     (return (m* d ans)))
 		    (t (return nil)))))
+       
        ;; The integral is not over a full period (2*%pi) or multiple
-       ;; of a full period.  Need to do something special.
+       ;; of a full period.  
 
        ;; Wang p. 111: The integral integrate(f(x),x,a,b) can be
        ;; written as:
@@ -1810,7 +1830,7 @@
        (setq l (infr l))
        ;; Compute -integrate(f,x,0,d)
        (setq int-zero-to-d
-	     (cond ((setq ans (intsc e (cdr l) var))
+	     (cond ((setq ans (try-intsc e (cdr l) var))
 		    (m*t -1 ans))
 		   (t  nil)))
        ;; Compute n = q - p (stored in nzp2)
@@ -1820,22 +1840,15 @@
        (setq int-nzp2 (cond ((zerop1 nzp2)
 			      ;; n = 0
 			      0.)
-			     ((setq ans (intsc e %pi2 var))
+			     ((setq ans (try-intsc e %pi2 var))
 			      ;; n is not zero, so compute
 			      ;; integrate(f,x,0,2*%pi)
 			      (m*t nzp2 ans))
 			     ;; Unable to compute integrate(f,x,0,2*%pi)
 			     (t nil)))
        ;; Compute integrate(f,x,0,c)
-       (setq int-zero-to-c (cond ((zerop1 (cdr b))
-				  ;; c = 0 (stored in cdr of b), so
-				  ;; integral is zero.
-				  0.)
-				 ((setq ans (intsc e (cdr b) var))
-				  ;; integrate(f,x,0,c)
-				  ans)
-				 ;; Unable to compute integrate(f,x,0,c)
-				 (t nil)))
+       (setq int-zero-to-c (try-intsc e (cdr b) var))
+
        (return (cond ((and int-zero-to-d int-nzp2 int-zero-to-c)
 		      ;; All three pieces succeeded.
 		      (add* int-zero-to-d int-nzp2 int-zero-to-c))
@@ -1847,6 +1860,16 @@
 			     limit-diff var))
 		     ;; nothing worked
 		     (t nil))))))
+
+;; integrate(sc, var, 0, b), where sc is f(sin(x), cos(x)).
+;; calls intsc with a wrapper to just return nil if integral is divergent,
+;;  rather than generating an error.
+(defun try-intsc (sc b var)
+  (let* ((*nodiverg t)
+	 (ans (catch 'divergent (intsc sc b var))))
+    (if (eq ans 'divergent)
+	nil
+      ans)))
 
 ;; integrate(sc, var, 0, b), where sc is f(sin(x), cos(x)).  I (rtoy)
 ;; think this expects b to be less than 2*%pi.
@@ -1955,8 +1978,7 @@
 	   0)
 	  ((equal ($asksign denom) '$zero)
 	   '$undefined)
-	  (t (let (($%piargs ()))
-	       (intsubs exp ll ul))))))
+	  (t (intsubs exp ll ul)))))
 
 ;; Determine whether E is of the form sin(x)^m*cos(x)^n and return the
 ;; list (m n).
@@ -2227,7 +2249,7 @@
       `((%gamma) ,c)))
 
 (defun zto%pi2 (grand var)
-  (let ((result (unitcir ($ratsimp (m// grand var)) var)))
+  (let ((result (unitcir (sratsimp (m// grand var)) var)))
     (cond (result (sratsimp (m* (m- '$%i) result)))
 	  (t nil))))
 
@@ -2335,7 +2357,7 @@
 		(eq ($sign (m+ s (m+ 1 (deg b))))
 		    '$pos)
 		(evenfn b var)
-		(setq a (lognxp ($ratsimp (m// a b)))))
+		(setq a (lognxp (sratsimp (m// a b)))))
 	   (list b a)))))
 
 (defun lognxp (a)
@@ -2386,60 +2408,47 @@
 
 (defun logcpj (n d i)
   (setq n (append
-	   (cond (plm* (list (mul* (m*t '$%i %pi2)
-				   (m+l
-				    (residue (m* (m^ `((%plog) ,var) i)
-						 n)
-					     d
-					     plm*))))))
+	   (if plm*
+	       (list (mul* (m*t '$%i %pi2)
+			   (m+l
+			    (residue (m* (m^ `((%plog) ,var) i)	 n)
+				     d
+				     plm*)))))
 	   (lognx2 i (m*t '$%i %pi2) pl* rl*)
 	   (lognx2 i %p%i pl*1 rl*1)))
-  (cond ((null n) 0)
-	(t (simplify (m+l n)))))
-
-
-;;should replace these references to *i* and *j* to symbol-value arrays.
-;;here and in SUMI, and LOGCPI.  These are the only references in this file.
-;;I did change I to *I*
-
-#-cl	      ;in case other lisps don't understand internal declares.
-(declare-top(special *i* *j*))
+  (if (null n)
+      0
+      (simplify (m+l n))))
 
 ;; Handle integral(n(x)/d(x)*log(x)^m,x,0,inf).  n and d are
 ;; polynomials.
 (defun log*rat (n d m)
-  (prog (leadcoef factors c plm* pl* rl* pl*1 rl*1 rlm*)
-     (declare (special *i* *j*))
-     ;;	(ARRAY *I* T (M+ 1 M))
-     ;;	(ARRAY *J* T (M+ 1 M))
-     (setq *i* (*array nil t (m+ 1 m)))
-     (setq *j* (*array nil t (m+ 1 m)))
-     (setq c 0.)
-     (setf (aref *j* c) 0.)
-     (do ((c 0. (m+ 1 c)))
-	 ((equal c m)
-	  (return (logcpi n d m)))
+  (declare (special *i* *j*))
+  (setq *i* (make-array (1+ m)))
+  (setq *j* (make-array (1+ m)))
+  (setf (aref *j* 0) 0)
+  (prog (leadcoef factors plm* pl* rl* pl*1 rl*1 rlm*)
+     (dotimes (c m (return (logcpi n d m)))
        (setf (aref *i* c) (logcpi n d c))
        (setf (aref *j* c) (logcpj n factors c)))))
 
 (defun logcpi (n d c)
   (declare (special *j*))
-  (cond ((equal c 0.)
-	 (logcpi0 n d))
-	(t (m* '((rat) 1. 2.)
-	       (m+ (aref *j* c) (m* -1 (sumi c)))))))
+  (if (zerop c)
+      (logcpi0 n d)
+      (m* '((rat) 1 2) (m+ (aref *j* c) (m* -1 (sumi c))))))
 
 (defun sumi (c)
   (declare (special *i*))
-  (do ((k 1. (m+ 1 k))
+  (do ((k 1 (1+ k))
        (ans ()))
-      ((equal k c)
+      ((= k c)
        (m+l ans))
-    (setq ans (cons (mul* ($makegamma `((%binomial) ,c ,k))
-			  (m^t '$%pi k)
-			  (m^t '$%i k)
-			  (aref *i* (m+ c (m- k))))
-		    ans))))
+    (push (mul* ($makegamma `((%binomial) ,c ,k))
+		(m^t '$%pi k)
+		(m^t '$%i k)
+		(aref *i* (- c k)))
+	  ans)))
 
 (defun fan (p m a n b)
   (let ((povern (m// p n))
@@ -2768,7 +2777,7 @@
        (cond ((and (eq ul '$inf)
 		   (equal ll 0.)
 		   (eq arg var)
-		   (equal 1 ($ratsimp (m// exp (m* (m- (subin (m^t var -1)
+		   (equal 1 (sratsimp (m// exp (m* (m- (subin (m^t var -1)
 							       exp))
 						    (m^t var -2))))))
 	      ;; Make the substitution y=1/x.  If the integrand has
@@ -3070,7 +3079,7 @@
 	   (setq m nn*)
 	   (setq r dn*)
 	   (cond
-	     ((and (setq r (bx**n+a ($ratsimp r)))
+	     ((and (setq r (bx**n+a (sratsimp r)))
 		   (not (among var (setq m (m// m (m* (cadr r) (caddr r)
 						      (m^t var (m+t -1 (cadr r))))))))
 		   (setq e (m// (subin 0. e) (m^t (car r) m))))
@@ -3212,7 +3221,7 @@
 	(den-conj nil))
     (cond ((among '$%i denom)
 	   (setq den-conj (maxima-substitute (m- '$%i) '$%i denom))
-	   (setq exp (m* den-conj ($ratsimp (m// exp den-conj))))
+	   (setq exp (m* den-conj (sratsimp (m// exp den-conj))))
 	   (setq exp (simplify ($multthru  (sratsimp exp)))))
 	  (t exp))))
 
@@ -3223,7 +3232,7 @@
 	   ;; %i.
 	   (let* ((den-conj (maxima-substitute (m- '$%i) '$%i denom))
 		  (num ($num exp))
-		  (new-denom ($ratsimp (m* denom den-conj))))
+		  (new-denom (sratsimp (m* denom den-conj))))
 	     ;; If the new denominator still contains %i, just give
 	     ;; up.  Otherwise, multiply the numerator by the
 	     ;; conjugate and divide by the new denominator.

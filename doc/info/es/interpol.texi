@@ -1,4 +1,4 @@
-@c english version 1.5
+@c english version 1.10
 @menu
 * Introducci@'on a interpol::
 * Funciones y variables para interpol::
@@ -44,26 +44,48 @@ Ejemplos:
 (%i1) load(interpol)$
 (%i2) p:[[7,2],[8,2],[1,5],[3,2],[6,7]]$
 (%i3) lagrange(p);
-                 4        3         2
-             73 x    701 x    8957 x    5288 x   186
-(%o3)        ----- - ------ + ------- - ------ + ---
-              420     210       420      105      5
+       (x - 7) (x - 6) (x - 3) (x - 1)
+(%o3)  -------------------------------
+                     35
+   (x - 8) (x - 6) (x - 3) (x - 1)
+ - -------------------------------
+                 12
+   7 (x - 8) (x - 7) (x - 3) (x - 1)
+ + ---------------------------------
+                  30
+   (x - 8) (x - 7) (x - 6) (x - 1)
+ - -------------------------------
+                 60
+   (x - 8) (x - 7) (x - 6) (x - 3)
+ + -------------------------------
+                 84
 (%i4) f(x):=''%;
-                     4        3         2
-                 73 x    701 x    8957 x    5288 x   186
-(%o4)    f(x) := ----- - ------ + ------- - ------ + ---
-                  420     210       420      105      5
+               (x - 7) (x - 6) (x - 3) (x - 1)
+(%o4)  f(x) := -------------------------------
+                             35
+   (x - 8) (x - 6) (x - 3) (x - 1)
+ - -------------------------------
+                 12
+   7 (x - 8) (x - 7) (x - 3) (x - 1)
+ + ---------------------------------
+                  30
+   (x - 8) (x - 7) (x - 6) (x - 1)
+ - -------------------------------
+                 60
+   (x - 8) (x - 7) (x - 6) (x - 3)
+ + -------------------------------
+                 84
 (%i5) /* Evaluate the polynomial at some points */
-      map(f,[2.3,5/7,%pi]);
-                             919062
-(%o5)  [- 1.567534999999992, ------,
-                             84035
-                         4          3           2
-                   73 %pi    701 %pi    8957 %pi    5288 %pi   186
-                   ------- - -------- + --------- - -------- + ---]
-                     420       210         420        105       5
+      expand(map(f,[2.3,5/7,%pi]));
+                                  4          3           2
+                    919062  73 %pi    701 %pi    8957 %pi
+(%o5)  [- 1.567535, ------, ------- - -------- + ---------
+                    84035     420       210         420
+                                             5288 %pi   186
+                                           - -------- + ---]
+                                               105       5
 (%i6) %,numer;
-(%o6) [- 1.567534999999992, 10.9366573451538, 2.89319655125692]
+(%o6) [- 1.567535, 10.9366573451538, 2.89319655125692]
 (%i7) load(draw)$  /* load draw package */
 (%i8) /* Plot the polynomial together with points */
       draw2d(
@@ -76,10 +98,21 @@ Ejemplos:
         points(p))$
 (%i9) /* Change variable name */
       lagrange(p, varname=w);
-                 4        3         2
-             73 w    701 w    8957 w    5288 w   186
-(%o9)        ----- - ------ + ------- - ------ + ---
-              420     210       420      105      5
+       (w - 7) (w - 6) (w - 3) (w - 1)
+(%o9)  -------------------------------
+                     35
+   (w - 8) (w - 6) (w - 3) (w - 1)
+ - -------------------------------
+                 12
+   7 (w - 8) (w - 7) (w - 3) (w - 1)
+ + ---------------------------------
+                  30
+   (w - 8) (w - 7) (w - 6) (w - 1)
+ - -------------------------------
+                 60
+   (w - 8) (w - 7) (w - 6) (w - 3)
+ + -------------------------------
+                 84
 @end example
 
 @end deffn
@@ -261,5 +294,47 @@ Ejemplos:
         key        = "Sample points",
         points(p))$
 @end example
+@end deffn
 
+
+@deffn {Funci@'on} ratinterpol (@var{points}, @var{numdeg})
+@deffnx {Funci@'on} ratinterpol (@var{points}, @var{numdeg}, @var{option1}, @var{option2}, ...)
+Genera el interpolador racional para los datos dados por @var{points} y con
+grado @var{numdeg} en el numerador; el grado del denominador se calcula
+autom@'aticamente. El argumento @var{points} debe ser:
+
+@itemize @bullet
+@item
+una matriz de dos columnas, @code{p:matrix([2,4],[5,6],[9,3])},
+@item
+una lista de pares de n@'umeros, @code{p: [[2,4],[5,6],[9,3]]},
+@item
+una lista de n@'umeros, @code{p: [4,6,3]}, en cuyo caso las abscisas se asignar@'an autom@'aticamente a 1, 2, 3, etc.
+@end itemize
+
+En los dos primeros casos los pares se ordenan con respecto a la primera coordenada antes de proceder a los c@'alculos.
+
+Esta funci@'on dispone de dos opciones para acomodarse a necesidades concretas:
+@itemize @bullet
+@item
+@code{'denterm}, por defecto @code{1}, es el t@'ermino independente del polinomio en el denominador.
+
+@item
+@code{'varname}, por defecto @code{'x}, es el nombre de la variable independiente.
+@end itemize
+
+Ejemplos:
+
+@example
+(%i1) load(interpol)$
+(%i2) load(draw)$
+(%i3) p:[[7.2,2.5],[8.5,2.1],[1.6,5.1],[3.4,2.4],[6.7,7.9]]$
+(%i4) for k:0 thru length(p)-1 do                                     
+        draw2d(
+          explicit(ratinterpol(p,k),x,0,9),                      
+          point_size = 3,                                        
+          points(p),                                             
+          title = concat("Grado del numerador = ",k),            
+          yrange=[0,10])$
+@end example
 @end deffn

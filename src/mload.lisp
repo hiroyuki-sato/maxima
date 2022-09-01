@@ -98,8 +98,6 @@
       (let* ((system-object
 	      (cond ((and (atom user-object) (not (symbolp user-object)))
 		     user-object)
-		    ;; The following clause takes care of |&Foo|,
-		    ;; which comes from the Maxima string "Foo".
 		    ((atom user-object)	;hence a symbol in view of the
 		     (print-invert-case (fullstrip1 user-object))) ; first clause
 		    (($listp user-object)
@@ -110,12 +108,6 @@
 	(if namestring-try (car namestring-try)
 	    ;; know its small now, so print on same line.
 	    (merror "Bad file spec: ~:M" user-object)))))
-
-(defmfun open-out-dsk (x)
-  (open x :direction :output :element-type 'character))
-
-(defmfun open-in-dsk (x)
-  (open x :direction :input :element-type 'character))
 
 (defun $batchload (filename &aux expr (*mread-prompt* ""))
   (declare (special *mread-prompt*))
@@ -155,8 +147,6 @@
   convenience for writers of packages and users of the macsyma->lisp
   translator."
 
-  (cond ((and (symbolp filename) (not (mstringp filename)))
-	 (setq filename (string-downcase (symbol-name (stripdollar filename))))))
   (let ((searched-for
 	 ($file_search1 filename
 			'((mlist) $file_search_maxima $file_search_lisp  )))
@@ -220,7 +210,7 @@
 ;; |a - b| <= float_approx_equal_tolerance * min(|a|, |b|).
 ;; In all other cases, return false.
 
-(defmvar $float_approx_equal_tolerance (* 8 double-float-epsilon))
+(defmvar $float_approx_equal_tolerance (* 8 flonum-epsilon))
 
 (defun $float_approx_equal (a b)
   (setq a (if (floatp a) a ($float a)))
@@ -420,7 +410,7 @@
 ;; multiple possiblities.  eg foo.l{i,}sp or foo.{dem,dm1,dm2}
 (defun $file_search (name &optional paths)
   (if (and (symbolp name)
-	   (member (char (symbol-name name) 0) '(#\& #\$)))
+	   (member (char (symbol-name name) 0) '(#\$)))
       (setq name (subseq (print-invert-case name) 1)))
   (if (symbolp name)  (setf name (string name)))
   (if (probe-file name) (return-from $file_search name))
@@ -432,8 +422,6 @@
 (defun new-file-search (name template)
   (cond ((probe-file name))
 	((atom template)
-     (if (mstringp template)
-       (setq template (subseq (maybe-invert-string-case (string template)) 1)))
 	 (let ((lis (loop for w in (split-string template "{}")
 			  when (null (position #\, w))
 			  collect w

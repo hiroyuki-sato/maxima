@@ -103,12 +103,14 @@ Paquetes adicionales
 * distrib::                     Distribuciones de probabilidad.
 * draw::                        Un interfaz Maxima-Gnuplot.
 * dynamics::                    Gráficas de sistemas dinámicos y fractales.
-* eval_string::                 Expresiones de Maxima en formato de cadena.
+* ezunits::                     Magnitudes dimensionales.
 * f90::                         Traductor de Maxima fortran.
 * ggf::                         Expresión general de sucesiones.
+* graphs::                      Teoría de grafos.
 * grobner::                     Funciones para trabajar con bases de Groebner.
 * impdiff::                     Derivadas implícitas.
 * interpol::                    Interpolación.
+* lapack::                      Paquete LAPACK para álgebra lineal.
 * lbfgs::                       Paquete L-BFGS para minimización sin restricciones.
 * lindstedt::                   Paquete Lindstedt.
 * linearalgebra::               Funciones de álgebra lineal.
@@ -169,7 +171,6 @@ Operadores
 Expresiones
 
 * Introducción a las expresiones::
-* Asignación::
 * Expresiones complejas::
 * Nombres y verbos::
 * Identificadores::
@@ -393,9 +394,11 @@ dynamics
 * Introducción a dynamics::
 * Funciones y variables para dynamics::
 
-eval_string
+ezunits
 
-* Funciones y variables para eval_string::
+* Introducción a ezunits::
+* Introducción a physical_constants::
+* Funciones y variables para ezunits::
 
 f90
 
@@ -404,6 +407,11 @@ f90
 ggf
 
 * Funciones y variables para ggf::
+
+graphs
+
+* Introducción a graphs::
+* Funciones y variables para graphs::
 
 grobner
 
@@ -418,6 +426,11 @@ interpol
 
 * Introducción a interpol::
 * Funciones y variables para interpol::
+
+lapack
+
+* Introducción a lapack::
+* Funciones y variables para lapack::
 
 lbfgs
 
@@ -448,7 +461,8 @@ mnewton
 numericalio
 
 * Introducción a numericalio::
-* Funciones y variables para numericalio::
+* Funciones y variables para entrada y salida en formato texto::
+* Funciones y variables para entrada y salida en formato binario::
 
 opsubst
 
@@ -1989,6 +2003,9 @@ File: maxima.info,  Node: Funciones y variables para la Línea de Comandos,  Prev
      en el lugar de cualquier símbolo para el que no hay función
      definida.
 
+     La función `remfunction' no se puede aplicar a arrays de funciones
+     ni a funciones subindicadas. Sí es aplicable en tales casos la
+     función `remarray'.
 
  -- Función: reset ()
      Reconfigura muchas variables y opciones globales y algunas otras
@@ -2062,13 +2079,13 @@ File: maxima.info,  Node: n-arios,  Next: no-fijos,  Prev: Operadores,  Up: Oper
 Un operador de tipo `nary'(`n'-ario, en Maxima nary) es usado para
 denotar una función cuyo número de argumentos es arbitrario; los
 argumentos se separa por el símbolo del operador, como en A+B o A+B+C.
-La función `nary("x")' es una extensión de la función `syntax' para
-declarar a x como un operador `n'-ario. Las funciones pueden ser
+La función `nary("x")' es una extensión de la función `Syntax' para
+declarar a `x' como un operador `n'-ario. Las funciones pueden ser
 declaradas para ser `nary'. Si se hace `declare(J,nary);', se esta
 diciendo al simplificador que haga la reducción de `j(j(a,b),j(c,d))' a
 `j(a, b, c, d)'.
 
-   Véase también `syntax'.
+   Véase también `Syntax'.
 
 
 File: maxima.info,  Node: no-fijos,  Next: postfijos,  Prev: n-arios,  Up: Operadores
@@ -2082,9 +2099,9 @@ tal operador en un comando causará que la correspondiente función sea
 evaluada. Por ejemplo, cuando se escribe "exit;" para salir de una
 interrupción de Maxima, "exit" se está comportando de forma similar a
 un operador no-fijo (`nofix'). La función `nofix("x")' es una extensión
-de la función syntax la cual declara a x como un operador `nofix'.
+de la función `Syntax', la cual declara a `x' como un operador `nofix'.
 
-   Véase también `syntax'.
+   Véase también `Syntax'.
 
 
 File: maxima.info,  Node: postfijos,  Next: prefijos,  Prev: no-fijos,  Up: Operadores
@@ -2096,10 +2113,10 @@ Un operador de tipo `postfix' (postfijo), al contrario de los de tipo
 `prefix', denota funciones de un solo argumento, pero en este caso el
 argumento precede inmediatamente la ocurrencia del operador en la
 cadena de entrada, como en `3!'. La función `postfix("x")' es una
-extensión de la función syntax para declarar a x como un operador
+extensión de la función syntax para declarar a `x' como un operador
 `postfix'.
 
-   Véase también `syntax'.
+   Véase también `Syntax'.
 
 
 File: maxima.info,  Node: prefijos,  Next: Operadores aritméticos,  Prev: postfijos,  Up: Operadores
@@ -2110,10 +2127,10 @@ File: maxima.info,  Node: prefijos,  Next: Operadores aritméticos,  Prev: postfi
 Un operador de tipo `prefix' (prefijo, en Maxima prefix) indica una
 función de un (1) argumento, dicho argumento viene inmediatamente
 después de una ocurrencia del operador. La función `prefix("x")' es una
-extensión de la función syntax para declarar a x como un operador de
-`prefix'.
+extensión de la función `Syntax' para declarar a `x' como un operador
+de `prefix'.
 
-   Véase también `syntax'.
+   Véase también `Syntax'.
 
 
 File: maxima.info,  Node: Operadores aritméticos,  Next: Operadores relacionales,  Prev: prefijos,  Up: Operadores
@@ -2128,7 +2145,7 @@ File: maxima.info,  Node: Operadores aritméticos,  Next: Operadores relacionales
  -- Operador: ^
      Los símbolos `+' `*' `/' y `^' representan la suma, resta,
      multiplicación, división y exponenciación, respectivamente.  Los
-     nombres de estos operadores son `"+"' `"*"' `"//"' y `"^"', que
+     nombres de estos operadores son `"+"' `"*"' `"/"' y `"^"', que
      pueden aparecer allá donde se requiera el nombre de una función u
      operador.
 
@@ -2143,7 +2160,7 @@ File: maxima.info,  Node: Operadores aritméticos,  Next: Operadores relacionales
 
      La división `a / b' se representa en maxima como la multiplicación
      `a * b^(- 1)'. Expresiones tales como `a * b^(- 1)' se muestran
-     como divisiones. Maxima reconoce `"//"' como el nombre del operador
+     como divisiones. Maxima reconoce `"/"' como el nombre del operador
      de división.
 
      La suma y la multiplicación son operadores conmutativos n-arios. La
@@ -2207,15 +2224,15 @@ File: maxima.info,  Node: Operadores aritméticos,  Next: Operadores relacionales
           (%o6)                       144 a  x
 
      La división y la exponenciación son operadores no conmutativos
-     binarios.  Los nombres de estos operadores son `"//"' y `"^"'.
+     binarios.  Los nombres de estos operadores son `"/"' y `"^"'.
 
           (%i1) [a / b, a ^ b];
                                         a   b
           (%o1)                        [-, a ]
                                         b
           (%i2) [map (op, %), map (args, %)];
-          (%o2)              [[//, ^], [[a, b], [a, b]]]
-          (%i3) [apply ("//", [a, b]), apply ("^", [a, b])];
+          (%o2)              [[/, ^], [[a, b], [a, b]]]
+          (%i3) [apply ("/", [a, b]), apply ("^", [a, b])];
                                         a   b
           (%o3)                        [-, a ]
                                         b
@@ -2319,6 +2336,62 @@ File: maxima.info,  Node: Operadores relacionales,  Next: Operadores generales, 
  -- Operator: <=
  -- Operator: >=
  -- Operator: >
+     Los símbolos `<', `<=', `>=' y `>' representan menor que, menor o
+     igual que, mayor o igual que y mayor que, respectivamente.  Los
+     nombres de estos operadores son `"<"' `"<="' `">="' y `">"', que
+     pueden aparecer allá donde se requiera el nombre de una función u
+     operador.
+
+     Estos operadores relacionales son todos operadores binarios. Maxima
+     no reconoce expresiones del estilo `a < b < c'.
+
+     Las expresiones relacionales devuelven valores booleanos haciendo
+     uso de las funciones `is' o `maybe', así como de las sentencias
+     condicionales `if', `while' y `unless'.  Las expresiones
+     relacionales no se evalúan de otra manera, aunque sus argumentos
+     sí sean evaluados.
+
+     Cuando una expresión relacional no pueda ser evaluada a `true' o
+     `false', el comportamiento de `is' y de `if' estará controlado por
+     la variable global `prederror'. Si `prederror' toma el valor
+     `true', `is' y `if' emiten un mensaje de error. Si `prederror'
+     toma el valor `false', `is' devuelve `unknown' y `if' devuelve una
+     expresión condicional parcialmente evaluada.
+
+     `maybe' se comporta siempre como si `prederror' fuese `false', al
+     tiempo que `while' y `unless' se comportan siempre como si
+     `prederror' fuese `true'.
+
+     Los operadores relacionales no se distribuyen sobre listas ni
+     sobre cualesquiera otros tipos de estructuras de datos.
+
+     Véanse también `=', `#', `equal' y `notequal'.
+
+     Ejemplos:
+
+     Las expresiones relacionales se reducen a valores booleanos a
+     través de ciertas funciones y sentencias condicionales.
+
+          (%i1) [x, y, z] : [123, 456, 789];
+          (%o1)                    [123, 456, 789]
+          (%i2) is (x < y);
+          (%o2)                         true
+          (%i3) maybe (y > z);
+          (%o3)                         false
+          (%i4) if x >= z then 1 else 0;
+          (%o4)                           0
+          (%i5) block ([S], S : 0, for i:1 while i <= 100 do S : S + i, return (S));
+          (%o5)                         5050
+
+     Las expresiones relacionales no se evalúan de otra manera, aunque
+     sus argumentos sí sean evaluados.
+
+          (%o1)                    [123, 456, 789]
+          (%i2) [x < y, y <= z, z >= y, y > z];
+          (%o2)    [123 < 456, 456 <= 789, 789 >= 456, 456 > 789]
+          (%i3) map (is, %);
+          (%o3)               [true, true, true, false]
+
 
 
 File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales,  Up: Operadores
@@ -2453,7 +2526,7 @@ File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales, 
 
  -- Operador: .
      El operador punto, para multiplicación de matrices
-     (no-conmutativo).  Cuando "." se usa de esta forma, se dejarán
+     (no-conmutativo).  Cuando `"."' se usa de esta forma, se dejarán
      espacios a ambos lados de éste, como en `A . B'. Así se evita que
      se confunda con el punto decimal de los números.
 
@@ -2463,15 +2536,112 @@ File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales, 
 
 
  -- Operador: :
-     El operador de asignación. Por ejemplo, `A:3' se asigna a la
-     variable <A> el valor de 3.
+     Operador de asignación.
+
+     Cuando el miembro de la izquierda es una variable simple (no
+     subindicada), `:' evalúa la expresión de la derecha y asigna ese
+     valor a la variable del lado izquierdo.
+
+     Cuando en el lado izquierdo hay un elemento subindicado
+     correspondiente a una lista, matriz, array declarado de Maxima o
+     array de Lisp, la expresión de la derecha se asigna a ese
+     elemento. El subíndice debe hacer referencia a un elemento ya
+     existente, ya que los objetos anteriores no pueden ampliarse
+     nombrando elementos no existentes.
+
+     Cuando en el lado izquierdo hay un elemento subindicado
+     correspondiente a un array no declarado de Maxima, la expresión de
+     la derecha se asigna a ese elemento en caso de que ya exista, o a
+     un nuevo elemento, si éste todavía no existe.
+
+     Cuando el miembro de la izquierda es una lista de átomos y/o
+     variables subindicadas, el miembro derecho debe evaluar también a
+     una lista, cuyos elementos serán asignados en paralelo a las
+     variables de la lista de la izquierda.
+
+     Véanse también `kill' y `remvalue', que deshacen las asociaciones
+     hechas por el operador `:'.
+
+     Ejemplos:
+
+     Asignación a una variable simple.
+
+          (%i1) a;
+          (%o1)                           a
+          (%i2) a : 123;
+          (%o2)                          123
+          (%i3) a;
+          (%o3)                          123
+
+     Asignación a un elemento de una lista.
+
+          (%i1) b : [1, 2, 3];
+          (%o1)                       [1, 2, 3]
+          (%i2) b[3] : 456;
+          (%o2)                          456
+          (%i3) b;
+          (%o3)                      [1, 2, 456]
+
+     La asignación crea un array no declarado.
+
+          (%i1) c[99] : 789;
+          (%o1)                          789
+          (%i2) c[99];
+          (%o2)                          789
+          (%i3) c;
+          (%o3)                           c
+          (%i4) arrayinfo (c);
+          (%o4)                   [hashed, 1, [99]]
+          (%i5) listarray (c);
+          (%o5)                         [789]
+
+     Asignación múltiple.
+
+          (%i1) [a, b, c] : [45, 67, 89];
+          (%o1)                     [45, 67, 89]
+          (%i2) a;
+          (%o2)                          45
+          (%i3) b;
+          (%o3)                          67
+          (%i4) c;
+          (%o4)                          89
+
+     La asignación múltiple se hace en paralelo. Los valores de `a' y
+     `b' se intercambian en este ejemplo.
+
+          (%i1) [a, b] : [33, 55];
+          (%o1)                       [33, 55]
+          (%i2) [a, b] : [b, a];
+          (%o2)                       [55, 33]
+          (%i3) a;
+          (%o3)                          55
+          (%i4) b;
+          (%o4)                          33
 
  -- Operador: ::
-     Operador de asignación. :: asigna el valor de una expresión en su
-     derecha a el valor de la cantidad en su izquierda, la cual debe
-     evaluarse a una variable de tipo atómica o una variable
-     subindicada.
+     Operador de asignación.
 
+     El operador `::' es similar a `:', excepto que `::' evalúa ambos
+     miembros, tanto el derecho como el izquierdo.
+
+     Ejemplos:
+
+          (%i1) x : 'foo;
+          (%o1)                          foo
+          (%i2) x :: 123;
+          (%o2)                          123
+          (%i3) foo;
+          (%o3)                          123
+          (%i4) x : '[a, b, c];
+          (%o4)                       [a, b, c]
+          (%i5) x :: [11, 22, 33];
+          (%o5)                     [11, 22, 33]
+          (%i6) a;
+          (%o6)                          11
+          (%i7) b;
+          (%o7)                          22
+          (%i8) c;
+          (%o8)                          33
 
  -- Operador: ::=
      El operador de definición de macros `::=' define una función
@@ -2585,7 +2755,9 @@ File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales, 
 
      Todas las definiciones de funciones aparecen en el mismo espacio de
      nombres; definiendo una función `f' dentro de otra función `g' no
-     limita el alcance de `f' a `g'.
+     limita automáticamente el alcance de `f' a `g'.  No obstante,
+     `local(f)' hace que la función `f' sea efectiva solamente dentro
+     del bloque o empaquetado de expresiones en la que aparece `local'.
 
      Si un argumento formal <x_k> es un símbolo afectado por el
      operador comilla (expresión nominal), la función definida por `:='
@@ -2628,6 +2800,16 @@ File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales, 
           (%i2) H (a, b, c);
           (%o2)                       c + b + a
 
+     `local' define una función como local.
+
+          (%i1) foo (x) := 1 - x;
+          (%o1)                    foo(x) := 1 - x
+          (%i2) foo (100);
+          (%o2)                         - 99
+          (%i3) block (local (foo), foo (x) := 2 * x, foo (100));
+          (%o3)                          200
+          (%i4) foo (100);
+          (%o4)                         - 99
 
  -- Operador: =
      Operador de ecuación.
@@ -3484,6 +3666,12 @@ File: maxima.info,  Node: Operadores generales,  Prev: Operadores relacionales, 
           (%i8) apply ("+", %);
 
 
+ -- Función: round (<x>)
+     Si <x> es un número real, la función devuelve el entero más
+     próximo a <x>. Los múltiplos de 1/2 se redondean al entero par más
+     próximo.  La evaluación de <x> es similar a `floor' y `ceiling'.
+
+
  -- Función: sign (<expr>)
      Intenta determinar el signo de <expr> en base a los hechos
      almacenados en la base de datos. Devuelve una de las siguientes
@@ -3826,7 +4014,6 @@ File: maxima.info,  Node: Expresiones,  Next: Simplificación,  Prev: Operadores,
 * Menu:
 
 * Introducción a las expresiones::
-* Asignación::
 * Expresiones complejas::
 * Nombres y verbos::
 * Identificadores::
@@ -3836,7 +4023,7 @@ File: maxima.info,  Node: Expresiones,  Next: Simplificación,  Prev: Operadores,
 * Funciones y variables para expresiones::
 
 
-File: maxima.info,  Node: Introducción a las expresiones,  Next: Asignación,  Prev: Expresiones,  Up: Expresiones
+File: maxima.info,  Node: Introducción a las expresiones,  Next: Expresiones complejas,  Prev: Expresiones,  Up: Expresiones
 
 6.1 Introducción a las expresiones
 ==================================
@@ -3880,21 +4067,9 @@ coma para que devuelva el valor de interés.
      (%o4)                        3628800
 
 
-File: maxima.info,  Node: Asignación,  Next: Expresiones complejas,  Prev: Introducción a las expresiones,  Up: Expresiones
+File: maxima.info,  Node: Expresiones complejas,  Next: Nombres y verbos,  Prev: Introducción a las expresiones,  Up: Expresiones
 
-6.2 Asignación
-==============
-
-Existen dos operadores de asignación en Maxima, `:' y `::'.  Por
-ejemplo, `a: 3' asigna a la variable `a' el valor de 3. Por otro lado,
-`::' asigna el valor de la expresión de su derecha al valor de la
-cantidad de su izquierda, el cual debe evaluarse a una variable de tipo
-átomo o una variable subindicada.
-
-
-File: maxima.info,  Node: Expresiones complejas,  Next: Nombres y verbos,  Prev: Asignación,  Up: Expresiones
-
-6.3 Expresiones complejas
+6.2 Expresiones complejas
 =========================
 
 Una expresión compleja se especifica en Maxima añadiendo a la parte
@@ -3910,7 +4085,7 @@ funciones `realpart', `imagpart', `rectform', `polarform', `abs' o
 
 File: maxima.info,  Node: Nombres y verbos,  Next: Identificadores,  Prev: Expresiones complejas,  Up: Expresiones
 
-6.4 Nombres y verbos
+6.3 Nombres y verbos
 ====================
 
 Maxima distingue entre operadores que son "nombres" y operadores que
@@ -3973,7 +4148,7 @@ muestre los nombres precedidos del apóstrofo `''.
 
 File: maxima.info,  Node: Identificadores,  Next: Cadenas de caracteres,  Prev: Nombres y verbos,  Up: Expresiones
 
-6.5 Identificadores
+6.4 Identificadores
 ===================
 
 En Maxima, los identificadores pueden contener caracteres alfabéticos,
@@ -4032,7 +4207,7 @@ Maxima:: para más información.
 
 File: maxima.info,  Node: Cadenas de caracteres,  Next: Desigualdades,  Prev: Identificadores,  Up: Expresiones
 
-6.6 Cadenas de caracteres
+6.5 Cadenas de caracteres
 =========================
 
 Las cadenas de caracteres deben ir acotadas por comillas dobles (`"')
@@ -4057,19 +4232,13 @@ cadena.
    No existe en Maxima el tipo de variable carácter, debiéndose
 representar un carácter simple como una cadena de un solo carácter.
 
-   En Maxima, las cadenas de caracteres se implementan como símbolos de
-Lisp, no como cadenas de Lisp, lo cual puede cambiar en versiones
-futuras de Maxima.  Maxima puede representar cadenas y caracteres de
-Lisp, aunque algunas operaciones, como las pruebas de igualdad, pueden
-no funcionar correctamente.
-
    El paquete adicional `stringproc' contiene muchas funciones que
 permiten trabajar con cadenas.
 
    Ejemplos:
 
-     (%i1) s_1 : "This is a Maxima string.";
-     (%o1)               This is a Maxima string.
+     (%i1) s_1 : "This is a string.";
+     (%o1)               This is a string.
      (%i2) s_2 : "Embedded \"double quotes\" and backslash \\ characters.";
      (%o2) Embedded "double quotes" and backslash \ characters.
      (%i3) s_3 : "Embedded line termination
@@ -4084,16 +4253,16 @@ permiten trabajar con cadenas.
      (%i5) stringdisp : false;
      (%o5)                         false
      (%i6) s_1;
-     (%o6)               This is a Maxima string.
+     (%o6)               This is a string.
      (%i7) stringdisp : true;
      (%o7)                         true
      (%i8) s_1;
-     (%o8)              "This is a Maxima string."
+     (%o8)              "This is a string."
 
 
 File: maxima.info,  Node: Desigualdades,  Next: Sintaxis,  Prev: Cadenas de caracteres,  Up: Expresiones
 
-6.7 Desigualdades
+6.6 Desigualdades
 =================
 
 Maxima dispone de los operadores de desigualdad `<', `<=', `>=', `>',
@@ -4103,7 +4272,7 @@ condicionales.
 
 File: maxima.info,  Node: Sintaxis,  Next: Funciones y variables para expresiones,  Prev: Desigualdades,  Up: Expresiones
 
-6.8 Sintaxis
+6.7 Sintaxis
 ============
 
 Es posible definir nuevos operadores con una precedencia especificada,
@@ -4249,7 +4418,7 @@ Nótese que el nombre del operador debe ir entre comillas.
 
 File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxis,  Up: Expresiones
 
-6.9 Funciones y variables para expresiones
+6.8 Funciones y variables para expresiones
 ==========================================
 
  -- Función: at (<expr>, [<eqn_1>, ..., <eqn_n>])
@@ -4475,11 +4644,9 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
     `mainvar'
           Hace que Maxima considere a <a_i> como una "variable
-          principal" (`mainvar'); `ordergreatp' determina la ordenación
-          de los átomos como sigue:
-
-          (variables principales) > (otras variables) > (variables
-          escalares) > (constantes) > (números)
+          principal", dándole prioridad frente a cualesquiera otras
+          constantes o variables en la ordenación canónica de
+          expresiones de Maxima, tal como determina `ordergreatp'.
 
     `alphabetic'
           Indica a Maxima que reconozca todos los caracteres de la
@@ -4806,8 +4973,8 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
      Si `%emode' vale `true', `%e^(%pi %i x)' se simplifica como sigue.
 
      `%e^(%pi %i x)' se simplifica a `cos (%pi x) + %i sin (%pi x)' si
-     `x' es un entero o múltiplo de 1/2, 1/3, 1/4 o 1/6, y luego se
-     sigue simplificando.
+     `x' es un número decimal de coma flotante, un entero o un múltiplo
+     de 1/2, 1/3, 1/4 o 1/6, y luego se sigue simplificando.
 
      Para otros valores numéricos de `x', `%e^(%pi %i x)' se simplifica
      a `%e^(%pi %i y)' donde `y' es `x - 2 k' para algún entero `k' tal
@@ -4838,8 +5005,10 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
  -- Función: freeof (<x_1>, ..., <x_n>, <expr>)
      `freeof (<x_1>, <expr>)' Devuelve `true' si ninguna subexpresión
-     de  <expr> es igual a <x_1> o si  <x_1> aparece como variable muda
-     en <expr>, devolviendo `false' en otro caso.
+     de <expr> coincide con <x_1>, o si <x_1> aparece como variable
+     muda en <expr>, o si <x_1> no es ni una forma nominal ni verbal de
+     cualesquiera operadores presentes en <expr>, devolviendo `false'
+     en otro caso.
 
      La llamada `freeof (<x_1>, ..., <x_n>, <expr>)' equivale a `freeof
      (<x_1>, <expr>) and ... and freeof (<x_n>, <expr>)'.
@@ -4955,7 +5124,13 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
      `infix (<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)' declara <op>
      como operador infijo con fuerzas de ligadura por la izquierda y
-     por la derecha y partes declaradas en los argumentos.
+     por la derecha, junto con los tipos de expresiones correspondientes
+     a <lpos>, <rpos> y <pos>, que son el operando de la izquierda, el
+     de la derecha y el operador del resultado; los tipos reconocidos
+     son: `expr', `clause' y `any', que indican expresión algebraica,
+     expresión booleana o cualquier otra, respectivamente. Maxima puede
+     detectar algunos errores sintácticos comparando los tipos
+     declarados con los de la expresión actual.
 
      La precedencia de <op> con respecto a otros operadores deriva de
      las fuerzas de ligadura de los operadores en cuestión.  Si las
@@ -5010,6 +5185,19 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
           (%i5) foo ## bar ## baz;
           (%o5)                    ((foo,bar),baz)
 
+     Maxima puede detectar algunos errores sintácticos comparando los
+     tipos declarados con los de la expresión actual.
+
+          (%i1) infix ("##", 100, 99, expr, expr, expr);
+          (%o1)                          ##
+          (%i2) if x ## y then 1 else 0;
+          Incorrect syntax: Found algebraic expression where logical expression expected
+          if x ## y then
+                       ^
+          (%i2) infix ("##", 100, 99, expr, expr, clause);
+          (%o2)                          ##
+          (%i3) if x ## y then 1 else 0;
+          (%o3)                if x ## y then 1 else 0
 
  -- Variable opcional: inflag
      Valor por defecto: `false'
@@ -5309,37 +5497,109 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
 
 
  -- Función: ordergreat (<v_1>, ..., <v_n>)
-     Establece una ordenación para las variables <v_1>, ..., <v_n> de
-     manera que <v_1> > <v_2> > ...  > <v_n> y <v_n> > cualquier otra
-     variable no mencionada como argumento.
+ -- Función: orderless (<v_1>, ..., <v_n>)
+     `ordergreat' cambia el orden canónico de las expresiones de
+     Maxima, de manera que <v_1> prevalece sobre <v_2>, que prevalece
+     sobre ..., que prevalece sobre <v_n>, que prevalece sobre
+     cualquier otro símbolo no presente en la lista de argumentos.
 
-     Véase también `orderless'.
+     `orderless' cambia el orden canónico de las expresiones de Maxima,
+     de manera que <v_1> precede a <v_2>, que precede a ..., que
+     precede a <v_n>, que precede a cualquier otra variable no presente
+     en la lista de argumentos.
+
+     El orden impuesto por `ordergreat' y `orderless' se destruye con
+     `unorder'. `ordergreat' y `orderless' sólo se pueden llamar una
+     vez, a menos que se invoque a `unorder'.  La última llamada a
+     `ordergreat' y `orderless' es la que se mantiene activa.
+
+     Véase también `ordergreatp'.
 
 
  -- Función: ordergreatp (<expr_1>, <expr_2>)
-     Devuelve `true' si <expr_2> precede a <expr_1> según el orden
-     establecido con la función `ordergreat'.
-
-
- -- Función: orderless (<v_1>, ..., <v_n>)
-     Establece una ordenación para las variables <v_1>, ..., <v_n> de
-     manera que <v_1> < <v_2> < ...  < <v_n> y <v_n> < cualquier otra
-     variable no mencionada como argumento.
-
-     Así, la ordenación completa de objetos es: constantes numéricas <
-     constantes declaradas < escalares declarados < primer argumento de
-     `orderless' < ...  < último argumento de `orderless' < variables
-     que empiezan por A < ...  < variables que empiezan por Z < último
-     argumento de  `ordergreat' <  ... < primer argumento de
-     `ordergreat' < objetos declarados como `mainvar'.
-
-     Véanse también `ordergreat' y `mainvar'.
-
-
  -- Función: orderlessp (<expr_1>, <expr_2>)
-     Devuelve `true' si <expr_1> precede a <expr_2> según el orden
-     establecido con la función `orderless'.
+     `ordergreatp' devuelve `true' si <expr_1> prevalece sobre <expr_2>
+     en el orden canónico de las expresiones de Maxima, o `false' en
+     caso contrario.
 
+     `orderlessp' devuelve `true' si <expr_1> precede a <expr_2> en el
+     orden canónico de las expresiones de Maxima, o `false' en caso
+     contrario.
+
+     Todos los átomos y expresiones de Maxima son comparables bajo
+     `ordergreatp' y `orderlessp', aunque existen ejemplos aislados de
+     expresiones para los que estos predicados no son transitivos.
+
+     La ordenación canónica de átomos (símbolos, números literales y
+     cadenas) es la siguiente: (enteros y decimales en coma flotante)
+     preceden a (números decimales grandes o bigfloats), que preceden a
+     (constantes declaradas), que preceden a (cadenas), que preceden a
+     (escalares declarados), que preceden a (primer argumento de
+     `orderless'), que precede a ..., que precede a (último argumento
+     de `orderless'), que precede a (otros símbolos), que preceden a
+     (último argumento de `ordergreat'), que precede a ..., que precede
+     a (primer argumento de `ordergreat'), que precede a (variables
+     principales declaradas).
+
+     Para las expresiones no atómicas, la ordenación canónica se deriva
+     de la ordenación de átomos. Para los operadores nativos `+', `*' y
+     `^', los criterios de ordenación no son sencillos de resumir.
+     Para otros operadores nativos, y todas las demás funciones y
+     operadores, las expresiones se ordenan por sus argumentos
+     (empezando por el primero), después por el nombre del operador o
+     función. En caso de expresiones con subíndices, el símbolo
+     subindicado se considera operador y el subíndice un argumento del
+     mismo.
+
+     El orden canónico de expresiones se modifica mediante las funciones
+     `ordergreat' y `orderless', así como por las declaraciones
+     `mainvar', `constant' y `scalar'.
+
+     Véase también `sort'.
+
+     Ejemplos:
+
+     Ordenación de símbolos comunes y constantes.  Nótese que `%pi' no
+     se ordena en función de su valor numérico.
+
+          (%i1) stringdisp : true;
+          (%o1)                         true
+          (%i2) sort ([%pi, 3b0, 3.0, x, X, "foo", 3, a, 4, "bar", 4.0, 4b0]);
+          (%o2) [3, 3.0, 4, 4.0, 3.0b0, 4.0b0, %pi, "bar", "foo", a, x, X]
+
+     Efecto producido por las funciones `ordergreat' y `orderless'.
+
+          (%i1) sort ([M, H, K, T, E, W, G, A, P, J, S]);
+          (%o1)           [A, E, G, H, J, K, M, P, S, T, W]
+          (%i2) ordergreat (S, J);
+          (%o2)                         done
+          (%i3) orderless (M, H);
+          (%o3)                         done
+          (%i4) sort ([M, H, K, T, E, W, G, A, P, J, S]);
+          (%o4)           [M, H, A, E, G, K, P, T, W, J, S]
+
+     Efecto producido por las declaraciones `mainvar', `constant' y
+     `scalar'.
+
+          (%i1) sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+          (%o1)   [aa, bar, baz, bb, cc, dd, foo, quux, A1, B1, C1]
+          (%i2) declare (aa, mainvar);
+          (%o2)                         done
+          (%i3) declare ([baz, quux], constant);
+          (%o3)                         done
+          (%i4) declare ([A1, B1], scalar);
+          (%o4)                         done
+          (%i5) sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+          (%o5)   [baz, quux, A1, B1, bar, bb, cc, dd, foo, C1, aa]
+
+     Ordenación de expresiones no atómicas.
+
+          (%i1) sort ([1, 2, n, f(1), f(2), f(2, 1), g(1), g(1, 2), g(n), f(n, 1)]);
+          (%o1) [1, 2, f(1), g(1), g(1, 2), f(2), f(2, 1), n, g(n),
+                                                                   f(n, 1)]
+          (%i2) sort ([foo(1), X[1], X[k], foo(k), 1, k]);
+          (%o2)            [1, foo(1), X , k, foo(k), X ]
+                                        1              k
 
  -- Función: part (<expr>, <n_1>, ..., <n_k>)
      Devuelve partes de la forma mostrada de `expr'. Obtiene la parte
@@ -5739,22 +5999,8 @@ File: maxima.info,  Node: Funciones y variables para expresiones,  Prev: Sintaxi
                                      ====
                                      k = 1
           (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10));
-          Incorrect syntax: Too many )'s
-          else b^k, k, 1, 10))
-                            ^
-          (%i12) linenum:11;
-          (%o11)                         11
-          (%i12) sum (integrate (x^k, x, 0, 1), k, 1, n);
-                                      n
-                                     ====
-                                     \       1
-          (%o12)                      >    -----
-                                     /     k + 1
-                                     ====
-                                     k = 1
-          (%i13) sum (if k <= 5 then a^k else b^k, k, 1, 10);
                     10    9    8    7    6    5    4    3    2
-          (%o13)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
+          (%o12)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
 
 
  -- Función: lsum (<expr>, <x>, <L>)
@@ -6132,6 +6378,8 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Simp
      les ha asignado un número sean sustituidas por sus valores.
      Además, activa la variable `float'.
 
+     Véase también `%enumer'.
+
  -- Función: numerval (<x_1>, <expr_1>, ..., <var_n>, <expr_n>)
      Declara las variables `x_1', ..., <x_n> asignándoles los valores
      numéricos `expr_1', ..., `expr_n'.  El valor numérico se evalúa y
@@ -6202,7 +6450,7 @@ File: maxima.info,  Node: Funciones y variables para simplificación,  Prev: Simp
 
      Si `radexpand' vale `false', ciertas transformaciones se inhiben;
      `radcan (sqrt (1-x))' se mantiene como `sqrt (1-x)' y no se reduce
-     a `%i sqrt (x-1)', o `radcan (sqrt (x^2 - 2*x + 11))' se mantiene
+     a `%i sqrt (x-1)', o `radcan (sqrt (x^2 - 2*x + 1))' se mantiene
      como  `sqrt (x^2 - 2*x + 1)' sin reducirse a`x - 1'.
 
      La instrucción `example (radcan)' muestra algunos ejemplos.
@@ -6539,10 +6787,15 @@ File: maxima.info,  Node: Funciones y variables para gráficos,  Prev: Gráficos, 
      la función ter'ica que los predice:
 
           (%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
-                  [style, [points,3,5], [lines,1,3]],
+                  [style, [points,5,2,6], [lines,1,1]],
                   [legend,"experiment","theory"],
-                  [xlabel,"pendulum's length (cm)"],
-                  [ylabel,"period (s)"])$
+                  [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
+
+     El significado de los tres números después de la opción "points"
+     es el siguiente: 5, radio de los puntos; 2, índice del color
+     (rojo); 6, tipo de objeto utilizado (cuadrados sólidos). Los dos
+     números después de la opción "lines" hacen referencia al ancho de
+     la línea (1 punto) y al color (1 para el azul).
 
      Véase también `plot_options', que describe las opciones gráficas,
      junto con más ejemplos.
@@ -6737,6 +6990,16 @@ File: maxima.info,  Node: Funciones y variables para gráficos,  Prev: Gráficos, 
 
                [legend, "Set 1", "Set 2", "Set 3"]
 
+        * Opción: `box'
+
+          Actualmente esta opción sólo puede ir seguida del símbolo
+          _false_, pero será utilizada en el futuro para eliminar el
+          marco alrededor del gráfico.
+
+          Ejemplo:
+
+               [box, false]
+
         * Opción: `style'
 
           Estilos a utilizar para las funciones o conjuntos de datos en
@@ -6748,28 +7011,39 @@ File: maxima.info,  Node: Funciones y variables para gráficos,  Prev: Gráficos, 
           pequeños puntos aislados. Gnuplot también acepta el estilo
           <impulses>.
 
-          Cada estilo puede ir encerrado en una lista con parámetros
-          adicionales: <lines> acepta uno o dos números: el ancho del
-          segmento y un entero que identifica el color; <points> acepta
-          uno o dos parámetros, el primero es el radio de los puntos y
-          el segundo un entero que en Gnuplot selecciona diferentes
-          formas y colores para los puntos y que en Openmath cambia el
-          color de éstos; <linesdots> acepta hasta cuatro parámetros,
-          los dos primeros son lo mismo que en <lines> y los dos
-          últimos son lo mismo que en <points>.
+          Los estilos se pueden escribir como elementos de una lista,
+          junto con algunos parámetros adicionales. <lines> acepta uno
+          o dos números: el ancho de la línea y un entero que identifica
+          el color. Los códigos de color por defecto son: 1, azul; 2,
+          rojo; 3, magenta; 4, naranja; 5, marrón; 6, verde lima; 7,
+          aguamarina.  En caso de utilizar Gnuplot con un terminal
+          diferente de X11, estos colores pueden cambiar; por ejemplo,
+          bajo la opción [<gnuplot_term>,<ps>], el índice 4 se
+          corresponde con el negro en lugar del naranja.
+
+          <points> acepta uno, dos o tres parámetros; el primer
+          parámetro es el radio de los puntos, el segundo es un entero
+          para seleccionar el color, con igual codificación que en
+          <lines> y el tercer parámetro sólo es utilizado por Gnuplot y
+          hace referencia a varios objetos para representar los puntos.
+          Los tipos de objetos disponibles son: 1, círculos rellenos;
+          2, circunferencias; 3, +; 4, x; 5, *; 6, cuadrados rellenos;
+          7, cuadrados huecos; 8, triángulos rellenos; 9, triángulos
+          huecos; 10, triángulos rellenos invertidos; 11, triángulos
+          huecos invertidos; 12, rombos rellenos; 13, rombos huecos.
+
+          <linesdots> acepta hasta cuatro parámetros: ancho de línea,
+          radio de los puntos, color y tipo de objetos para representar
+          puntos.
 
           Ejemplo:
+               [style,[lines,2,3],[points,1,4,3]]
 
-               [style,[lines,2,3],[points,1,4]]
-
-          En Gnuplot, con este código se representaría la primera
-          (tercera, quinta, etc.) expresión con segmentos azules de
-          ancho 2, y la segunda (cuarta, sexta, etc.) expresión con
-          cuadrados verdes de tama24no 1. En Openmath, la primera
-          expresión se representaría con segmentos magenta de ancho 2, y
-          la segunda con puntos naranja de radio 1. Nótese que
-          `openmath_color(3)' y `openmath_color(4)' devuelven `magenta'
-          y `orange', respectivamente.
+          En este ejemplo se representará la primera (tercera, quinta,
+          etc. ) expresión con segmentos rectilíneos magenta de ancho
+          2, la segunda (cuarta, sexta, etc.) expresión con símbolos de
+          suma naranja de tamanõ 1 (círculos naranja en el caso de
+          Openmath).
 
           El estilo por defecto es <lines> de ancho 1 y diferentes
           colores.

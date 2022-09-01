@@ -23,7 +23,7 @@
 
 (defmvar mopl nil)
 
-(declare-top  (special $lasttime $disptime
+(declare-top  (special $debugmode $lasttime $disptime
 		       bindlist loclist errset $labels linelable $filesize
 		       st rephrase $dispflag refchkl baktrcl
 		       dskfnp dsksavep *rset ^q lf tab ff cr
@@ -153,7 +153,7 @@
   (when (and $dskuse (not $nolabels) (> (incf dcount) $filesize))
     (setq dcount 0)
     (dsksave))
-  (setq linelable (intern (format nil "~a~d" x $linenum)))
+  (setq linelable ($concat '|| x $linenum))
   (unless $nolabels
     (when (or (null (cdr $labels))
 	      (when (member linelable (cddr $labels) :test #'equal)
@@ -206,7 +206,7 @@
 	      (errset (displa (list '(mlable) linelable $%)))))
   (if (null ret) (mtell "~%Error during display~%"))
   (when $disptime
-    (mtell-open "Displaytime= ~A sec.~%" (/ (float (- (get-internal-run-time) tim) 1d0)
+    (mtell-open "Displaytime= ~A sec.~%" (/ (float (- (get-internal-run-time) tim))
 					    internal-time-units-per-second)))
   ret)
 
@@ -220,7 +220,9 @@
 	 #+cmu (c::backend-fasl-file-type c::*target-backend*)
 	 #+clisp "fas"
 	 #+allegro "fasl"
-	 #-(or gcl cmu clisp allegro) ""))
+	 #+openmcl (pathname-type ccl::*.fasl-pathname*)
+	 #+lispworks (pathname-type (compile-file-pathname "foo.lisp"))
+	 #-(or gcl cmu clisp allegro openmcl lispworks) ""))
     (if (member type (list bin-ext "lisp" "lsp")  :test 'equalp)
       #-sbcl (load file) #+sbcl (with-compilation-unit nil (load file))
       ($load file))))
@@ -244,7 +246,7 @@
   (let ((file ($file_search filename)))
     (dolist (func functions)
       (nonsymchk func '$setup_autoload)
-      (putprop (setq func (dollarify-name func)) file 'autoload)
+      (putprop (setq func ($verbify func)) file 'autoload)
       (add2lnc func $props)))
   '$done)
 
@@ -364,6 +366,7 @@
           (remprop x 'dimension)
           (remprop x 'defstruct-template)
           (remprop x 'defstruct-default)
+          (remprop x 'translate)
           (setf $structures (delete y $structures :count 1 :test #'equal))))
       (when (and (member x *builtin-symbols* :test #'equal)
 		 (gethash x *builtin-symbol-props*))
@@ -372,6 +375,7 @@
       (if z (kill1 z)))))
 
 (defmfun kill1 (x)
+  (if (and (stringp x) (not (getopr0 x))) (return-from kill1 nil))
   (funcall
    #'(lambda (z)
        (cond ((and allbutl (member x allbutl :test #'equal)))
@@ -471,6 +475,7 @@
 	     (member rule l :test #'equal) op))))
 
 (defmfun $debugmode (x)
+  (setq $debugmode x)
   (debugmode1 nil x))
 
 (defun debugmode1 (assign-var y)
@@ -705,13 +710,13 @@
 (defmfun alias (x y)
   (cond ((nonsymchk x '$alias))
 	((nonsymchk y '$alias))
-	((not (eq (getchar x 1) '$))
+	((not (eq (getcharn x 1) #\$))
 	 (merror "-ed symbols may not be aliased. ~M" x))
 	((get x 'reversealias)
 	 (if (not (eq x y))
 	     (merror "~M already is aliased." x)))
 	(t (putprop x y'alias)
-	   (putprop y (stripdollar x) 'reversealias)
+	   (putprop y x 'reversealias)
 	   (add2lnc y $aliases)
 	   y)))
 
@@ -724,7 +729,7 @@
 	  (y (remprop x 'reversealias)
 	     (remprop x 'noun)
 	     (setf $aliases (delete x $aliases :count 1 :test #'eq))
-	     (remprop (setq x (makealias y)) 'alias) (remprop x 'verb) x))))
+	     (remprop (setq x y) 'alias) (remprop x 'verb) x))))
 
 (defmfun stripdollar (x)
   (cond ((not (atom x))
@@ -733,8 +738,8 @@
 	((numberp x) x)
 	((null x) 'false)
 	((eq x t) 'true)
-	((member (getchar x 1) '($ % &) :test #'equal)
-	 (intern (subseq (string x) 1)))
+    ((member (getcharn x 1) '(#\$ #\%))
+     (intern (subseq (string x) 1)))
 	(t x)))
 
 (defmfun fullstrip (x)
@@ -742,7 +747,7 @@
 
 (defmfun fullstrip1 (x)
   (or (and (numberp x) x)
-      (get x 'reversealias)
+      (let ((y (get x 'reversealias))) (if y (stripdollar y)))
       (let ((u (rassoc x aliaslist :test #'eq)))
 	(if u (implode (string*1 (car u)))))
       (stripdollar x)))
@@ -771,7 +776,8 @@
 ;;; been disabled for now.
 ;;;
 (defmfun $nounify (x)
-  (nonsymchk x '$nounify)
+  (if (not (or (symbolp x) (stringp x)))
+    (merror "nounify: argument must be a symbol or a string."))
   (setq x (amperchk x))
   (cond ((get x 'verb))
 	((get x 'noun) x)
@@ -785,7 +791,8 @@
 		 (t x))))))
 
 (defmfun $verbify (x)
-  (nonsymchk x '$verbify)
+  (if (not (or (symbolp x) (stringp x)))
+    (merror "verbify: argument must be a symbol or a string."))
   (setq x (amperchk x))
   (cond ((get x 'noun))
 	((and (char= (char (symbol-name x) 0) #\%)
@@ -794,26 +801,11 @@
 		  (get x 'noun))))
 	(t x)))
 
-
-(defmfun dollarify-name (name)
-  (let ((n (char (symbol-name name) 0)))
-    (cond ((char= n #\&)
-	   (or (get name 'opr)
-	       (let ((namel (casify-exploden name)) ampname dolname)
-		 (cond ((get (setq ampname (implode (cons #\& namel))) 'opr))
-		       (t (setq dolname (implode (cons #\$ namel)))
-			  (putprop dolname ampname 'op)
-			  (putprop ampname dolname 'opr)
-			  (add2lnc ampname $props)
-			  dolname)))))
-	  ((char= n #\%) ($verbify name))
-	  (t name))))
-
 (defmspec $string (form)
   (setq form (strmeval (fexprcheck form)))
   (setq form (if $grind (strgrind form) (mstring form)))
   (setq st (reverse form) rephrase t)
-  (implode (cons #\& form)))
+  (coerce form 'string))
 
 (defmfun makstring (x)
   (setq x (mstring x))
@@ -829,7 +821,7 @@
 
 
 (mapc #'(lambda (x) (putprop (car x) (cadr x) 'alias)
-		(putprop (cadr x) (caddr x) 'reversealias))
+		(putprop (cadr x) (car x) 'reversealias))
       '(($block mprog block) ($lambda lambda lambda)
 	($abs mabs abs) ($subst $substitute subst)
 	($go mgo go) ($signum %signum signum)
@@ -846,32 +838,10 @@
 	($bothcoeff $bothcoef)))
 
 (defmfun amperchk (name)
-  " $AB ==> $AB,
-   $aB ==> $aB,
-   &AB ==> $AB,
-   &aB ==> $aB,
-   |aB| ==> |aB| "
-  (if (char= (char (symbol-name name) 0) #\&)
-      (getalias (or (get name 'opr)
-		    (implode (cons #\$ (casify-exploden name)))))
-      name))
-
-
-#+(and cl (not scl) (not allegro))
-(defun casify-exploden (x)
-  (cond ((char= (char (symbol-name x) 0) #\&)
-	 (cdr (exploden (maybe-invert-string-case (string x)))))
-	(t (exploden x))))
-
-#+(or scl allegro)
-(defun casify-exploden (x)
-  (cond ((char= (char (symbol-name x) 0) #\&)
-	 (let ((string (string x)))
-	   (unless #+scl (eq ext:*case-mode* :lower)
-		   #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
-	     (setf string (maybe-invert-string-case string)))
-	   (cdr (exploden string))))
-	(t (exploden x))))
+  (cond
+    ((symbolp name) name)
+    ((stringp name)
+     (getalias (or (getopr0 name) (implode (cons #\$ (coerce name 'list))))))))
 
 (defmspec $stringout (x)
   (setq x (cdr x))
@@ -917,7 +887,7 @@
 			 (if $grind (mgrind (strmeval (car l)) savefile)
 			     (princ (print-invert-case (maknam (mstring (strmeval (car l)))))
 					    savefile))
-			 (if (or (and (atom (car l)) (get (car l) 'nodisp)) (not $strdisp))
+			 (if (or (and (symbolp (car l)) (get (car l) 'nodisp)) (not $strdisp))
 			     (write-char #\$ savefile)
 			     (write-char #\; savefile)))))
 		     (setq maxima-error t)))
@@ -1013,9 +983,12 @@
   #+(or cmu scl) (ext:quit)
   #+sbcl (sb-ext:quit)
   #+clisp (ext:quit)
-  #+mcl (ccl::quit)
+  #+(or openmcl mcl) (ccl::quit)
   #+gcl (quit)
-  #+excl "don't know quit function")
+  #+abcl (cl-user::quit)
+  #+ecl (si:quit)
+  #+excl "don't know quit function"
+  #+lispworks (lispworks:quit))
 
 (defmfun $logout () (bye))
 
@@ -1047,11 +1020,14 @@
   (let* ((keyword (car form))
 	 (feature (cadr form)))
     (assert (symbolp keyword))
-    (assert (symbolp feature))
+    (assert (or (stringp feature) (symbolp feature)))
     (case keyword
       ($feature (cond ((null feature) (dollarify *features*))
-		      ((member (intern (symbol-name
-				      (fullstrip1 feature)) 'keyword)
+		      ((member (intern
+                         (if (stringp feature)
+                           (maybe-invert-string-case feature)
+                           (symbol-name (fullstrip1 feature)))
+                         'keyword)
 			     *features* :test #'equal) t)))
       ($status '((mlist simp) $feature $status))
       (t (merror "Unknown argument - `status':~%~M" keyword)))))
@@ -1063,14 +1039,14 @@
 	 (setq *features* (delete ($mkey item) *features*)) t)
 	(t (error "know only how to set and remove feature status"))))
 
-(do ((l '($sqrt $erf $sin $cos $tan $log $plog $sec $csc $cot $sinh $cosh
+(do ((l '($sqrt $sin $cos $tan $log $plog $sec $csc $cot $sinh $cosh
 	  $tanh $sech $csch $coth $asin $acos $atan $acot $acsc $asec $asinh
 	  $acosh $atanh $acsch $asech $acoth $binomial $gamma $genfact $del)
 	(cdr l)))
     ((null l))
   ((lambda (x)
      (putprop (car l) x 'alias)
-     (putprop x (stripdollar (car l)) 'reversealias))
+     (putprop x (car l) 'reversealias))
    ($nounify (car l))))
 
 ($nounify '$sum)

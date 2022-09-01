@@ -14,7 +14,7 @@
 
 (load-macsyma-macros defcal mopers)
 
-(defmvar *alphabet* '(#\_ #\%))
+(defmvar *alphabet* (list #\_ #\%))
 
 (defmfun alphabetp (n)
   (and (characterp n)
@@ -246,11 +246,8 @@
       (setq c (parse-tyi)))
     (setq flag t)))
 
-(defun scan-lisp-string ()
-  (intern (scan-string)))
-
-(defun scan-macsyma-string ()
-  (intern-invert-case (scan-string #\&)))
+(defun scan-lisp-string () (scan-string))
+(defun scan-macsyma-string () (scan-string))
 
 (defun scan-string (&optional init)
   (let ((buf (make-array 50 :element-type ' #.(array-element-type "a")
@@ -271,11 +268,13 @@
 
 (defun make-number (data)
   (setq data (nreverse data))
-  ;; Maxima really wants to read in any number as a double-float
-  ;; (except when we have a bigfloat, of course!).  So convert an E or
-  ;; S exponent marker to D.
-  (when (member (car (nth 3 data)) '(#\E #\S))
-    (setf (nth 3 data) (list #\D)))
+  ;; Maxima really wants to read in any number as a flonum
+  ;; (except when we have a bigfloat, of course!).  So convert exponent
+  ;; markers to the flonum-exponent-marker.
+  (let ((marker (car (nth 3 data))))
+    (unless (eql marker flonum-exponent-marker)
+      (when (member marker '(#\E #\S #\D #\L #+cmu #\W))
+        (setf (nth 3 data) (list flonum-exponent-marker)))))
   (if (not (equal (nth 3 data) '(#\B)))
       (readlist (apply #'append data))
       ;; For bigfloats, turn them into rational numbers then convert to bigfloat.
@@ -299,7 +298,7 @@
 (defun scan-digits (data continuation? continuation &optional exponent-p)
   (do ((c (parse-tyipeek) (parse-tyipeek))
        (l () (cons c l)))
-      ((not (digit-char-p c))
+      ((not (and (characterp c) (digit-char-p c)))
        (cond ((member c continuation?)
 	      (funcall continuation (list* (ncons (char-upcase
 						   (parse-tyi)))
@@ -490,9 +489,7 @@
 (defmacro first-c () '(peek-one-token))
 (defmacro pop-c   () '(scan-one-token))
 
-
-(defun mstringp (x)
-  (and (symbolp x) (char= (char (symbol-name x) 0) #\&)))
+(defun mstringp (x) (stringp x)) ;; OBSOLETE. PRESERVE FOR SAKE OF POSSIBLE CALLS FROM NON-MAXIMA CODE !!
 
 (defun inherit-propl (op-to op-from getl)
   (let ((propl (getl op-from getl)))
@@ -1431,7 +1428,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 	((symbolp x)
 	 (or (get x 'reversealias)
 	     (let ((name (symbol-name x)))
-	       (if (member (char name 0) '(#\$ #\% #\&) :test #'char=)
+	       (if (member (char name 0) '(#\$ #\%) :test #'char=)
 		   (subseq name 1)
 		   name))))
 	(t x)))
@@ -1455,7 +1452,7 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 
 ;; !! FOLLOWING MOVED HERE FROM MLISP.LISP (DEFSTRUCT STUFF)
 ;; !! SEE NOTE THERE
-(define-symbol '&@) 
+(define-symbol "@") 
 
 ;;; User extensibility:
 (defmfun $prefix (operator &optional (rbp  180.)
@@ -1528,14 +1525,14 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
     (if (or (and rbp (not (integerp (setq x rbp))))
 	    (and lbp (not (integerp (setq x lbp)))))
 	(merror "Binding powers must be integers.~%~M is not an integer." x))
-    (if (mstringp op) (setq op (define-symbol op)))
+    (if (stringp op) (setq op (define-symbol op)))
     (op-setup op)
     (let ((noun   ($nounify op))
 	  (dissym (cdr (exploden op))))
       (cond
        ((not match)
 	(setq dissym (append (if sp1 '(#\space)) dissym (if sp2 '(#\space)))))
-       (t (if (mstringp match) (setq match (define-symbol match)))
+       (t (if (stringp match) (setq match (define-symbol match)))
 	  (op-setup match)
 	  (putprop op    match 'match)
 	  (putprop match 5.    'lbp)
@@ -1560,28 +1557,31 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 (defun op-setup (op)
   (declare (special mopl))
   (let ((dummy (or (get op 'op)
-		   (implode (cons '& (string* op))))))
+                   (coerce (string* op) 'string))))
     (putprop op    dummy 'op )
-    (putprop dummy op    'opr)
+    (putopr dummy op)
     (if (and (operatorp1 op) (not (member dummy (cdr $props) :test #'eq)))
 	(push dummy mopl))
     (add2lnc dummy $props)))
 
 (defun kill-operator (op)
-  (undefine-symbol (stripdollar op))
-  (let ((opr (get op 'op)) (noun-form ($nounify op)))
-    (remprop opr 'opr)
-    (rempropchk opr)
-    (mapc #'(lambda (x) (remprop op x))
- 	  '(nud nud-expr nud-subr			; NUD info
-		     led led-expr led-subr		; LED info
-		     lbp rbp			; Binding power info
-		     lpos rpos pos		; Part-Of-Speech info
-		     grind dimension dissym	; Display info
-		     op
-		     ))			; Operator info
-    (mapc #'(lambda (x) (remprop noun-form x))
- 	  '(dimension dissym lbp rbp))))
+  (let
+    ((opr (get op 'op))
+     (noun-form ($nounify op)))
+    ;; Refuse to kill an operator which appears on *BUILTIN-$PROPS*.
+    (unless (member opr *builtin-$props* :test #'equal)
+      (undefine-symbol opr)
+      (remopr opr)
+      (rempropchk opr)
+      (mapc #'(lambda (x) (remprop op x))
+   	  '(nud nud-expr nud-subr			; NUD info
+  		     led led-expr led-subr		; LED info
+  		     lbp rbp			; Binding power info
+  		     lpos rpos pos		; Part-Of-Speech info
+  		     grind dimension dissym	; Display info
+  		     op))			; Operator info
+      (mapc #'(lambda (x) (remprop noun-form x))
+   	  '(dimension dissym lbp rbp)))))
 
 
 

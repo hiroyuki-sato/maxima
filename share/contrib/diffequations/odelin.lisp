@@ -32,7 +32,6 @@
 (eval-when
     #+gcl (load compile eval)
     #-gcl (:load-toplevel :compile-toplevel :execute)
-    ($load "nset")
     ($load "polynomialp")
     ($load "sqfr")
     ($load "spherodialwave")
@@ -42,7 +41,7 @@
     ($load "gauss")
     ($load "odeutils"))
 
-(defmvar $de_solver_is_loquacious t)
+(defmvar $de_solver_is_loquacious nil)
 
 (defun ode-polynomialp (p x)
   (setq p ($ratdisrep p))
@@ -91,7 +90,7 @@
 	(merror "DE must be linear"))
       (setq f (sub f (mul cf (list '(%derivative) y x n))))
       (decf n))
-    (setq f ($ratsimp f))
+    (setq f (sratsimp f))
     (if (not (like 0 f))
 	(merror "DE must be linear and homogeneous.~%"))
     acc))
@@ -99,8 +98,8 @@
 (defun $odelin (de y x)
   (let ((cfs (require-linear-homogeneous-de de y x)) (n))
     (setq n (length cfs))
-    (cond ((= n 2) (odelin-order-one cfs x))
-	  ((= n 3) (odelin-order-two cfs x))
+    (cond ((= n 2) ($expand (odelin-order-one cfs x) 0))
+	  ((= n 3) ($expand (odelin-order-two cfs x) 0))
 	  (t (merror "'odelin' doesn't handle DEs with order ~:M" (- n 1))))))
 
 (defun odelin-order-one (cfs x)
@@ -174,7 +173,7 @@
     (dolist (cf cfs)
       (setq zip (add zip (mul cf sol)))
       (setq sol ($diff sol x)))
-    (setq zip ($ratsimp zip))
+    (setq zip (sratsimp zip))
     (or
      (like 0 zip) (like 0 ($radcan zip)) (like 0 ($radcan ($expand zip)))
      (mtell "should vanish, but it does not ~:M~%" zip))))
@@ -292,7 +291,7 @@
 (defun polynomial-filter (p x f)
   (let (($gcd '$spmod) ($algebraic t) ($ratfac nil) 
 	($ratprint nil) ($radexpand nil))
-    (setq p ($ratsimp p x)) ;; Get rid of terms like sqr(5)^2, %i^2...
+    (setq p (sratsimp p x)) ;; Get rid of terms like sqr(5)^2, %i^2...
     (setq p ($mysqfr p x))
     (setq p (if (mtimesp p) (margs p) (list p)))
     (let ((q 1) (n))
@@ -328,7 +327,7 @@
 
 (defun easy-eqs (cnd s x)
   (let ((acc) (n) ($gcd '$spmod) ($algebraic t) 
-	($solve_inconsistent_error nil) ($programmode t) 
+	($programmode t) 
 	($globalsolve nil) ($solveexplicit t) ($solveradcan nil))
     
     (setq s (polynomial-filter s x #'(lambda (n) (min 1 n))))
@@ -516,8 +515,8 @@
     (cond (xi
 	   (setq z (nth 0 xi))
 	   (setq mu (car (nth 1 xi)))
-	   (setq z ($ratsimp z))
-	   (setq mu ($ratsimp mu))
+	   (setq z (sratsimp z))
+	   (setq mu (sratsimp mu))
 	   (setq m (mul 
 		    (power z (div 1 2)) 
 		    (power ($diff z x) (div -1 2))))
@@ -557,8 +556,8 @@
     (cond (xi
 	   (setq z (nth 0 xi))
 	   (setq mu (car (nth 1 xi)))
-	   (setq z ($ratsimp z))
-	   (setq mu ($ratsimp mu))
+	   (setq z (sratsimp z))
+	   (setq mu (sratsimp mu))
 	   (setq m (mul 
 		    (power z (div 1 2)) 
 		    (power ($diff z x) (div -1 2))))
@@ -605,7 +604,7 @@
 	   (setq z (car xi))
 	   (setq a (caadr xi))
 	   (setq b (cadadr xi))
-	   (setq z ($ratsimp z))
+	   (setq z (sratsimp z))
 	   (setq m (mul 
 		    (power '$%e (div z -2)) 
 		    (power z (div b 2))
@@ -664,7 +663,7 @@
 	   (setq b (nth 0 (nth 1 xi)))
 	   (setq c (nth 1 (nth 1 xi)))
 	   (setq q (nth 2 (nth 1 xi)))
-	   (setq z ($ratsimp z))
+	   (setq z (sratsimp z))
 	   (setq m (mul 
 		    (power (sub (mul z z) 1) (div (add b 1) 2))
 		    (power ($diff z x) (div -1 2))))
@@ -731,7 +730,7 @@
 	   (setq a (nth 0 (nth 1 xi)))
 	   (setq b (nth 1 (nth 1 xi)))
 	   (setq c (nth 2 (nth 1 xi)))
-	   (setq z ($ratsimp z))
+	   (setq z (sratsimp z))
 ;; (xi(x))^(c/2) * (xi(x)-1)^((-c+b+a+1)/2) * f(xi(x)) / sqrt(diff(xi(x),x))
 	   (setq m (mul 
 		    (power z (div c 2)) (power (sub z 1) 

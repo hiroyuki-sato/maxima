@@ -318,8 +318,19 @@ sin(%pi * 31 / 37);
 subst(n = 1, tan(%pi * n * 31 / 37));
 tan(%pi * 31 / 37);
 
+/* [ 580721 ] trigexpand bug */
+tan(%pi*x+%pi/2),trigexpand;
+-cot(%pi*x);
+
+tan(n*2*%pi);
+0;
+
 (kill(n,declare),0);
 0$
+
+/* [ 1553866 ] %piargs inconsistent behavior */
+cos(%pi*x + %pi);
+-cos(%pi*x);
 
 (remfunction(complexfloatp, complexbigfloatp),0);
 0$
@@ -327,3 +338,21 @@ tan(%pi * 31 / 37);
 /* Probably we should beef up reset slightly to handle this, but for now this is OK. */
 (map (lambda ([a, b], a :: b), save_flags_names, save_flags_values), 0);
 0;
+
+/* [ 1644575 ] acot(0.0) vs acot(0) */
+acot(0.0);
+1.570796326794897;
+
+/* [ 620246 ] carg(complex) */
+(declare(u, complex),0);
+0;
+
+rectform(log(u));
+log(cabs(u)) + %i*carg(u);
+
+cabs(u);
+sqrt(?%realpart(u)^2+?%imagpart(u)^2);
+
+/* [ 617699 ] carg([1]) is bogus */
+carg([1]);
+[0];

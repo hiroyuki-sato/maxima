@@ -19,6 +19,10 @@
     (defvar *old-read-base* *read-base*)
     (setq *read-base* 10.))
 
+(defmvar $mapprint t
+  "If TRUE, messages about map/fullmap truncating on the shortest list
+or if apply is being used are printed.")
+  
 (declare-top (special mspeclist mproplist bindlist loclist nounsflag
 		      derivflag derivlist mprogp mdop evp aexprp mlocp $labels
 		      $values $functions $arrays $rules $gradefs $dependencies $aliases
@@ -26,10 +30,10 @@
 		      $float $numer aryp msump state-pdl evarrp $setval nounl
 		      $setcheckbreak $refcheck *mdebug* refchkl baktrcl maplp
 		      $norepeat $detout $doallmxops $doscmxops opers factlist opexprp
-		      $translate $transrun $maperror outargs1 outargs2 fmaplvl mopl
+		      $translate $transrun $maperror fmaplvl mopl
 		      $powerdisp $subscrmap $dispflag $optionset dsksetp fexprerrp
 		      $features *alphabet* $%enumer $infeval $savedef $%% %e-val
-		      $mapprint featurel outfiles fundefsimp mfexprp transp
+		      featurel outfiles fundefsimp mfexprp transp
 		      $macros linel $ratfac $ratwtlvl
 		      $operators noevalargs $piece $partswitch *gcdl*
 		      scanmapp *builtin-$props* $infolists))
@@ -42,7 +46,7 @@
       $subscrmap nil $translate nil $transrun t $savedef t aexprp nil
       $maperror t fmaplvl 0 $optionset nil
       $setcheckbreak nil dsksetp nil aryp nil msump nil evarrp nil
-      $infeval nil factlist nil $mapprint t fundefsimp nil
+      $infeval nil factlist nil fundefsimp nil
       mfexprp t nounsflag nil opexprp nil
       transp nil noevalargs nil
       $piece '$piece $setval '$setval fexprerrp nil rulefcnl nil
@@ -59,7 +63,7 @@
 
 (defvar fixunbound most-negative-fixnum)
 
-(defvar flounbound most-negative-double-float)
+(defvar flounbound most-negative-flonum)
 
 (defmvar munbindp nil
   "Used for safely `munbind'ing incorrectly-bound variables."
@@ -76,15 +80,26 @@
 	 (cond ((atom fn)
 		(cond ((functionp fn)
 		       (apply fn args))
-              ((and (fboundp fn) (not (macro-function fn)))
+              ((and (symbolp fn) (fboundp fn) (not (macro-function fn)))
                (mapply1 (symbol-function fn) args fn form))
-		      ((symbol-array fn)
+		      ((and (symbolp fn) (symbol-array fn))
 		       (mapply1 (symbol-array fn) args fn form))
 		      (t
 		       (setq fn (getopr fn))
 		       (badfunchk fnname fn nil)
 		       (let ((noevalargs t))
 			 (meval (cons (ncons fn) args))))))))
+
+	;; GCL considers interpreted functions and lambdas to be non-atoms
+	#+gcl((functionp fn)
+	 (apply fn args))
+
+	;; extension for pdiff; additional extension are welcomed.
+    ;; (AND (CONSP FN) (CONSP (CAR FN)) ...) is an attempt to identify
+    ;; conventional Maxima expressions ((FOO) X Y Z); probably should
+    ;; encapsulate somewhere, maybe it is already ??
+	((and (consp fn) (consp (car fn)) (symbolp (mop fn)) (get (mop fn) 'mapply1-extension)
+	      (apply (get (mop fn) 'mapply1-extension) (list fn args fnname form))))
 	((eq (car fn) 'lambda)
 	 (apply (coerce fn 'function) args))
 	((eq (caar fn) 'lambda) (mlambda fn args fnname t form))
@@ -287,7 +302,7 @@ is EQ to FNNAME if the latter is non-NIL."
 		    ((eq (caar form) 'mqapply) (return (mqapply1 form))))
 	      (badfunchk (caar form) (caar form) nil)
 	      a    (setq u (or (safe-getl (caar form) '(noun))
-			       (and nounsflag (eq (getchar (caar form) 1) '%)
+			       (and nounsflag (eq (getcharn (caar form) 1) #\%)
 				    (not (or (getl-lm-fcn-prop (caar form) '(subr fsubr lsubr))
 					     (safe-getl (caar form) '(mfexpr* mfexpr*s))))
 				    (prog2 ($verbify (caar form))
@@ -589,8 +604,7 @@ wrapper for this."
      (cond ((atom x)
 	    (when (or (not (symbolp x))
 		      (member x '(t nil) :test #'eq)
-		      (mget x '$numer)
-		      (char= (char (symbol-name x) 0) #\&))
+		      (mget x '$numer))
 	      (if munbindp (return nil))
 	      (if (mget x '$numer)
 		  (merror "~:M improper value assignment to a numerical quantity" x)
@@ -658,6 +672,7 @@ wrapper for this."
 ;; (11) EXTEND KILL TO RECOGNIZE KILL(X@Y)
 ;; (12) EVALUATE INITIALIZERS IN $DEFSTRUCT AND IN $NEW
 ;; (13) DISPLAY FIELDS WHICH HAVE BEEN ASSIGNED VALUES AS FOO(X = BAR, Y = BAZ)
+;; (14) ASSIGN TRANSLATION PROPERTY TO 'DEFSTRUCT AND DEF-SAME%TR ALL STRUCTURES
 
 (setf (get '$@ 'mset_extension_operator) 'mrecord-assign)
 
@@ -746,6 +761,10 @@ wrapper for this."
 
 (defvar $structures '((mlist)))
 
+(defun defstruct-translate (form)
+  (let ((translated-args (mapcar #'translate (cdr form))))
+    `($any simplify (list '(,(caar form)) ,@(mapcar #'cdr translated-args)))))
+
 (defun defstruct1 (z) ;; z will look like (($whatever) $a $b $c)
    ;; store the template
   (putprop (caar z) (namesonly z) 'defstruct-template)
@@ -753,6 +772,7 @@ wrapper for this."
   (putprop (caar z) (initializersmostly z) 'defstruct-default)
   (setf (get (caar z) 'dimension) 'dimension-defstruct)
   (nconc $structures (list (get (caar z) 'defstruct-default)))
+  (setf (get (caar z) 'translate) #'defstruct-translate)
   (get (caar z) 'defstruct-default))
 
 (defun namesonly(r)			; f(a,b,c) unchanged, f(a=3,b=4,c=5) -> f(a,b,c)
@@ -796,11 +816,11 @@ wrapper for this."
 ;; Following property assignments comprise the Lisp code equivalent to infix("@", 190, 191)
 
 (defprop $@ %@ verb) 
-(defprop $@ &@ op) 
-(defprop &@ $@ opr) 
+(defprop $@ "@" op) 
+(putopr "@" '$@) 
 ;; !! FOLLOWING LINE MOVED TO NPARSE.LISP TO AVOID COMPILER ERROR
 ;; !! (MOVING SUPRV1.LISP HIGHER IN MAXIMA.SYSTEM CAUSES MYSTERIOUS ERROR)
-;; !! (define-symbol '&@) 
+;; !! (define-symbol "@") 
 (defprop $@ dimension-infix dimension) 
 (defprop $@ (#\@) dissym) 
 (defprop $@ msize-infix grind) 
@@ -1068,7 +1088,7 @@ wrapper for this."
 (defmfun msetchk (x y)
   (cond ((member x '(*read-base* *print-base*) :test #'eq)
 	 (cond ((eq y 'roman))
-	       ((or (not (fixnump y)) (< y 2) (> y 35)) (mseterr x y))
+	       ((or (not (fixnump y)) (< y 2) (> y 36)) (mseterr x y))
 	       ((eq x '*read-base*))))
 	((member x '($linel $fortindent $gensumnum $fpprintprec $floatwidth
 		   $parsewindow $ttyintnum) :test #'eq)
@@ -1167,7 +1187,7 @@ wrapper for this."
        (nreverse ans))))
 
 (defun mapatom (x)
-  (or (symbolp x) (mnump x) ($subvarp x)))
+  (or (symbolp x) (mnump x) ($subvarp x) (stringp x)))
 
 (defmfun $mapatom (x)
   (if (mapatom (specrepcheck x)) t))
@@ -1228,18 +1248,17 @@ wrapper for this."
   (apply #'fmapl1 (mmapev l)))
 
 (defmfun fmapl1 (fun &rest args)
-  (let ((header '(mlist)) argl)
-    (setq argl (fmap1 fun
-		      (mapcar
-		       #'(lambda (z)
-			   (cond ((not (mxorlistp z))
-				  (merror "Argument to `fullmapl' is not a list or matrix."))
-				 ((eq (caar z) '$matrix)
-				  (setq header '($matrix))
-				  (cons '(mlist simp) (cdr z)))
-				 (t z)))
-		       args)
-		      'mlist))
+  (let* ((header '(mlist))
+	 (argl (fmap1 fun
+		      (mapcar #'(lambda (z)
+				  (cond ((not (mxorlistp z))
+					 (merror "Argument to `fullmapl' is not a list or matrix."))
+					((eq (caar z) '$matrix)
+					 (setq header '($matrix))
+					 (cons '(mlist simp) (cdr z)))
+					(t z)))
+			      args)
+		      'mlist)))
     (if (dolist (e (cdr argl))
 	  (unless ($listp e) (return t)))
 	argl
@@ -1247,23 +1266,25 @@ wrapper for this."
 
 (defun $outermap (x y &rest z)
   (if z
-    (apply #'outermap1 `(,x ,y ,@z))
+    (apply #'outermap1 x y z)
     (fmapl1 x y)))
 
 (defmfun outermap1 n
   (let (outargs1 outargs2)
+    (declare (special outargs1 outargs2))
     (cond ((mxorlistp (arg 2))
 	   (setq outargs1 (ncons (arg 1))
 		 outargs2 (listify (- 2 n)))
-	   (fmapl1 'outermap2 (arg 2)))
+	   (fmapl1 #'outermap2 (arg 2)))
 	  (t (do ((i 3 (1+ i)))
 		 ((> i n) (funcer (arg 1) (listify (- 1 n))))
 	       (when (mxorlistp (arg i))
 		 (setq outargs1 (listify (1- i))
 		       outargs2 (if (< i n) (listify (- i n))))
-		 (return (fmapl1 'outermap2 (arg i)))))))))
+		 (return (fmapl1 #'outermap2 (arg i)))))))))
 
 (defmfun outermap2 (&rest args)
+  (declare (special outargs1 outargs2))
   (unless (null args)
     (apply #'outermap1 (append outargs1 (list (first args)) outargs2))))
 
@@ -1293,8 +1314,14 @@ wrapper for this."
     (add2lnc atom $props)))
 
 (defun prop1 (fun atom val ind)
-  (nonsymchk atom fun)
-  (nonsymchk ind fun)
+  (unless (or (symbolp atom) (stringp atom))
+    (merror "~:M: atom must be a symbol or a string:~%~M" fun atom))
+  (unless (or (symbolp ind) (stringp ind))
+    (merror "~:M: indicator must be a symbol or a string:~%~M" fun ind))
+  (unless (symbolp atom)
+    (setq atom (intern atom)))
+  (unless (symbolp ind)
+    (setq ind (intern ind)))
   (let ((u (mget atom '$props)))
     (cond ((eq fun '$get) (and u (old-get u ind)))
 	  ((eq fun '$rem) (and u (zl-remprop u ind) '$done))
@@ -1332,17 +1359,19 @@ wrapper for this."
 (defun declare1 (vars val prop mpropp)
   (dolist (var vars)
     (setq var (getopr var))
-    (nonsymchk var '$declare)
+    (unless (or (symbolp var) (stringp var))
+      (merror "declare: argument must be a symbol or a string."))
     (cond ((eq mpropp 'kind) (declarekind var prop))
 	  ((eq mpropp 'opers)
 	   (putprop (setq var (linchk var)) t prop) (putprop var t 'opers)
-	   (if (not (get var 'operators)) (putprop var 'simpargs1 'operators)))
+	   (if (and (symbolp var) (not (get var 'operators)))
+         (putprop var 'simpargs1 'operators)))
 
 	  ((eq mpropp '$alphabetic)
        ; Explode var into characters and put each one on the *alphabet* list,
        ; which is used by src/nparse.lisp .
-       (dolist (1-char (cdr (coerce (print-invert-case var) 'list)))
-	 (add2lnc 1-char *alphabet*)))
+       (dolist (1-char (coerce var 'list))
+         (add2lnc 1-char *alphabet*)))
 
 	  ((eq prop 'special)(proclaim (list 'special var))
 	   (fluidize var))
@@ -1352,7 +1381,7 @@ wrapper for this."
 	       (merror "Inconsistent Declaration: ~:M" `(($declare) ,var ,prop)))
 	   (mputprop var val prop))
 	  (t (putprop var val prop)))
-    (if (and (get var 'op) (operatorp1 var)
+    (if (and (safe-get var 'op) (operatorp1 var)
 	     (not (member (setq var (get var 'op)) (cdr $props) :test #'eq)))
 	(setq mopl (cons var mopl)))
     (add2lnc (getop var) $props)))
@@ -1372,14 +1401,15 @@ wrapper for this."
     (cond (($listp (cadr l))
 	   (do ((l1 (cdadr l) (cdr l1))) ((if (null l1) (setq flag t)))
 	     (i-$remove (list (car l) (car l1)))))
-	  ((nonsymchk (cadr l) '$remove))
+      ((unless (or (symbolp (cadr l)) (stringp (cadr l)))
+        (merror "remove: argument must be a symbol or a string.")))
 	  (t (setq vars (declsetup (car l) '$remove))))
     (cond (flag)
 	  ((eq (cadr l) '$value) (i-$remvalue vars))
 	  ((eq (cadr l) '$function)
-	   (remove1 (mapcar #'rem-verbify vars) 'mexpr t $functions t))
+	   (remove1 (mapcar #'$verbify vars) 'mexpr t $functions t))
 	  ((eq (cadr l) '$macro)
-	   (remove1 (mapcar #'rem-verbify vars) 'mmacro t $macros t))
+	   (remove1 (mapcar #'$verbify vars) 'mmacro t $macros t))
 	  ((eq (cadr l) '$array) (meval `(($remarray) ,@vars)))
 	  ((member (cadr l) '($alias $noun) :test #'eq) (remalias1 vars (eq (cadr l) '$alias)))
 	  ((eq (cadr l) '$matchdeclare) (remove1 vars 'matchdeclare t t nil))
@@ -1419,24 +1449,26 @@ wrapper for this."
 (defmfun remove1 (vars prop mpropp info funp)
   (do ((vars vars (cdr vars)) (allflg))
       ((null vars))
-    (nonsymchk (car vars) '$remove)
+    (unless (or (symbolp (car vars)) (stringp (car vars)))
+      (merror "remove: argument must be a symbol or a string."))
     (cond ((and (eq (car vars) '$all) (null allflg))
 	   (setq vars (append vars (cond ((atom info) (cdr $props))
 					 (funp (mapcar #'caar (cdr info)))
 					 (t (cdr info))))
 		 allflg t))
 	  (t
-	   (let ((var  (getopr (car vars)))( flag  nil))
+        (if (and (stringp (car vars)) (eq prop '$op) (getopr0 (car vars)))
+          (kill-operator (getopr0 (car vars))))
 
+	   (let ((var  (getopr (car vars)))( flag  nil))
 	     (cond (mpropp (mremprop var prop)
 			   (when (member prop '(mexpr mmacro) :test #'eq)
 			     (mremprop var 'mlexprp)
 			     (mremprop var 'mfexprp)
 			     (if (mget var 'trace)
 				 (macsyma-untrace var))))
-		   ((eq prop '$op) (kill-operator var))
-		   ((and (eq prop '$alphabetic) (mstringp var))
-	    (dolist (1-char (cdr (coerce (print-invert-case var) 'list)))
+		   ((and (eq prop '$alphabetic) (stringp var))
+	    (dolist (1-char (coerce var 'list))
 	      (setf *alphabet* (delete 1-char *alphabet* :count 1 :test #'equal))))
 		   ((eq prop '$transfun)
 		    (remove-transl-fun-props var)
@@ -1472,23 +1504,23 @@ wrapper for this."
     (if (not (fboundp fun)) (zl-remprop fun 'translated))))
 
 (defmfun rempropchk (var)
-  (if (and (not (mgetl var '($constant $nonscalar $scalar $mainvar $numer
-			     matchdeclare $atomgrad atvalues t-mfexpr)))
-	   (not (getl var '(evfun evflag translated nonarray bindtest
-			    opr sp2 operators opers special data autoload mode)))
-	   (not (member var *builtin-$props* :test #'eq)))
-      (delete var $props :count 1 :test #'eq)))
-
-(defun rem-verbify (fnname)
-  (nonsymchk fnname '$remove)
-  ($verbify fnname))
+  (if (and 
+        (or
+          (not (symbolp var))
+          (and
+            (not (mgetl var '($constant $nonscalar $scalar $mainvar $numer
+                                        matchdeclare $atomgrad atvalues t-mfexpr)))
+            (not (getl var '(evfun evflag translated nonarray bindtest
+                                   sp2 operators opers special data autoload mode)))))
+	   (not (member var *builtin-$props* :test #'equal)))
+      (delete var $props :count 1 :test #'equal)))
 
 (defmspec $remfunction (l)
   (setq l (cdr l))
   (cond ((member '$all l :test #'eq)
 	 (setq l (nconc (mapcar #'caar (cdr $functions))
 			(mapcar #'caar (cdr $macros)))))
-	(t (setq l (mapcar #'rem-verbify l))
+	(t (setq l (mapcar #'$verbify l))
 	   (do ((l1 l (cdr l1))) ((null l1) t)
 	     (if (not (or (assoc (ncons (car l1)) (cdr $functions) :test #'equal)
 			  (assoc (ncons (car l1)) (cdr $macros) :test #'equal)))
@@ -1532,7 +1564,7 @@ wrapper for this."
   (if (mfilep (cadr ary))
       (i-$unstore (ncons (caar form))))
   (let ((y (car (arraydims (cadr ary)))))
-    (arrstore form (cond ((eq y 'fixnum) 0) ((eq y 'flonum) 0.0d0) (t munbound)))))
+    (arrstore form (cond ((eq y 'fixnum) 0) ((eq y 'flonum) 0.0) (t munbound)))))
 
 (defmfun remrule (l)
   (do ((l l (cdr l)) (u))
@@ -1607,7 +1639,7 @@ wrapper for this."
 	   u)
 	  (evarrp (throw 'evarrp 'notexist))
 	  ((or (not v) (null (setq u (arrfunp (caar form)))))
-	   (cond ((eq type 'flonum) 0.0d0)
+	   (cond ((eq type 'flonum) 0.0)
 		 ((eq type 'fixnum) 0)
 		 (t (meval2 sub form))))
 	  (t (setq u (arrfuncall u sub form))
@@ -1622,66 +1654,69 @@ wrapper for this."
   (cond ($use_fast_arrays
 	 (mset (car x) (apply '$make_array '$any (mapcar #'1+ (cdr x)))))
 	((symbolp (car x))
-	 (funcall #'(lambda (compp)
-		      (funcall #'(lambda (fun diml funp old new ncells)
-				   (cond ((member '$function diml :test #'eq)
-					  (setq diml (delete '$function (copy-list diml)
-							     :count 1 :test #'eq) funp t)))
-				   (setq diml (mapcar #'meval diml))
-				   (cond ((null diml)
-					  (wna-err '$array))
-					 ((> (length diml) 5)
-					  (merror "`array' takes at most 5 indices"))
-					 ((member nil (mapcar #'(lambda (u) (eq (ml-typep u) 'fixnum))
-							      diml) :test #'eq)
-					  (merror "Non-integer dimension - `array'")))
-				   (setq diml (mapcar #'1+ diml))
-				   (setq new (apply #'*array (cons (if compp fun (gensym))
-								   (cons t diml))))
-				   (cond ((eq compp 'fixnum) (fillarray new '(0)))
-					 ((eq compp 'flonum) (fillarray new '(0.0d0))))
-				   (cond ((not (member compp '(fixnum flonum) :test #'eq))
-					  (fillarray new (list munbound)))
-					 ((or funp (arrfunp fun))
-					  (fillarray new (list (cond ((eq compp 'fixnum) fixunbound)
-								     (t flounbound))))))
-				   (cond ((null (setq old (mget fun 'hashar)))
-					  (mputprop fun new 'array))
-					 (t (cond ((not (= (aref (symbol-array old) 2) (length diml)))
-						   (merror "Array ~:M already has ~:M dimension(s)"
-							   fun (aref (symbol-array old) 2))))
-					    (setq ncells (+ 2 (aref (symbol-array old) 0)))
-					    (do ((n 3 (1+ n))) ((> n ncells))
-					      (do ((items (aref (symbol-array old) n) (cdr items))) ((null items))
-						(do ((x (caar items) (cdr x)) (y diml (cdr y)))
-						    ((null x)
-						     (if (and (member compp '(fixnum flonum) :test #'eq)
-							      (not (eq (ml-typep (cdar items)) compp)))
-							 (merror "Element and array type do not match:~%~M"
-								 (cdar items)))
-
-						     (setf (apply #'aref (symbol-array new)
-								  (caar items))
-							   (cdar items)))
-						  (if (or (not (eq (ml-typep (car x)) 'fixnum))
-							  (< (car x) 0)
-							  (not (< (car x) (car y))))
-						      (merror "Improper index for declared array:~%~M"
-							      (car x))))))
-					    (mremprop fun 'hashar)
-					    (mputprop fun new 'array)))
-				   (add2lnc fun $arrays)
-				   (if (eq compp 'fixnum) (putprop fun '$fixnum 'array-mode))
-				   (if (eq compp 'flonum) (putprop fun '$float 'array-mode))
-				   fun)
-			       ($verbify (car x)) (cond (compp (setq compp (cdr compp)) (cddr x)) (t (cdr x)))
-			       nil nil nil 0))
-		  (assoc (cadr x) '(($complete . t) ($integer . fixnum) ($fixnum . fixnum)
-				   ($float . flonum) ($flonum . flonum)) :test #'eq)))
+	 (let ((compp (assoc (cadr x) '(($complete . t) ($integer . fixnum) ($fixnum . fixnum)
+					($float . flonum) ($flonum . flonum)))))
+	   (let ((fun ($verbify (car x)))
+		 (diml (cond (compp (setq compp (cdr compp))
+				    (cddr x))
+			     (t (cdr x))))
+		 funp
+		 old
+		 new
+		 (ncells 0))
+	     (when (member '$function diml :test #'eq)
+	       (setq diml (delete '$function diml :count 1 :test #'eq)
+		     funp t))
+	     (setq diml (mapcar #'meval diml))
+	     (cond ((null diml)
+		    (wna-err '$array))
+		   ((> (length diml) 5)
+		    (merror "`array' takes at most 5 indices"))
+		   ((member nil (mapcar #'(lambda (u) (eq (ml-typep u) 'fixnum)) diml)
+			    :test #'eq)
+		    (merror "Non-integer dimension - `array'")))
+	     (setq diml (mapcar #'1+ diml))
+	     (setq new (if compp fun (gensym)))
+	     (setf (symbol-array new) (make-array diml :initial-element (case compp
+									   (fixnum 0)
+									   (flonum 0.0)
+									   (otherwise munbound))))
+	     (when (or funp (arrfunp fun))
+	       (fillarray new (list (if (eq compp 'fixnum) fixunbound flounbound))))
+	     (cond ((null (setq old (mget fun 'hashar)))
+		    (mputprop fun new 'array))
+		   (t (unless (= (aref (symbol-array old) 2) (length diml))
+			(merror "Array ~:M already has ~:M dimension(s)" fun (aref (symbol-array old) 2)))
+		      (setq ncells (+ 2 (aref (symbol-array old) 0)))
+		      (do ((n 3 (1+ n)))
+			  ((> n ncells))
+			(do ((items (aref (symbol-array old) n) (cdr items)))
+			    ((null items))
+			  (do ((x (caar items) (cdr x)) (y diml (cdr y)))
+			      ((null x)
+			       (if (and (member compp '(fixnum flonum) :test #'eq)
+					(not (eq (ml-typep (cdar items)) compp)))
+				   (merror "Element and array type do not match:~%~M" (cdar items)))
+			       (setf (apply #'aref (symbol-array new) (caar items))
+				     (cdar items)))
+			    (if (or (not (eq (ml-typep (car x)) 'fixnum))
+				    (< (car x) 0)
+				    (not (< (car x) (car y))))
+				(merror "Improper index for declared array:~%~M" (car x))))))
+		      (mremprop fun 'hashar)
+		      (mputprop fun new 'array)))
+	     (add2lnc fun $arrays)
+	     (when (eq compp 'fixnum)
+	       (putprop fun '$fixnum 'array-mode))
+	     (when (eq compp 'flonum)
+	       (putprop fun '$float 'array-mode))
+	     fun)))
 	(($listp (car x))
-	 (do ((u (cdar x) (cdr u))) ((null u)) (meval `(($array) ,(car u) ,@(cdr x))))
+	 (dolist (u (cdar x))
+	   (meval `(($array) ,u ,@(cdr x))))
 	 (car x))
-	(t (merror "Improper first argument to `array':~%~M" (car x)))))
+	(t
+	 (merror "Improper first argument to `array':~%~M" (car x)))))
 
 
 (defmfun $show_hash_array (x)
@@ -1704,11 +1739,11 @@ wrapper for this."
 				    (error "Array has dimension 1")))
 			       (t (or (cdr index)
 				      (error "Array has dimension > 1"))))
-			 (setf (gethash
-				(if (cdr index) index
-				    (car index))
-				tem) r))
-			((eq the-type  'list)
+			 (setf (gethash	(if (cdr index)
+					    index
+					    (car index))
+					tem) r))
+			((eq the-type 'list)
 			 (cond ((eq (caar tem) 'mlist)
 				(setq index (car index))
 				(setf (nth index tem) r)
@@ -1719,13 +1754,14 @@ wrapper for this."
 			       (t
 				(error "The value of ~A is not a hash-table ,an ~
 					   array, Maxima list, or a matrix" (caar l)))))
-			(t(cond ((eq tem (caar l))
-				 (meval* `((mset) ,(caar l)
-					   ,(make-equal-hash-table
-					     (cdr (mevalargs (cdr l))))))
-				 (arrstore l r))
-				(t
-				 (error "The value of ~A is not a hash-table , ~
+			(t
+			 (cond ((eq tem (caar l))
+				(meval* `((mset) ,(caar l)
+					  ,(make-equal-hash-table
+					    (cdr (mevalargs (cdr l))))))
+				(arrstore l r))
+			       (t
+				(error "The value of ~A is not a hash-table, ~
                                          an array, a Maxima list, or a matrix" (caar l))))))))
 	       (t
 		(cond ((mget (caar l) 'hashar)
@@ -1783,8 +1819,9 @@ wrapper for this."
 						       (eq (ml-typep ary) 'array)))))
 		  (if (member fun '(mqapply $%) :test #'eq) (merror "Illegal use of :"))
 		  (add2lnc fun $arrays)
-		  (mputprop fun (setq ary (gensym)) 'hashar)
-		  (*array ary t 7)
+		  (setq ary (gensym))
+		  (mputprop fun ary 'hashar)
+		  (setf (symbol-array ary) (make-array 7 :initial-element nil))
 		  (setf (aref (symbol-array ary) 0) 4)
 		  (setf (aref (symbol-array ary) 1) 0)
 		  (setf (aref (symbol-array ary) 2) (length (cdr l)))
@@ -1827,7 +1864,7 @@ wrapper for this."
 	      (let ((x (car l)))
 		(cond (($ratp x) (merror "Subscripts may not be in CRE form."))
 		      ((or (fixnump x) (floatp x))
-		       (+ (if (fixnump x) x (floor (+ x 5d-4)))
+		       (+ (if (fixnump x) x (floor (+ x 5e-4)))
 			   (* 7 (hasher (cdr l)))))
 		      ((atom x) (+ (sxhash x) (hasher (cdr l))))
 		      (t (+ 1 (sxhash (caar x)) (hasher (cdr x))
@@ -1836,8 +1873,9 @@ wrapper for this."
 (defun arraysize (fun n)
   (prog (old new indx ncells cell item i y)
      (setq old (symbol-array (mget fun 'hashar)))
-     (mputprop fun (setq new (gensym)) 'hashar)
-     (*array new t (+ n 3))
+     (setq new (gensym))
+     (mputprop fun new 'hashar)
+     (setf (symbol-array new) (make-array (+ n 3) :initial-element nil))
      (setq new (symbol-array new))
      (setf (aref new 0) n)
      (setf (aref new 1) (aref old 1))
@@ -1859,10 +1897,9 @@ wrapper for this."
        (y (cdr (arraydims (mget ary 'array))) (cdr y)))
       ((null y)
        (if x (merror "Array ~:M has dimensions ~:M, but was called with ~:M"
-		     ary `((mlist)
-			   ,.(mapcar #'1-
-			      (cdr (arraydims (mget ary 'array)))))
-		     `((mlist) ,.sub))
+		     ary
+		     `((mlist) ,@(mapcar #'1- (cdr (arraydims (mget ary 'array)))))
+		     `((mlist) ,@sub))
 	   ret))
     (cond ((or (null x) (and (eq (ml-typep (car x)) 'fixnum)
 			     (or (< (car x) 0) (not (< (car x) (car y))))))
@@ -1941,36 +1978,36 @@ wrapper for this."
 		 (merror "Array ~:M already defined with different dimensions"
 			 fnname))
 	     (mdefarray fnname subs args body mqdef))
-	    (t (mputprop fnname (setq ary (gensym)) 'hashar)
-	       (*array ary t 7)
-	       (setf (aref (symbol-array ary) 0) 4)
-	       (setf (aref (symbol-array ary) 1) 0)
-	       (setf (aref (symbol-array ary) 2) (length subs))
-	       (mdefarray fnname subs args body mqdef)))
+	    (t
+	     (setq ary (gensym))
+	     (mputprop fnname ary 'hashar)
+	     (setf (symbol-array ary) (make-array 7 :initial-element nil))
+	     (setf (aref (symbol-array ary) 0) 4)
+	     (setf (aref (symbol-array ary) 1) 0)
+	     (setf (aref (symbol-array ary) 2) (length subs))
+	     (mdefarray fnname subs args body mqdef)))
       (cons '(mdefine simp) (copy-list l)))))
 
 ;; Checks to see if a user is clobbering the name of a system function.
 ;; Prints a warning and returns T if he is, and NIL if he isn't.
 (defun mredef-check (fnname)
-  (cond ((and (not (mget fnname 'mexpr))
-	      (or (and (or (get fnname 'autoload)
-			   (getl-lm-fcn-prop fnname '(subr fsubr lsubr))
-			   (get fnname 'mfexpr*s))
-		       (not (get fnname 'translated)))
-		  (mopp fnname)))
-	 (princ "Warning - you are redefining the Maxima ")
-	 (if (getl fnname '(verb operators))
-	     (princ "command ") (princ "function "))
-	 (princ (print-invert-case (stripdollar fnname)))
-	 (terpri)
-	 t)))
+  (when (and (not (mget fnname 'mexpr))
+	     (or (and (or (get fnname 'autoload)
+			  (getl-lm-fcn-prop fnname '(subr fsubr lsubr))
+			  (get fnname 'mfexpr*s))
+		      (not (get fnname 'translated)))
+		 (mopp fnname)))
+    (format t "Warning - you are redefining the Maxima ~:[function~;command~] ~a~%"
+	    (getl fnname '(verb operators))
+	    (print-invert-case (stripdollar fnname)))
+    t))
 
 (defun mdefarray (fun subs args body mqdef)
-  (cond ((and  (boundp fun) (hash-table-p fun))
-	 (error "~a is already a hash table.  Make it a function first" fun)))
+  (when (hash-table-p fun)
+    (error "~a is already a hash table.  Make it a function first" fun))
   (cond ((and (null args) (not mqdef)) (mputprop fun (mdefine1 subs body) 'aexpr))
 	((null (dolist (u subs)
-		 (if (not (or (consp u) ($constantp u) (char= (char (symbol-name u) 0) #\&)))
+		 (unless (or (consp u) ($constantp u) (stringp u))
 		     (return t))))
 	 (arrstore (cons (ncons fun) subs) (mdefine1 args body)))
 	(t (mdefchk fun subs t nil)
@@ -2007,7 +2044,7 @@ wrapper for this."
 	(merror "Improper parameter in function definition for ~:M:~%~M" fun (car l)))))
 
 (defun mdefparam (x)
-  (and (atom x) (not (maxima-constantp x)) (not (char= (char (symbol-name x) 0) #\&))))
+  (and (atom x) (not (maxima-constantp x)) (not (stringp x))))
 
 (defun mdeflistp (l)
   (and (null (cdr l)) ($listp (car l)) (cdar l) (null (cddar l))))
@@ -2088,7 +2125,7 @@ wrapper for this."
 
 
 (defmfun $funmake (fun args)
-  (if (not (or (symbolp fun) ($subvarp fun)
+  (if (not (or (stringp fun) (symbolp fun) ($subvarp fun)
 	       (and (not (atom fun)) (eq (caar fun) 'lambda))))
       (merror "Bad first argument to `funmake': ~M" fun))
   (if (not ($listp args)) (merror "Bad second argument to `funmake': ~M" args))
@@ -2122,22 +2159,22 @@ wrapper for this."
 
 (defmspec mdo (form)
   (setq form (cdr form))
-  (funcall #'(lambda (mdop var next test do)
-	       (setq next (or (cadddr form) (list '(mplus) (or (caddr form) 1) var))
+  (funcall #'(lambda (mdop my-var next test do)
+	       (setq next (or (cadddr form) (list '(mplus) (or (caddr form) 1) my-var))
 		     test (list '(mor)
 				(cond ((null (car (cddddr form))) nil)
 				      (t (list (if (mnegp ($numfactor (simplify (caddr form))))
 						   '(mlessp)
 						   '(mgreaterp))
-					       var (car (cddddr form)))))
+					       my-var (car (cddddr form)))))
 				(cadr (cddddr form)))
 		     do (caddr (cddddr form)))
-	       (mbinding ((ncons var)
+	       (mbinding ((ncons my-var)
 			  (ncons (if (null (cadr form)) 1 (meval (cadr form)))))
 			 (do ((val) (bindl bindlist))
 			     ((is test) '$done)
 			   (cond ((null (setq val (catch 'mprog (prog2 (meval do) nil))))
-				  (mset var (meval next)))
+				  (mset my-var (meval next)))
 				 ((atom val) (merror "`go' not in `block':~%~M" val))
 				 ((not (eq bindl bindlist))
 				  (merror "Illegal `return':~%~M" (car val)))
@@ -2146,22 +2183,22 @@ wrapper for this."
 
 (defmspec mdoin (form)
   (setq form (cdr form))
-  (funcall #'(lambda  (mdop var set test action)
+  (funcall #'(lambda  (mdop my-var set test action)
 	       (setq set (if ($atom (setq set (format1 (meval (cadr form)))))
 			     (merror "Atomic 'in' argument to `do' statement:~%~M" set)
 			     (margs set))
 		     test (list '(mor)
 				(if (car (cddddr form))
-				    (list '(mgreaterp) var (car (cddddr form))))
+				    (list '(mgreaterp) my-var (car (cddddr form))))
 				(cadr (cddddr form)))
 		     action (caddr (cddddr form)))
 	       (cond ((atom set) '$done)
-		     (t (mbinding ((ncons var) (ncons (car set)))
+		     (t (mbinding ((ncons my-var) (ncons (car set)))
 				  (do ((val) (bindl bindlist))
 				      ((or (atom set) (is test))
 				       '$done)
 				    (cond ((null (setq val (catch 'mprog (prog2 (meval action) nil))))
-					   (if (setq set (cdr set)) (mset var (car set))))
+					   (if (setq set (cdr set)) (mset my-var (car set))))
 					  ((atom val) (merror "`go' not in `block':~%~M" val))
 					  ((not (eq bindl bindlist))
 					   (merror "Illegal `return':~%~M" (car val)))
@@ -2203,10 +2240,13 @@ wrapper for this."
 		       (merror "No such tag as ~:M" x)))
 		(if retp (setq prog '(nil)))))))
 
-(defmfun mreturn (x)
-  (if (and (not mprogp) (not mdop))
-      (merror "`return' not in `block':~%~M" x))
-  (throw 'mprog (ncons x)))
+(defmfun mreturn (&optional (x nil) &rest args)
+  (cond 
+    ((not (null args))
+       (merror "Too many arguments supplied to `return':~%~M" `((mlist) ,x ,@args) ))
+    ((and (not mprogp) (not mdop))
+       (merror "`return' not in `block':~%~M" x))
+    (t (throw 'mprog (ncons x)) ) ))
 
 (defmspec mgo (tag)
   (setq tag (fexprcheck tag))
@@ -2266,8 +2306,7 @@ wrapper for this."
 	   z)))
 
 (defmfun |''MAKE-FUN| (noun-name x)
-  (let (($numer t) ($float t))
-    (simplifya (list (ncons noun-name) (resimplify x)) t)))
+  (simplifya (list (ncons noun-name) (resimplify x)) t))
 
 (macrolet ((|''MAKE| (fun noun)
 	     `(defmfun ,fun (x) (|''MAKE-FUN| ',noun x))))
@@ -2280,7 +2319,8 @@ wrapper for this."
   (|''MAKE| $acot %acot) (|''MAKE| $asec %asec) (|''MAKE| $acsc %acsc)
   (|''MAKE| $asinh %asinh) (|''MAKE| $acosh %acosh) (|''MAKE| $atanh %atanh)
   (|''MAKE| $acoth %acoth) (|''MAKE| $asech %asech) (|''MAKE| $acsch %acsch)
-  (|''MAKE| $gamma %gamma))
+  (|''MAKE| $round %round) (|''MAKE| $truncate %truncate) (|''MAKE| $plog %plog)
+  (|''MAKE| $signum %signum) (|''MAKE| $gamma %gamma))
 
 (defmfun $binomial (x y)
   (let (($numer t) ($float t))
@@ -2300,10 +2340,19 @@ wrapper for this."
 	$halfangles $exptisolate $isolate_wrt_times $sumexpand
 	$cauchysum $numer_pbranch $m1pbranch $dotscrules $trigexpand))
 
-(mdefprop $%e     2.71828182845904523536 $numer) ; (EXP 1) [wrong in ITS-MACLISP]
-(mdefprop $%pi    3.14159265358979323846 $numer) ; (ATAN 0 -1)
-(mdefprop $%phi   1.61803398874989484820 $numer) ; (1+sqrt(5))/2
-(mdefprop $%gamma 0.5772156649015328606  $numer) ; Euler's constant
+;;; Float constants, to 2048 bits of precision.
+;;; (EXP 1)
+(mdefprop $%e     2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174135966290435729003342952605956307381323286279434907632338298807531952510190115738341879307021540891499348841675092447614606680822648001684774118537423454424371075390777449920695517027618386062613313845830007520449338265602976067371132007093287091274437470472306969772093101416928368190255151086574637721112523897844250569536967707854499699679468644549059879316368892300987931277361782154249992295763514822082698951936680331825288693984964651058209392398294887933203625094431173012381970684161404
+	  $numer)
+;;; (ATAN 0 -1)
+(mdefprop $%pi    3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608
+	  $numer)
+;;; (1+sqrt(5))/2
+(mdefprop $%phi   1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374847540880753868917521266338622235369317931800607667263544333890865959395829056383226613199282902678806752087668925017116962070322210432162695486262963136144381497587012203408058879544547492461856953648644492410443207713449470495658467885098743394422125448770664780915884607499887124007652170575179788341662562494075890697040002812104276217711177780531531714101170466659914669798731761356006708748071013179523689427521948435305678300228785699782977834784587822891109762500302696156170025046433824377648610283831268330372
+	  $numer)
+;;; Euler's constant
+(mdefprop $%gamma 0.57721566490153286060651209008240243104215933593992359880576723488486772677766467093694706329174674951463144724980708248096050401448654283622417399764492353625350033374293733773767394279259525824709491600873520394816567085323315177661152862119950150798479374508570574002992135478614669402960432542151905877553526733139925401296742051375413954911168510280798423487758720503843109399736137255306088933126760017247953783675927135157722610273492913940798430103417771778088154957066107501016191663340152278935867965497252036212879226555953669628176388792726801324310104765059637039473949576389065729679296010090151251959509223
+	  $numer)
 
 (mdefprop $herald_package (nil $transload t) $props)
 (mdefprop $load_package (nil $transload t) $props)

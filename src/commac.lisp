@@ -108,7 +108,7 @@
   (pushnew name *maxima-arrays*)	;for tracking down old ones.
   (setq aarray (make-array dimlist :initial-element (case maclisp-type
 						      (fixnum 0)
-						      (flonum 0.0d0)
+						      (flonum 0.0)
 						      (otherwise nil))))
   (cond ((null name) aarray)
 	((symbolp name)
@@ -313,15 +313,18 @@ values")
 ;;(defmfun foo a (show a )(show (listify a)) (show (arg 3)))
 
 (defun exploden (symb)
+  (declare (special $maxfpprintprec))
   (let* (#+(and gcl (not gmp)) (big-chunk-size 120)
 	   #+(and gcl (not gmp)) (tentochunksize (expt 10 big-chunk-size))
 	   string)
     (cond ((symbolp symb)
 	   (setq string (print-invert-case symb)))
 	  ((floatp symb)
-	   (let
-	 ((a (abs symb))
-	  (effective-printprec (if (or (= $fpprintprec 0) (> $fpprintprec 16)) 16 $fpprintprec)))
+	   (let ((a (abs symb))
+		 (effective-printprec (if (or (= $fpprintprec 0)
+					      (> $fpprintprec $maxfpprintprec))
+					  $maxfpprintprec
+					  $fpprintprec)))
 	     ;; When printing out something for Fortran, we want to be
 	     ;; sure to print the exponent marker so that Fortran
 	     ;; knows what kind of number it is.  It turns out that
@@ -337,13 +340,13 @@ values")
 		 (setq string (format nil "~e" symb))
 		 (multiple-value-bind (form width)
 		     (cond ((or (zerop a)
-				(<= 1 a 1d7))
+				(<= 1 a 1e7))
 			    (values "~vf" (+ 1 effective-printprec)))
-			   ((<= 0.001d0 a 1)
+			   ((<= 0.001 a 1)
 			    (values "~vf" (+ effective-printprec
-					     (cond ((< a 0.01d0)
+					     (cond ((< a 0.01)
 						    3)
-						   ((< a 0.1d0)
+						   ((< a 0.1)
 						    2)
 						   (t 1)))))
 			   (t
@@ -356,17 +359,17 @@ values")
 		  ans rem tem
 		  (chunks
 		   (loop
-		    do (multiple-value-setq (big rem)
-			 (floor big tentochunksize))
-		    collect rem
-		    while (not (eql 0 big)))))
+		      do (multiple-value-setq (big rem)
+			   (floor big tentochunksize))
+		      collect rem
+		      while (not (eql 0 big)))))
 	     (setq chunks (nreverse chunks))
 	     (setq ans (coerce (format nil "~d" (car chunks)) 'list))
 	     (loop for v in (cdr chunks)
-		    do (setq tem (coerce (format nil "~d" v) 'list))
-		    (loop for i below (- big-chunk-size (length tem))
-			   do (setq tem (cons #\0 tem)))
-		    (setq ans (nconc ans tem)))
+		do (setq tem (coerce (format nil "~d" v) 'list))
+		(loop for i below (- big-chunk-size (length tem))
+		   do (setq tem (cons #\0 tem)))
+		(setq ans (nconc ans tem)))
 	     (return-from exploden ans)))
 	  (t (setq string (format nil "~A" symb))))
     (assert (stringp string))
@@ -424,10 +427,9 @@ values")
 
 (defun intern-invert-case (string)
   ;; Like read-from-string with readtable-case :invert
-  ;;
-  ;; No explicit package for INTERN.  It seems maxima sets *package*
-  ;; as needed.
-  (intern (maybe-invert-string-case string)))
+  ;; Supply package argument in case this function is called
+  ;; from outside the :maxima package.
+  (intern (maybe-invert-string-case string) :maxima))
 
 
 #-(or gcl scl allegro)
@@ -499,7 +501,7 @@ values")
   (let ((strin (string symb)))
     (if (<= 1 i (length strin))
 	(char strin (1- i))
-	(maxima-error "out of bounds"))))
+    nil)))
 
 (defun getchar (symb i)
   (let ((str (string symb)))
@@ -520,18 +522,6 @@ values")
      else do (maxima-error "bad entry")
      finally
      (return (make-symbol (maybe-invert-string-case (coerce tem 'string))))))
-
-(defmacro make-mstring (string)
-  "Make a Maxima string.  The case is inverted for standard CL, and is not
-  changed for lower-case case-sensitive CL variants."
-  #-(or scl allegro)
-  `',(intern (print-invert-case (make-symbol (concatenate 'string "&" string))))
-  #+(or scl allegro)
-  `',(cond (#+scl (eq ext:*case-mode* :lower)
-	    #+allegro (eq excl:*current-case-mode* :case-sensitive-lower)
-	    (intern (concatenate 'string "&" string)))
-	   (t
-	    (intern (print-invert-case (make-symbol (concatenate 'string "&" string)))))))
 
 ;;for those window labels etc. that are wrong type.
 ;; is not only called for symbols, but also on numbers
@@ -617,11 +607,19 @@ values")
 (defvar ^r nil)
 
 (defun $timedate ()
-  (multiple-value-bind (second minute hour date month year day-of-week dst-p tz)
-      (get-decoded-time)
-    (declare (ignore dst-p))
-    (format nil "~2,'0d:~2,'0d:~2,'0d ~[Mon~;Tue~;Wed~;Thu~;Fri~;Sat~;Sun~], ~d/~2,'0d/~d (GMT~@d)"
-	    hour minute second day-of-week month date year (- tz))))
+  (multiple-value-bind
+    (second minute hour date month year day-of-week dst-p tz)
+    (get-decoded-time)
+    (declare (ignore day-of-week))
+    (let
+      ((tz-offset (if dst-p (- 1 tz) (- tz))))
+      (multiple-value-bind
+        (tz-hours tz-hour-fraction)
+        (floor tz-offset)
+        (let
+          ((tz-sign (if (< 0 tz-hours) #\+ #\-)))
+          (format nil "~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d~a~2,'0d:~2,'0d"
+              year month date hour minute second tz-sign (abs tz-hours) (floor (* 60 tz-hour-fraction))))))))
 
 ;;Some systems make everything functionp including macros:
 (defun functionp (x)

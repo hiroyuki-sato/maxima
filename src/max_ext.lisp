@@ -5,8 +5,11 @@
 ($auto_mexpr '$unsum "nusum")
 ($auto_mexpr '$funcsolve "nusum")
 
+($auto_mexpr '$bffac "bffac")
+($auto_mexpr '$cbffac "bffac")
 ($auto_mexpr '$bfzeta "bffac")
 ($auto_mexpr '$bfpsi "bffac")
+($auto_mexpr '$bfpsi0 "bffac")
 
 (auto-mexpr '$trigrat '|trigrat|)
 ($auto_mexpr '$gcdex '|gcdex|)
@@ -25,7 +28,7 @@
 ($auto_mexpr '$declare_linear_operator "misc/declin")
 
 ($auto_mexpr '$nonumfactor "simplification/genut")
-(meval '((%setup_autoload simp) &bffac $bfzeta))
+(meval '((%setup_autoload simp) "bffac" $bfzeta))
 
 ;jfa
 ($auto_mexpr '$eigenvectors '|eigen|)
@@ -37,6 +40,7 @@
 ($auto_mexpr '$ic2 "ode2.mac")
 ($auto_mexpr '$bc2 "ode2.mac")
 ($auto_mexpr '$desimp "ode2.mac")
+($auto_mexpr '$linear2 "ode2")
 
 (dolist (v       
 	  '($arite
@@ -106,6 +110,7 @@
        $make_string_output_stream
        $get_output_stream_string
        $printf
+       $sprint
        $readline
        $alphacharp
        $alphanumericp
@@ -124,13 +129,9 @@
        $lcharp
        $lowercasep
        $uppercasep
-       $sunlisp
-       $lstringp
        $stringp
        $charat
        $charlist
-       $parsetoken
-       $sconc
        $scopy
        $sdowncase
        $sequal
@@ -156,20 +157,30 @@
        $strimr
        $substring
        $supcase
+       $tab
        $tokens ))
   (setf (get f 'autoload) "stringproc"))
 
 
-(auto-mspec '$romberg "romberg")
+(setf (get '$romberg 'autoload) "romberg")
 
-(dolist (f       
-     '($read_matrix
-       $read_lisp_array
-       $read_maxima_array
-       $read_hashed_array
-       $read_nested_list
-       $read_list
-       $write_data ))
+(dolist (f
+  '($assume_external_byte_order
+    $opena_binary
+    $openr_binary
+    $openw_binary
+    $read_array
+    $read_binary_array
+    $read_binary_list
+    $read_binary_matrix
+    $read_hashed_array
+    $read_lisp_array
+    $read_list
+    $read_matrix
+    $read_maxima_array
+    $read_nested_list
+    $write_binary_data
+    $write_data))
   (setf (get f 'autoload) "numericalio"))
 
 (setf (get '$eval_string 'autoload) "eval_string")
@@ -187,6 +198,7 @@
        $hessian
        $jacobian
        $matrix_sign
+       $vandermonde_matrix
        
        $blockmatrixp           ; linalg-utilities.lisp
        $ctranspose
@@ -246,14 +258,13 @@
        $polytocompanion
        $ptriangularize
        $ptriangularize_with_proviso
-       $rank
+       $linalg_rank
        $request_rational_matrix
        $require_integer
        $require_symbol
        $rowop
        $rowswap
-       $toeplitz
-       $vandermonde_matrix ))
+       $toeplitz))
   ($auto_mexpr mexpr "linearalgebra"))
 
 
@@ -269,3 +280,32 @@
 			 ))
 ;;for hypgeo.lisp
 '($%y $%k $%j)
+
+(dolist (f
+     '($assoc_legendre_p
+       $assoc_legendre_q
+       $chebyshev_t
+       $chebyshev_u
+       $gen_laguerre
+       $hermite
+       $intervalp
+       $jacobi_p
+       $laguerre
+       $legendre_p
+       $legendre_q
+       $orthopoly_recur
+       $orthopoly_weight
+       $pochhammer
+       $spherical_bessel_j
+       $spherical_bessel_y
+       $spherical_hankel1
+       $spherical_hankel2
+       $spherical_harmonic
+       $ultraspherical))
+  (setf (get f 'autoload) "orthopoly"))
+
+(defprop $unit_step simp-unit-step operators)
+(autof 'simp-unit-step "orthopoly")
+
+(defprop $pochhammer simp-pochhammer operators)
+(autof 'simp-pochhammer "orthopoly")

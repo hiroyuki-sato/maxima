@@ -11,8 +11,8 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima Manual
-*************
+Maxima 5.17.1 Manual
+********************
 
 Maxima is a computer algebra system, implemented in Lisp.
 
@@ -94,13 +94,15 @@ Additional packages
 * distrib::                     Probability distributions.
 * draw::                        A Maxima-Gnuplot interface.
 * dynamics::                    Graphics for dynamical systems and fractals.
-* eval_string::                 Maxima expressions as strings.
+* ezunits::                     Dimensional quantities.
 * f90::                         Maxima to fortran translator.
 * ggf::                         Generating function of sequences.
+* graphs::                      Graph theory package.
 * grobner::                     Functions for working with Groebner bases.
 * impdiff::                     Implicit derivatives.
 * implicit_plot::               Implicit plots package.
 * interpol::                    Interpolation package.
+* lapack::                      LAPACK functions for linear algebra.
 * lbfgs::                       L-BFGS unconstrained minimization package.
 * lindstedt::                   Lindstedt package.
 * linearalgebra::               Functions for linear algebra.
@@ -157,7 +159,6 @@ Operators
 Expressions
 
 * Introduction to Expressions::
-* Assignment::
 * Complex::
 * Inequality::
 * Syntax::
@@ -169,6 +170,7 @@ Simplification
 
 Plotting
 
+* Introduction to Plotting::
 * Functions and Variables for Plotting::
 
 Input and Output
@@ -238,10 +240,10 @@ Differential Equations
 
 Numerical
 
-* Introduction to Numerical::
-* Fourier packages::
-* Functions and Variables for Numerical::
-* Functions and Variables for Fourier Series::
+* Introduction to fast Fourier transform::
+* Functions and Variables for fast Fourier transform::
+* Introduction to Fourier series::
+* Functions and Variables for Fourier series::
 
 Arrays
 
@@ -257,6 +259,7 @@ Matrices and Linear Algebra
 
 Affine
 
+* Introduction to Affine::
 * Functions and Variables for Affine::
 
 itensor
@@ -285,6 +288,7 @@ Number Theory
 
 Symmetries
 
+* Introduction to Symmetries::
 * Functions and Variables for Symmetries::
 
 Groups
@@ -381,9 +385,11 @@ dynamics
 * Introduction to dynamics::
 * Functions and Variables for dynamics::
 
-eval_string
+ezunits
 
-* Functions and Variables for eval_string::
+* Introduction to ezunits::
+* Introduction to physical_constants::
+* Functions and Variables for ezunits::
 
 f90
 
@@ -392,6 +398,11 @@ f90
 ggf
 
 * Functions and Variables for ggf::
+
+graphs
+
+* Introduction to graphs::
+* Functions and Variables for graphs::
 
 grobner
 
@@ -411,6 +422,11 @@ interpol
 * Introduction to interpol::
 * Functions and Variables for interpol::
 
+lapack
+
+* Introduction to lapack::
+* Functions and Variables for lapack::
+
 lbfgs
 
 * Introduction to lbfgs::
@@ -427,6 +443,7 @@ linearalgebra
 
 lsquares
 
+* Introduction to lsquares
 * Functions and Variables for lsquares::
 
 makeOrders
@@ -435,12 +452,14 @@ makeOrders
 
 mnewton
 
+* Introduction to mnewton::
 * Functions and Variables for mnewton::
 
 numericalio
 
 * Introduction to numericalio::
-* Functions and Variables for numericalio::
+* Functions and Variables for plain-text input and output::
+* Functions and Variables for binary input and output::
 
 opsubst
 
@@ -468,7 +487,13 @@ simplex
 simplification
 
 * Introduction to simplification::
-* Functions and Variables for simplification::
+* Package absimp::
+* Package facexp::
+* Package functs::
+* Package ineq::
+* Package rducon::
+* Package scifac::
+* Package sqdnst::
 
 solve_rec
 
@@ -721,6 +746,7 @@ File: maxima.info,  Node: Functions and Variables for Bug Detection and Reportin
 
      `run_testsuite' returns `done'.
 
+
  -- Option variable: testsuite_files
      `testsuite_files' is the set of tests to be run by
      `run_testsuite'.  It is a list of names of the files containing
@@ -736,6 +762,7 @@ File: maxima.info,  Node: Functions and Variables for Bug Detection and Reportin
      "rtest14", but "rtest14" contains two tests that are known to
      fail: 57 and 63.
 
+
  -- Function: bug_report ()
      Prints out Maxima and Lisp version numbers, and gives a link to
      the Maxima project bug report web page.  The version information
@@ -746,10 +773,12 @@ File: maxima.info,  Node: Functions and Variables for Bug Detection and Reportin
 
      `bug_report' returns an empty string `""'.
 
+
  -- Function: build_info ()
      Prints out a summary of the parameters of the Maxima build.
 
      `build_info' returns an empty string `""'.
+
 
 
 File: maxima.info,  Node: Help,  Next: Command Line,  Prev: Bug Detection and Reporting,  Up: Top
@@ -1894,6 +1923,9 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Prev: Intro
      definition was unbound.  `false' is returned in place of any
      symbol for which there is no function definition.
 
+     `remfunction' does not apply to array functions or subscripted
+     functions.  `remarray' applies to those types of functions.
+
 
  -- Function: reset ()
      Resets many global variables and options, and some other
@@ -1963,11 +1995,11 @@ File: maxima.info,  Node: nary,  Next: nofix,  Prev: Operators,  Up: Operators
 An `nary' operator is used to denote a function of any number of
 arguments, each of which is separated by an occurrence of the operator,
 e.g. A+B or A+B+C.  The `nary("x")' function is a syntax extension
-function to declare x to be an `nary' operator.  Functions may be
+function to declare `x' to be an `nary' operator.  Functions may be
 declared to be `nary'.  If `declare(j,nary);' is done, this tells the
 simplifier to simplify, e.g. `j(j(a,b),j(c,d))' to `j(a, b, c, d)'.
 
-   See also `syntax'.
+   See also `Syntax'.
 
 
 File: maxima.info,  Node: nofix,  Next: postfix,  Prev: nary,  Up: Operators
@@ -1980,9 +2012,9 @@ mere presence of such an operator in a command will cause the
 corresponding function to be evaluated.  For example, when one types
 "exit;" to exit from a Maxima break, "exit" is behaving similar to a
 `nofix' operator.  The function `nofix("x")' is a syntax extension
-function which declares x to be a `nofix' operator.
+function which declares `x' to be a `nofix' operator.
 
-   See also `syntax'.
+   See also `Syntax'.
 
 
 File: maxima.info,  Node: postfix,  Next: prefix,  Prev: nofix,  Up: Operators
@@ -1993,10 +2025,10 @@ File: maxima.info,  Node: postfix,  Next: prefix,  Prev: nofix,  Up: Operators
 `postfix' operators like the `prefix' variety denote functions of a
 single argument, but in this case the argument immediately precedes an
 occurrence of the operator in the input string, e.g. 3! .  The
-`postfix("x")' function is a syntax extension function to declare x to
-be a `postfix' operator.
+`postfix("x")' function is a syntax extension function to declare `x'
+to be a `postfix' operator.
 
-   See also `syntax'.
+   See also `Syntax'.
 
 
 File: maxima.info,  Node: prefix,  Next: Arithmetic operators,  Prev: postfix,  Up: Operators
@@ -2006,10 +2038,10 @@ File: maxima.info,  Node: prefix,  Next: Arithmetic operators,  Prev: postfix,  
 
 A `prefix' operator is one which signifies a function of one argument,
 which argument immediately follows an occurrence of the operator.
-`prefix("x")' is a syntax extension function to declare x to be a
+`prefix("x")' is a syntax extension function to declare `x' to be a
 `prefix' operator.
 
-   See also `syntax'.
+   See also `Syntax'.
 
 
 File: maxima.info,  Node: Arithmetic operators,  Next: Relational operators,  Prev: prefix,  Up: Operators
@@ -2024,7 +2056,7 @@ File: maxima.info,  Node: Arithmetic operators,  Next: Relational operators,  Pr
  -- Operator: ^
      The symbols `+' `*' `/' and `^' represent addition,
      multiplication, division, and exponentiation, respectively.  The
-     name of these operators are `"+"' `"*"' `"//"' and `"^"', which
+     names of these operators are `"+"' `"*"' `"/"' and `"^"', which
      may appear where the name of a function or operator is required.
 
      The symbols `+' and `-' represent unary addition and negation,
@@ -2039,7 +2071,7 @@ File: maxima.info,  Node: Arithmetic operators,  Next: Relational operators,  Pr
 
      Division `a / b' is represented within Maxima as multiplication,
      `a * b^(- 1)'.  Expressions such as `a * b^(- 1)' are displayed as
-     division.  Maxima recognizes `"//"' as the name of the division
+     division.  Maxima recognizes `"/"' as the name of the division
      operator.
 
      Addition and multiplication are n-ary, commutative operators.
@@ -2098,15 +2130,15 @@ File: maxima.info,  Node: Arithmetic operators,  Next: Relational operators,  Pr
           (%o6)                       144 a  x
 
      Division and exponentiation are binary, noncommutative operators.
-     The names of these operators are `"//"' and `"^"'.
+     The names of these operators are `"/"' and `"^"'.
 
           (%i1) [a / b, a ^ b];
                                         a   b
           (%o1)                        [-, a ]
                                         b
           (%i2) [map (op, %), map (args, %)];
-          (%o2)              [[//, ^], [[a, b], [a, b]]]
-          (%i3) [apply ("//", [a, b]), apply ("^", [a, b])];
+          (%o2)              [[/, ^], [[a, b], [a, b]]]
+          (%i3) [apply ("/", [a, b]), apply ("^", [a, b])];
                                         a   b
           (%o3)                        [-, a ]
                                         b
@@ -2210,6 +2242,63 @@ File: maxima.info,  Node: Relational operators,  Next: General operators,  Prev:
  -- Operator: <=
  -- Operator: >=
  -- Operator: >
+     The symbols `<' `<=' `>=' and `>' represent less than, less than
+     or equal, greater than or equal, and greater than, respectively.
+     The names of these operators are `"<"' `"<="' `">="' and `">"',
+     which may appear where the name of a function or operator is
+     required.
+
+     These relational operators are all binary operators; constructs
+     such as `a < b < c' are not recognized by Maxima.
+
+     Relational expressions are evaluated to Boolean values by the
+     functions `is' and `maybe', and the programming constructs `if',
+     `while', and `unless'.  Relational expressions are not otherwise
+     evaluated or simplified to Boolean values, although the arguments
+     of relational expressions are evaluated (when evaluation is not
+     otherwise prevented by quotation).
+
+     When a relational expression cannot be evaluated to `true' or
+     `false', the behavior of `is' and `if' are governed by the global
+     flag `prederror'.  When `prederror' is `true', `is' and `if'
+     trigger an error.  When `prederror' is `false', `is' returns
+     `unknown', and `if' returns a partially-evaluated conditional
+     expression.
+
+     `maybe' always behaves as if `prederror' were `false', and `while'
+     and `unless' always behave as if `prederror' were `true'.
+
+     Relational operators do not distribute over lists or other
+     aggregates.
+
+     See also `=' `#' `equal' and `notequal'.
+
+     Examples:
+
+     Relational expressions are evaluated to Boolean values by some
+     functions and programming constructs.
+
+          (%i1) [x, y, z] : [123, 456, 789];
+          (%o1)                    [123, 456, 789]
+          (%i2) is (x < y);
+          (%o2)                         true
+          (%i3) maybe (y > z);
+          (%o3)                         false
+          (%i4) if x >= z then 1 else 0;
+          (%o4)                           0
+          (%i5) block ([S], S : 0, for i:1 while i <= 100 do S : S + i, return (S));
+          (%o5)                         5050
+
+     Relational expressions are not otherwise evaluated or simplified
+     to Boolean values, although the arguments of relational
+     expressions are evaluated.
+
+          (%o1)                    [123, 456, 789]
+          (%i2) [x < y, y <= z, z >= y, y > z];
+          (%o2)    [123 < 456, 456 <= 789, 789 >= 456, 456 > 789]
+          (%i3) map (is, %);
+          (%o3)               [true, true, true, false]
+
 
 
 File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: Operators
@@ -2339,9 +2428,9 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
  -- Operator: .
      The dot operator, for matrix (non-commutative) multiplication.
-     When "." is used in this way, spaces should be left on both sides
-     of it, e.g. A . B.  This distinguishes it plainly from a decimal
-     point in a floating point number.
+     When `"."' is used in this way, spaces should be left on both
+     sides of it, e.g. `A . B'.  This distinguishes it plainly from a
+     decimal point in a floating point number.
 
      See also `dot', `dot0nscsimp', `dot0simp', `dot1simp', `dotassoc',
      `dotconstrules', `dotdistrib', `dotexptsimp', `dotident', and
@@ -2349,13 +2438,112 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
 
  -- Operator: :
-     The assignment operator.  E.g. A:3 sets the variable A to 3.
+     Assignment operator.
+
+     When the left-hand side is a simple variable (not subscripted),
+     `:' evaluates its right-hand side and associates that value with
+     the left-hand side.
+
+     When the left-hand side is a subscripted element of a list,
+     matrix, declared Maxima array, or Lisp array, the right-hand side
+     is assigned to that element.  The subscript must name an existing
+     element; such objects cannot be extended by naming nonexistent
+     elements.
+
+     When the left-hand side is a subscripted element of an undeclared
+     Maxima array, the right-hand side is assigned to that element, if
+     it already exists, or a new element is allocated, if it does not
+     already exist.
+
+     When the left-hand side is a list of simple and/or subscripted
+     variables, the right-hand side must evaluate to a list, and the
+     elements of the right-hand side are assigned to the elements of
+     the left-hand side, in parallel.
+
+     See also `kill' and `remvalue', which undo the association between
+     the left-hand side and its value.
+
+     Examples:
+
+     Assignment to a simple variable.
+
+          (%i1) a;
+          (%o1)                           a
+          (%i2) a : 123;
+          (%o2)                          123
+          (%i3) a;
+          (%o3)                          123
+
+     Assignment to an element of a list.
+
+          (%i1) b : [1, 2, 3];
+          (%o1)                       [1, 2, 3]
+          (%i2) b[3] : 456;
+          (%o2)                          456
+          (%i3) b;
+          (%o3)                      [1, 2, 456]
+
+     Assignment creates an undeclared array.
+
+          (%i1) c[99] : 789;
+          (%o1)                          789
+          (%i2) c[99];
+          (%o2)                          789
+          (%i3) c;
+          (%o3)                           c
+          (%i4) arrayinfo (c);
+          (%o4)                   [hashed, 1, [99]]
+          (%i5) listarray (c);
+          (%o5)                         [789]
+
+     Multiple assignment.
+
+          (%i1) [a, b, c] : [45, 67, 89];
+          (%o1)                     [45, 67, 89]
+          (%i2) a;
+          (%o2)                          45
+          (%i3) b;
+          (%o3)                          67
+          (%i4) c;
+          (%o4)                          89
+
+     Multiple assignment is carried out in parallel.  The values of `a'
+     and `b' are exchanged in this example.
+
+          (%i1) [a, b] : [33, 55];
+          (%o1)                       [33, 55]
+          (%i2) [a, b] : [b, a];
+          (%o2)                       [55, 33]
+          (%i3) a;
+          (%o3)                          55
+          (%i4) b;
+          (%o4)                          33
 
 
  -- Operator: ::
-     Assignment operator.  :: assigns the value of the expression on
-     its right to the value of the quantity on its left, which must
-     evaluate to an atomic variable or subscripted variable.
+     Assignment operator.
+
+     `::' is the same as `:' (which see) except that `::' evaluates its
+     left-hand side as well as its right-hand side.
+
+     Examples:
+
+          (%i1) x : 'foo;
+          (%o1)                          foo
+          (%i2) x :: 123;
+          (%o2)                          123
+          (%i3) foo;
+          (%o3)                          123
+          (%i4) x : '[a, b, c];
+          (%o4)                       [a, b, c]
+          (%i5) x :: [11, 22, 33];
+          (%o5)                     [11, 22, 33]
+          (%i6) a;
+          (%o6)                          11
+          (%i7) b;
+          (%o7)                          22
+          (%i8) c;
+          (%o8)                          33
 
 
  -- Operator: ::=
@@ -2461,8 +2649,10 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      arguments, if present, are assigned to <x_n> as a list.
 
      All function definitions appear in the same namespace; defining a
-     function `f' within another function `g' does not limit the scope
-     of `f' to `g'.
+     function `f' within another function `g' does not automatically
+     limit the scope of `f' to `g'.  However, `local(f)' makes the
+     definition of function `f' effective only within the block or
+     other compound expression in which `local' appears.
 
      If some formal argument <x_k> is a quoted symbol, the function
      defined by `:=' does not evaluate the corresponding actual
@@ -2503,6 +2693,17 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
           (%o1)                H([L]) := apply("+", L)
           (%i2) H (a, b, c);
           (%o2)                       c + b + a
+
+     `local' makes a local function definition.
+
+          (%i1) foo (x) := 1 - x;
+          (%o1)                    foo(x) := 1 - x
+          (%i2) foo (100);
+          (%o2)                         - 99
+          (%i3) block (local (foo), foo (x) := 2 * x, foo (100));
+          (%o3)                          200
+          (%i4) foo (100);
+          (%o4)                         - 99
 
 
  -- Operator: =
@@ -2790,10 +2991,10 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
  -- Function: compare (<x>, <y>)
      Return a comparison operator <op> (`<', `<=', `>', `>=', `=', or
-     `#') such that `is (<x> <op> <y>)' evaluates to true; when either
-     <x> or <y> depends on `%i' and `<x> # <y>', return `notcomparable';
-     when there is no such operator or Maxima isn't able to determine
-     the operator, return `unknown'.
+     `#') such that `is (<x> <op> <y>)' evaluates to `true'; when
+     either <x> or <y> depends on `%i' and `<x> # <y>', return
+     `notcomparable'; when there is no such operator or Maxima isn't
+     able to determine the operator, return `unknown'.
 
      Examples:
 
@@ -2931,12 +3132,12 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
      than or equal to <x>.
 
      If <x> is a constant expression (`10 * %pi', for example), `floor'
-     evaluates <x> using big floating point numbers, and applies floor
-     to the resulting big float. Because floor uses floating point
-     evaluation, it's possible, although unlikely, that `floor' could
-     return  an erroneous value for constant inputs.  To guard against
-     errors, the floating point evaluation is done using three values
-     for `fpprec'.
+     evaluates <x> using big floating point numbers, and applies
+     `floor' to the resulting big float. Because `floor' uses floating
+     point evaluation, it's possible, although unlikely, that `floor'
+     could return  an erroneous value for constant inputs.  To guard
+     against errors, the floating point evaluation is done using three
+     values for `fpprec'.
 
      For non-constant inputs, `floor' tries to return a simplified
      value.  Here are examples of the simplifications that `floor'
@@ -3347,6 +3548,12 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
                                          37
 
 
+ -- Function: round (<x>)
+     When <x> is a real number, returns the closest integer to <x>.
+     Multiples of 1/2 are rounded to the nearest even integer.
+     Evaluation of <x> is similar to `floor' and `ceiling'.
+
+
  -- Function: sign (<expr>)
      Attempts to determine the sign of <expr> on the basis of the facts
      in the current data base.  It returns one of the following
@@ -3455,10 +3662,11 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
 
 
  -- Option variable: sublis_apply_lambda
-     Default value: `true' - controls whether `lambda''s substituted
-     are applied in simplification after `sublis' is used or whether
-     you have to do an `ev' to get things to apply. `true' means do the
-     application.
+     Default value: `true'
+
+     Controls whether `lambda''s substituted are applied in
+     simplification after `sublis' is used or whether you have to do an
+     `ev' to get things to apply. `true' means do the application.
 
 
  -- Function: subst (<a>, <b>, <c>)
@@ -3519,7 +3727,7 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
           (%i3) substinpart (f1, f[1](x + 1), 0);
           (%o3)                       f1(x + 1)
 
-     If the last argument to a part function is a list of indices then
+     If the last argument to a `part' function is a list of indices then
      several subexpressions are picked out, each one corresponding to an
      index of the list.  Thus
 
@@ -3527,7 +3735,7 @@ File: maxima.info,  Node: General operators,  Prev: Relational operators,  Up: O
           (%o1)                         z + x
 
      `piece' holds the value of the last expression selected when using
-     the part functions.  It is set during the execution of the
+     the `part' functions.  It is set during the execution of the
      function and thus may be referred to in the function itself as
      shown below.  If `partswitch' is set to `true' then `end' is
      returned when a selected part of an expression doesn't exist,
@@ -3688,7 +3896,6 @@ File: maxima.info,  Node: Expressions,  Next: Simplification,  Prev: Operators, 
 * Menu:
 
 * Introduction to Expressions::
-* Assignment::
 * Complex::
 * Nouns and Verbs::
 * Identifiers::
@@ -3698,7 +3905,7 @@ File: maxima.info,  Node: Expressions,  Next: Simplification,  Prev: Operators, 
 * Functions and Variables for Expressions::
 
 
-File: maxima.info,  Node: Introduction to Expressions,  Next: Assignment,  Prev: Expressions,  Up: Expressions
+File: maxima.info,  Node: Introduction to Expressions,  Next: Complex,  Prev: Expressions,  Up: Expressions
 
 6.1 Introduction to Expressions
 ===============================
@@ -3740,20 +3947,9 @@ the comma expression which actually gives back the value.
      (%o4)                        3628800
 
 
-File: maxima.info,  Node: Assignment,  Next: Complex,  Prev: Introduction to Expressions,  Up: Expressions
+File: maxima.info,  Node: Complex,  Next: Nouns and Verbs,  Prev: Introduction to Expressions,  Up: Expressions
 
-6.2 Assignment
-==============
-
-There are two assignment operators in Maxima, `:' and `::'.  E.g., `a:
-3' sets the variable `a' to 3. `::' assigns the value of the expression
-on its right to the value of the quantity on its left, which must
-evaluate to an atomic variable or subscripted variable.
-
-
-File: maxima.info,  Node: Complex,  Next: Nouns and Verbs,  Prev: Assignment,  Up: Expressions
-
-6.3 Complex
+6.2 Complex
 ===========
 
 A complex expression is specified in Maxima by adding the real part of
@@ -3768,7 +3964,7 @@ functions.
 
 File: maxima.info,  Node: Nouns and Verbs,  Next: Identifiers,  Prev: Complex,  Up: Expressions
 
-6.4 Nouns and Verbs
+6.3 Nouns and Verbs
 ===================
 
 Maxima distinguishes between operators which are "nouns" and operators
@@ -3830,7 +4026,7 @@ quote mark `''.
 
 File: maxima.info,  Node: Identifiers,  Next: Strings,  Prev: Nouns and Verbs,  Up: Expressions
 
-6.5 Identifiers
+6.4 Identifiers
 ===============
 
 Maxima identifiers may comprise alphabetic characters, plus the
@@ -3885,7 +4081,7 @@ appears in Maxima.  See *Note Lisp and Maxima:: for more on this point.
 
 File: maxima.info,  Node: Strings,  Next: Inequality,  Prev: Identifiers,  Up: Expressions
 
-6.6 Strings
+6.5 Strings
 ===========
 
 Strings (quoted character sequences) are enclosed in double quote marks
@@ -3907,18 +4103,13 @@ embedding the literal character in the string.
    There is no character type in Maxima; a single character is
 represented as a one-character string.
 
-   Maxima strings are implemented as Lisp symbols, not Lisp strings;
-that may change in a future version of Maxima.  Maxima can display Lisp
-strings and Lisp characters, although some other operations (for
-example, equality tests) may fail.
-
    The `stringproc' add-on package contains many functions for working
 with strings.
 
    Examples:
 
-     (%i1) s_1 : "This is a Maxima string.";
-     (%o1)               This is a Maxima string.
+     (%i1) s_1 : "This is a string.";
+     (%o1)               This is a string.
      (%i2) s_2 : "Embedded \"double quotes\" and backslash \\ characters.";
      (%o2) Embedded "double quotes" and backslash \ characters.
      (%i3) s_3 : "Embedded line termination
@@ -3933,16 +4124,16 @@ with strings.
      (%i5) stringdisp : false;
      (%o5)                         false
      (%i6) s_1;
-     (%o6)               This is a Maxima string.
+     (%o6)                   This is a string.
      (%i7) stringdisp : true;
      (%o7)                         true
      (%i8) s_1;
-     (%o8)              "This is a Maxima string."
+     (%o8)                  "This is a string."
 
 
 File: maxima.info,  Node: Inequality,  Next: Syntax,  Prev: Strings,  Up: Expressions
 
-6.7 Inequality
+6.6 Inequality
 ==============
 
 Maxima has the inequality operators `<', `<=', `>=', `>', `#', and
@@ -3951,7 +4142,7 @@ Maxima has the inequality operators `<', `<=', `>=', `>', `#', and
 
 File: maxima.info,  Node: Syntax,  Next: Functions and Variables for Expressions,  Prev: Inequality,  Up: Expressions
 
-6.8 Syntax
+6.7 Syntax
 ==========
 
 It is possible to define new operators with specified precedence, to
@@ -4095,7 +4286,7 @@ quotation marks.
 
 File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax,  Up: Expressions
 
-6.9 Functions and Variables for Expressions
+6.8 Functions and Variables for Expressions
 ===========================================
 
  -- Function: at (<expr>, [<eqn_1>, ..., <eqn_n>])
@@ -4320,11 +4511,10 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
           vector or matrix.
 
     `mainvar'
-          Tells Maxima to consider <a_i> a "main variable" (`mainvar').
-          `ordergreatp' determines the ordering of atoms as follows:
-
-          (main variables) > (other variables) > (scalar variables) >
-          (constants) > (numbers)
+          Tells Maxima to consider <a_i> a "main variable".  A main
+          variable succeeds all other constants and variables in the
+          canonical ordering of Maxima expressions, as determined by
+          `ordergreatp'.
 
     `alphabetic'
           Tells Maxima to recognize all characters in <a_i> (which must
@@ -4644,8 +4834,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
      When `%emode' is `true', `%e^(%pi %i x)' is simplified as follows.
 
      `%e^(%pi %i x)' simplifies to `cos (%pi x) + %i sin (%pi x)' if
-     `x' is an integer or a multiple of 1/2, 1/3, 1/4, or 1/6, and then
-     further simplified.
+     `x' is a floating point number, an integer, or a multiple of 1/2,
+     1/3, 1/4, or 1/6, and then further simplified.
 
      For other numerical `x', `%e^(%pi %i x)' simplifies to `%e^(%pi %i
      y)' where `y' is `x - 2 k' for some integer `k' such that `abs(y)
@@ -4684,7 +4874,8 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
  -- Function: freeof (<x_1>, ..., <x_n>, <expr>)
      `freeof (<x_1>, <expr>)' Returns `true' if no subexpression of
      <expr> is equal to <x_1> or if <x_1> occurs only as a dummy
-     variable in <expr>, and returns `false' otherwise.
+     variable in <expr>, or if <x_1> is neither the noun nor verb form
+     of any operator in <expr>, and returns `false' otherwise.
 
      `freeof (<x_1>, ..., <x_n>, <expr>)' is equivalent to `freeof
      (<x_1>, <expr>) and ... and freeof (<x_n>, <expr>)'.
@@ -4804,7 +4995,15 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
      `infix (<op>, <lbp>, <rbp>, <lpos>, <rpos>, <pos>)' declares <op>
      to be an infix operator with stated left and right binding powers
-     and parts of speech.
+     and parts of speech <lpos>, <rpos>, and <pos> for the left
+     operand, the right operand, and the operator result, respectively.
+
+     "Part of speech", in reference to operator declarations, means
+     expression type.  Three types are recognized: `expr', `clause',
+     and `any', indicating an algebraic expression, a Boolean
+     expression, or any kind of expression, respectively.  Maxima can
+     detect some syntax errors by comparing the declared part of speech
+     to an actual expression.
 
      The precedence of <op> with respect to other operators derives
      from the left and right binding powers of the operators in
@@ -4859,6 +5058,20 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
           (%i5) foo ## bar ## baz;
           (%o5)                    ((foo,bar),baz)
 
+     Maxima can detect some syntax errors by comparing the declared
+     part of speech to an actual expression.
+
+          (%i1) infix ("##", 100, 99, expr, expr, expr);
+          (%o1)                          ##
+          (%i2) if x ## y then 1 else 0;
+          Incorrect syntax: Found algebraic expression where logical expression expected
+          if x ## y then
+                       ^
+          (%i2) infix ("##", 100, 99, expr, expr, clause);
+          (%o2)                          ##
+          (%i3) if x ## y then 1 else 0;
+          (%o3)                if x ## y then 1 else 0
+
 
  -- Option variable: inflag
      Default value: `false'
@@ -4908,7 +5121,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
  -- Function: isolate (<expr>, <x>)
      Returns <expr> with subexpressions which are sums and which do not
-     contain var replaced by intermediate expression labels (these
+     contain <var> replaced by intermediate expression labels (these
      being atomic symbols like `%t1', `%t2', ...).  This is often useful
      to avoid unnecessary expansion of subexpressions which don't
      contain the variable of interest.  Since the intermediate labels
@@ -4917,7 +5130,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
      `exptisolate' (default value: `false') if `true' will cause
      `isolate' to examine exponents of atoms (like `%e') which contain
-     var.
+     <var>.
 
      `isolate_wrt_times' if `true', then `isolate' will also isolate
      with respect to products. See `isolate_wrt_times'.
@@ -4992,8 +5205,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
 
  -- Function: lfreeof (<list>, <expr>)
-     For each member <m> of list, calls `freeof (<m>, <expr>)'.  It
+     For each member <m> of <list>, calls `freeof (<m>, <expr>)'.  It
      returns `false' if any call to `freeof' does and `true' otherwise.
+
 
  -- Function: lopow (<expr>, <x>)
      Returns the lowest exponent of <x> which explicitly appears in
@@ -5144,36 +5358,104 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
 
 
  -- Function: ordergreat (<v_1>, ..., <v_n>)
-     Sets up aliases for the variables <v_1>, ..., <v_n> such that
-     <v_1> > <v_2> > ...  > <v_n>, and <v_n> > any other variable not
-     mentioned as an argument.
+ -- Function: orderless (<v_1>, ..., <v_n>)
+     `ordergreat' changes the canonical ordering of Maxima expressions
+     such that <v_1> succeeds <v_2> succeeds ...  succeeds <v_n>, and
+     <v_n> succeeds any other symbol not mentioned as an argument.
 
-     See also `orderless'.
+     `orderless' changes the canonical ordering of Maxima expressions
+     such that <v_1> precedes <v_2> precedes ...  precedes <v_n>, and
+     <v_n> precedes any other variable not mentioned as an argument.
+
+     The order established by `ordergreat' and `orderless' is dissolved
+     by `unorder'.  `ordergreat' and `orderless' can be called only
+     once each, unless `unorder' is called; only the last call to
+     `ordergreat' and `orderless' has any effect.
+
+     See also `ordergreatp'.
 
 
  -- Function: ordergreatp (<expr_1>, <expr_2>)
-     Returns `true' if <expr_2> precedes <expr_1> in the ordering set
-     up with the `ordergreat' function.
-
-
- -- Function: orderless (<v_1>, ..., <v_n>)
-     Sets up aliases for the variables <v_1>, ..., <v_n> such that
-     <v_1> < <v_2> < ...  < <v_n>, and <v_n> < any other variable not
-     mentioned as an argument.
-
-     Thus the complete ordering scale is: numerical constants <
-     declared constants < declared scalars < first argument to
-     `orderless' < ...  < last argument to `orderless' < variables
-     which begin with A < ...  < variables which begin with Z < last
-     argument to `ordergreat' <  ... < first argument to `ordergreat' <
-     declared `mainvar's.
-
-     See also `ordergreat' and `mainvar'.
-
-
  -- Function: orderlessp (<expr_1>, <expr_2>)
-     Returns `true' if <expr_1> precedes <expr_2> in the ordering set
-     up by the `orderless' command.
+     `ordergreatp' returns `true' if <expr_1> succeeds <expr_2> in the
+     canonical ordering of Maxima expressions, and `false' otherwise.
+
+     `orderlessp' returns `true' if <expr_1> precedes <expr_2> in the
+     canonical ordering of Maxima expressions, and `false' otherwise.
+
+     All Maxima atoms and expressions are comparable under
+     `ordergreatp' and `orderlessp', although there are isolated
+     examples of expressions for which these predicates are not
+     transitive; that is a bug.
+
+     The canonical ordering of atoms (symbols, literal numbers, and
+     strings) is the following.
+
+     (integers and floats) precede (bigfloats) precede (declared
+     constants) precede (strings) precede (declared scalars) precede
+     (first argument to `orderless') precedes ...  precedes (last
+     argument to `orderless') precedes (other symbols) precede (last
+     argument to `ordergreat') precedes ... precedes (first argument to
+     `ordergreat') precedes (declared main variables)
+
+     For non-atomic expressions, the canonical ordering is derived from
+     the ordering for atoms.  For the built-in `+' `*' and `^'
+     operators, the ordering is not easily summarized.  For other
+     built-in operators and all other functions and operators,
+     expressions are ordered by their arguments (beginning with the
+     first argument), then by the name of the operator or function.  In
+     the case of subscripted expressions, the subscripted symbol is
+     considered the operator and the subscript is considered an
+     argument.
+
+     The canonical ordering of expressions is modified by the functions
+     `ordergreat' and `orderless', and the `mainvar', `constant', and
+     `scalar' declarations.
+
+     See also `sort'.
+
+     Examples:
+
+     Ordering ordinary symbols and constants.  Note that `%pi' is not
+     ordered according to its numerical value.
+
+          (%i1) stringdisp : true;
+          (%o1)                         true
+          (%i2) sort ([%pi, 3b0, 3.0, x, X, "foo", 3, a, 4, "bar", 4.0, 4b0]);
+          (%o2) [3, 3.0, 4, 4.0, 3.0b0, 4.0b0, %pi, "bar", "foo", a, x, X]
+
+     Effect of `ordergreat' and `orderless' functions.
+
+          (%i1) sort ([M, H, K, T, E, W, G, A, P, J, S]);
+          (%o1)           [A, E, G, H, J, K, M, P, S, T, W]
+          (%i2) ordergreat (S, J);
+          (%o2)                         done
+          (%i3) orderless (M, H);
+          (%o3)                         done
+          (%i4) sort ([M, H, K, T, E, W, G, A, P, J, S]);
+          (%o4)           [M, H, A, E, G, K, P, T, W, J, S]
+
+     Effect of `mainvar', `constant', and `scalar' declarations.
+
+          (%i1) sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+          (%o1)   [aa, bar, baz, bb, cc, dd, foo, quux, A1, B1, C1]
+          (%i2) declare (aa, mainvar);
+          (%o2)                         done
+          (%i3) declare ([baz, quux], constant);
+          (%o3)                         done
+          (%i4) declare ([A1, B1], scalar);
+          (%o4)                         done
+          (%i5) sort ([aa, foo, bar, bb, baz, quux, cc, dd, A1, B1, C1]);
+          (%o5)   [baz, quux, A1, B1, bar, bb, cc, dd, foo, C1, aa]
+
+     Ordering non-atomic expressions.
+
+          (%i1) sort ([1, 2, n, f(1), f(2), f(2, 1), g(1), g(1, 2), g(n), f(n, 1)]);
+          (%o1) [1, 2, f(1), g(1), g(1, 2), f(2), f(2, 1), n, g(n),
+                                                                   f(n, 1)]
+          (%i2) sort ([foo(1), X[1], X[k], foo(k), 1, k]);
+          (%o2)            [1, foo(1), X , k, foo(k), X ]
+                                        1              k
 
 
  -- Function: part (<expr>, <n_1>, ..., <n_k>)
@@ -5185,11 +5467,11 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
      `part' can be used to obtain an element of a list, a row of a
      matrix, etc.
 
-     If the last argument to a part function is a list of indices then
+     If the last argument to a `part' function is a list of indices then
      several subexpressions are picked out, each one corresponding to an
      index of the list.  Thus `part (x + y + z, [1, 3])' is `z+x'.
 
-     `piece' holds the last expression selected when using the part
+     `piece' holds the last expression selected when using the `part'
      functions.  It is set during the execution of the function and thus
      may be referred to in the function itself as shown below.
 
@@ -5205,7 +5487,7 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
  -- Function: partition (<expr>, <x>)
      Returns a list of two expressions.  They are (1) the factors of
      <expr> (if it is a product), the terms of <expr> (if it is a sum),
-     or the list (if it is a list) which don't contain var and, (2) the
+     or the list (if it is a list) which don't contain <x> and, (2) the
      factors, terms, or list which do.
 
           (%i1) partition (2*a*x*f(x), x);
@@ -5563,23 +5845,9 @@ File: maxima.info,  Node: Functions and Variables for Expressions,  Prev: Syntax
                                      /     k + 1
                                      ====
                                      k = 1
-          (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10));
-          Incorrect syntax: Too many )'s
-          else b^k, k, 1, 10))
-                            ^
-          (%i12) linenum:11;
-          (%o11)                         11
-          (%i12) sum (integrate (x^k, x, 0, 1), k, 1, n);
-                                      n
-                                     ====
-                                     \       1
-          (%o12)                      >    -----
-                                     /     k + 1
-                                     ====
-                                     k = 1
-          (%i13) sum (if k <= 5 then a^k else b^k, k, 1, 10);
+          (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10);
                     10    9    8    7    6    5    4    3    2
-          (%o13)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
+          (%o12)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
 
 
  -- Function: lsum (<expr>, <x>, <L>)
@@ -5642,6 +5910,7 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
      At one time, it was possible for a user to inspect `askexp' by
      entering a Maxima break with control-A.
+
 
  -- Function: askinteger (<expr>, integer)
  -- Function: askinteger (<expr>)
@@ -5949,6 +6218,8 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
      given numerals to be replaced by their values.  It also sets the
      `float' switch on.
 
+     See also `%enumer'.
+
 
  -- Function: numerval (<x_1>, <expr_1>, ..., <var_n>, <expr_n>)
      Declares the variables `x_1', ..., <x_n> to have numeric values
@@ -5958,6 +6229,7 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
      The expressions `expr_1', ..., `expr_n' can be any expressions,
      not necessarily numeric.
+
 
  -- System variable: opproperties
      `opproperties' is the list of the special operator properties
@@ -6019,8 +6291,8 @@ File: maxima.info,  Node: Functions and Variables for Simplification,  Prev: Sim
 
      When `radexpand' is `false', certain transformations are inhibited.
      `radcan (sqrt (1-x))' remains `sqrt (1-x)' and is not simplified
-     to `%i sqrt (x-1)'.  `radcan (sqrt (x^2 - 2*x + 11))' remains
-     `sqrt (x^2 - 2*x + 1)' and is not simplified to `x - 1'.
+     to `%i sqrt (x-1)'.  `radcan (sqrt (x^2 - 2*x + 1))' remains `sqrt
+     (x^2 - 2*x + 1)' and is not simplified to `x - 1'.
 
      `example (radcan)' displays some examples.
 
@@ -6150,12 +6422,81 @@ File: maxima.info,  Node: Plotting,  Next: Input and Output,  Prev: Simplificati
 
 * Menu:
 
+* Introduction to Plotting::
 * Functions and Variables for Plotting::
 
 
-File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,  Up: Plotting
+File: maxima.info,  Node: Introduction to Plotting,  Next: Functions and Variables for Plotting,  Prev: Plotting,  Up: Plotting
 
-8.1 Functions and Variables for Plotting
+8.1 Introduction to Plotting
+============================
+
+Maxima uses an external plotting package to make the plots (see the
+section on Plotting Interfaces below). Maxima calculates set of points
+to be plotted and pass the to the plotting package together with a set
+of commands; the commands and plot data are passed to the external
+program either through a pipe or by saving them into a file with the
+extension `maxout.interface', where `interface' is the name of the
+plotting interface being used.
+
+   The `maxout.interface' file, in the cases when it is used, is
+created in the directory specified by the variable <temp_dir>. That
+location can be changed; by assigning to that variable a string that
+represents a valid directory where Maxima can create new files.
+
+   After a plot has been obtained, the file `maxout.interface' can be
+executed again with the appropriate external program. If a Maxima
+plotting command fails to show anything, that file can be inspected to
+look for possible sources of problems.
+
+8.1.1 Plotting Interfaces
+-------------------------
+
+Currently, Maxima can one of two external plotting programs: Gnuplot or
+Xmaxima. There are various different interfaces for those programs,
+which can be selected with the option `[plot_format,interface]', where
+`interface' is one of the following:
+
+   * Value: `gnuplot' default on Windows
+
+     Gnuplot is the most advanced plotting package among the packages
+     available in Maxima. It requires an external gnuplot installation.
+     All plotting commands and data are passed in a file
+     `maxout.gnuplot'.
+
+   * Value: `gnuplot_pipes' default on non-Windows platforms
+
+     Similar to the `gnuplot' format except that the commands are sent
+     to gnuplot is done through a pipe; the data is passed via a file
+     `maxout.gnuplot_pipes'. It should be used to plot on screen, for
+     plotting to files it is better to use the `gnuplot' format.
+
+   * Value: `mgnuplot'
+
+     Mgnuplot is a Tk-based wrapper around gnuplot. It is included in
+     the Maxima distribution. Mgnuplot offers a rudimentary GUI for
+     gnuplot, but has fewer overall features than the plain gnuplot
+     interface. Mgnuplot requires an external gnuplot installation and
+     Tcl/Tk.
+
+   * Value: `openmath'
+
+     Openmath is a Tcl/Tk GUI plotting program. This format is provided
+     by Xmaxima, which is distributed together with Maxima; in order to
+     use this format you should install the package Xmaxima, and it
+     will work not only from Xmaxima itself, but also from the command
+     line and other GUI's for Maxima. If it is used from within
+     Xmaxima, all commands and data are passed using the same socket
+     used for the communication between Maxima and Xmaxima. If it is
+     used from the console or other interface different from Xmaxima,
+     the commands and data will be save in a file named
+     `maxout.openmath'.
+
+
+
+File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Introduction to Plotting,  Up: Plotting
+
+8.2 Functions and Variables for Plotting
 ========================================
 
  -- Function: contour_plot (<expr>, <x_range>, <y_range>, <options>,
@@ -6277,7 +6618,10 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
      There are several global options stored in the list <plot_options>
      which can be modified with the function `set_plot_option'; any of
      those global options can be overriden with options given in the
-     <plot2d> command.
+     <plot2d> command. There are also other options which are not part
+     of the global options array <plot_options> and which can be given
+     only as part of the <plot2d> command; those options are: <logx>,
+     <logy>, <box>, <legend>, <xlabel>, <ylabel>, <psfile> and <style>.
 
      A function to be plotted may be specified as the name of a Maxima
      or Lisp function or operator, a Maxima lambda expression, or a
@@ -6351,12 +6695,51 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
      the theoretical function that predicts the data:
 
           (%i17) plot2d([[discrete,xy], 2*%pi*sqrt(l/980)], [l,0,50],
-                  [style, [points,3,5], [lines,1,3]],
+                  [style, [points,5,2,6], [lines,1,1]],
                   [legend,"experiment","theory"],
                   [xlabel,"pendulum's length (cm)"], [ylabel,"period (s)"])$
 
-     See also `plot_options', which describes plotting options and has
-     more examples.
+     The meaning of the three numbers after the "points" style option
+     are as follows; 5: radius of the points, 2: index of color used
+     (red), 6: type of objects used (solid squares). The two numbers
+     after the "lines" style option give the thickness of the line (1
+     point) and the color (1 corresponds to blue).
+
+     To save a plot of `sin(x)' to the file `sin.ps', one can use:
+          (%i18) plot2d (sin(x), [x, 0, 2*%pi], [psfile, "sin.eps"])$
+
+     The next example uses the y option to chop off singularities and
+     the gnuplot_preamble option to put the key at the bottom of the
+     plot instead of the top.
+          (%i19) plot2d ([gamma(x), 1/gamma(x)], [x, -4.5, 5], [y, -10, 10],
+                               [gnuplot_preamble, "set key bottom"])$
+
+     We can also use a `gnuplot_preamble' to produce fancy x-axis
+     labels.  (Note that the `gnuplot_preamble' string must be entered
+     without any line breaks.)
+          (%i20) my_preamble: "set xtics ('-2pi' -6.283, \
+          '-3pi/2' -4.712, '-pi' -3.1415, '-pi/2' -1.5708, '0' 0, \
+          'pi/2' 1.5708, 'pi' 3.1415,'3pi/2' 4.712, '2pi' 6.283)"$
+
+          (%i21) plot2d([cos(x), sin(x), tan(x), cot(x)],
+                 [x, -2*%pi, 2.1*%pi], [y, -2, 2], [axes, x]
+                 [gnuplot_preamble, my_preamble]);
+
+     This example uses a `gnuplot_preamble' to produce fancy x-axis
+     labels, and produces PostScript output that takes advantage of the
+     advanced text formatting available in gnuplot.  (Note that the
+     `gnuplot_preamble' string must be entered without any line breaks.)
+          (%i22) my_preamble: "set xtics ('-2{/Symbol p}' \
+          -6.283, '-3{/Symbol p}/2' -4.712, '-{/Symbol p}' -3.1415, \
+          '-{/Symbol p}/2' -1.5708, '0' 0,'{/Symbol p}/2' 1.5708, \
+          '{/Symbol p}' 3.1415,'3{/Symbol p}/2' 4.712, '2{/Symbol p}' \
+          6.283)"$
+
+          (%i23) plot2d ([cos(x), sin(x), tan(x)], [x, -2*%pi, 2*%pi],
+              [y, -2, 2], [gnuplot_preamble, my_preamble],
+              [psfile, "trig.eps"]);
+
+     See also `plot_options', which describes plotting options.
 
 
  -- Function: xgraph_curves (<list>)
@@ -6408,7 +6791,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
      an option is present in a `plot2d' or `plot3d' call, that value
      takes precedence over the default option.  Otherwise, the value in
      `plot_options' is used.  Default options are assigned by
-     `set_plot_option'.
+     `set_plot_option'. There are other local options specific to each
+     plotting command, and not included in this list of global options.
 
      Each element of `plot_options' is a list of two or more items.
      The first item is the name of an option, and the remainder
@@ -6422,37 +6806,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
         * Option: `plot_format'
 
           Determines which graphic interface is used by `plot2d' and
-          `plot3d'.
-
-             * Value: `gnuplot' default on Windows
-
-               Gnuplot is the most advanced plotting package among the
-               packages available in Maxima. It requires an external
-               gnuplot installation.
-
-             * Value: `gnuplot_pipes' default on non-Windows platforms
-
-               Similar to the `gnuplot' format except that
-               communication with gnuplot is done through a pipe. It
-               should be used to plot on screen, for plotting to files
-               it is better to use the `gnuplot' format.
-
-             * Value: `mgnuplot'
-
-               Mgnuplot is a Tk-based wrapper around gnuplot. It is
-               included in the Maxima distribution. Mgnuplot offers a
-               rudimentary GUI for gnuplot, but has fewer overall
-               features than the plain gnuplot interface. Mgnuplot
-               requires an external gnuplot installation and Tcl/Tk.
-
-             * Value: `openmath'
-
-               Openmath is a Tcl/Tk GUI plotting program. This format
-               is provided by Xmaxima, which is distributed together
-               with Maxima; in order to use this format you should
-               install the package Xmaxima, and it will work not only
-               from Xmaxima itself, but also from the command line and
-               other GUI's for Maxima.
+          `plot3d'. It can be either `gnuplot', `gnuplot_pipes',
+          `mgnuplot' or `openmath'
 
         * Option: `run_viewer'
 
@@ -6540,13 +6895,23 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
 
           The labels for the various expressions in a 2d plot with
           several expressions. If there are more expressions than the
-          number of labels given, they will be repeated. By default,
-          the names of the expressions or functions will be used, or
-          the words discrete1, discrete2, ..., for discrete sets of
-          points.
+          number of labels given, they will be repeated. If legend is
+          followed by the word _false_, no legend will be shown. By
+          default, the names of the expressions or functions will be
+          used, or the words discrete1, discrete2, ..., for discrete
+          sets of points.
 
           Example:
                [legend, "Set 1", "Set 2", "Set 3"]
+
+        * Option: `box'
+
+          Currently, this option can only be followed by the word
+          _false_, and it will be used to supress the box around the
+          plot.
+
+          Example:
+               [box, false]
 
         * Option: `style'
 
@@ -6561,28 +6926,62 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
 
           Each of the styles can be enclosed inside a list with some
           aditional parameters. <lines> accepts one or two numbers: the
-          width of the line and an integer that identifies a color.
-          <points> accepts one or two parameters; the first parameter
-          is the radius of the points and the second parameter is an
-          integer that in Gnuplot selects different shapes and colors
-          for the points and in Openmath changes the color used for the
-          points. <linesdots> accepts up to four parameters; the first
-          two are the same as for <lines> and the last two are the same
-          as for <points>.
+          width of the line and an integer that identifies a color. The
+          default color codes are: 1: blue, 2: red, 3: magenta, 4:
+          orange, 5: brown, 6: lime and 7: aqua. If you use Gnuplot
+          with a terminal different than X11, those colors might be
+          different; for example, if you use the option
+          [<gnuplot_term>,<ps>], color index 4 will correspond to black,
+          instead of orange.
+
+          <points> accepts one two or three parameters; the first
+          parameter is the radius of the points, the second parameter
+          is an integer that selects the color, using the same code
+          used for <lines> and the third parameter is currently used
+          only by Gnuplot and it corresponds to several objects instead
+          of points. The default types of objects are: 1: filled
+          circles, 2: open circles, 3: plus signs, 4: x, 5: *, 6:
+          filled squares, 7: open squares, 8: filled triangles, 9: open
+          triangles, 10: filled inverted triangles, 11: open inverted
+          triangles, 12: filled lozenges and 13: open lozenges.
+
+          <linesdots> accepts up to four parameters: line width, points
+          radius, color and type of object to replace the points.
 
           Example:
-               [style,[lines,2,3],[points,1,4]]
+               [style,[lines,2,3],[points,1,4,3]]
 
-          In Gnuplot, this will plot the first (and third, fifth, etc)
-          expression with blue line segments of width 2, and the second
-          (and fourth, sixth, etc) expression with green squares of
-          size 1. In Openmath, the first expression will be plotted
-          with magenta lines of width 2, and the second with orange
-          points of radius 1; notice that openmath_color(3) and
-          openmath_color(4) return "magenta" and "orange".
+          This will plot the first (and third, fifth, etc) expression
+          with magenta line segments of width 2, and the second (and
+          fourth, sixth, etc) expression with orange plus signs of size
+          1 (orange circles in the case of Openmath).
 
           The default for the style option is <lines> with a width of
           1, and different colors.
+
+        * Option: `psfile'
+
+          This option is used to save the plots created by plot2d or
+          plot3d into a Postscript file. The option should be given one
+          parameter, which must be a valid name for a Postscript file.
+          By default, that file will be created in the directory
+          defined by the variable <maxima_tempdir>; the value of that
+          variable can be changed to save the file in a different
+          directory.
+
+          Example:
+               [psfile, "plot1.ps"]
+
+        * Option: `axes'
+
+          This is a global option used only by plot2d. By default it
+          has the value _true_, which means that the two axis, x and y,
+          will be displayed. It can be changed to _x_, to show only the
+          x axis, or to _y_, which will show only the y axis, or to
+          _false_ to skip the display of the axes.
+
+          Example:
+               [axes, 'x]
 
         * Option: `grid'
 
@@ -6613,7 +7012,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
 
      There are several plot options specific to gnuplot.  Some of these
      options are raw gnuplot commands, specified as strings. Refer to
-     the gnuplot documentation for more details.
+     the gnuplot documentation for more details. In most cases, these
+     options can be replaced by one of the more general options above;
+     in those cases we recommend that you use the most general form.
 
         * Option: `gnuplot_term'
 
@@ -6653,17 +7054,14 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
 
         * Option: `gnuplot_out_file'
 
-          Write gnuplot output to a file.
+          When used in conjunction with the `gnuplot_term' option, it
+          can be used to save the plot in a file, in one of the graphic
+          formats supported by Gnuplot. If you want to create a
+          Postscript file, you can use the option `psfile' instead,
+          which will also work in Openmath, and does the same thing
+          with just one option.
 
-             * Default value: `false'
-
-               No output file specified.
-
-             * Value: <filename>
-
-               Example: `[gnuplot_out_file, "myplot.ps"]' This example
-               sends PostScript output to the file `myplot.ps' when
-               used in conjunction with the PostScript gnuplot terminal.
+               [gnuplot_term, png], [gnuplot_outfile, "graph3.png"]
 
         * Option: `gnuplot_pm3d'
 
@@ -6685,35 +7083,17 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
 
           Example:
 
-               [gnuplot_preamble, "set log y"]
+               [gnuplot_preamble, "set size ratio -1"]
 
         * Option: `gnuplot_curve_titles'
 
-          Controls the titles given in the plot key. The default value
-          is `[default]', which automatically sets the title of each
-          curve to the function plotted. If not `[default]',
-          `gnuplot_curve_titles' should contain a list of strings, each
-          of which is `"title '<title_string>'"'.  (To disable the plot
-          key, add `"set nokey"' to `gnuplot_preamble'.)
-
-          Example:
-
-               [gnuplot_curve_titles,
-               ["title 'My first function'", "title 'My second function'"]]
+          This is an old option that has been replaced by _legend_
+          described above.
 
         * Option: `gnuplot_curve_styles'
 
-          A list of strings controlling the appearance of curves, i.e.,
-          color, width, dashing, etc., to be sent to the gnuplot plot
-          command. The default value is `["with lines 3", "with lines
-          1", "with lines 2", "with lines 5", "with lines 4", "with
-          lines 6", "with lines 7"]', which cycles through different
-          colors. See the gnuplot documentation for `plot' for more
-          information.
-
-          Example:
-
-               [gnuplot_curve_styles, ["with lines 7", "with lines 2"]]
+          This is an old option that has been replaced by _style_
+          described above.
 
         * Option: `gnuplot_default_term_command'
 
@@ -6754,70 +7134,6 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
                [gnuplot_ps_term_command, "set size 1.3, 1.3; \
                        set term postscript eps color solid lw 2.5 30"]
 
-
-     Examples:
-
-        * Saves a plot of `sin(x)' to the file `sin.eps'.
-
-          (%i1) plot2d (sin(x), [x, 0, 2*%pi], [gnuplot_term, ps],
-                                  [gnuplot_out_file, "sin.eps"])$
-
-        * Uses the y option to chop off singularities and the
-          gnuplot_preamble option to put the key at the bottom of the
-          plot instead of the top.
-
-          (%i2) plot2d ([gamma(x), 1/gamma(x)], [x, -4.5, 5], [y, -10, 10],
-                               [gnuplot_preamble, "set key bottom"])$
-
-        * Uses a very complicated `gnuplot_preamble' to produce fancy
-          x-axis labels.  (Note that the `gnuplot_preamble' string must
-          be entered without any line breaks.)
-
-          (%i3) my_preamble: "set xzeroaxis; set xtics ('-2pi' -6.283, \
-          '-3pi/2' -4.712, '-pi' -3.1415, '-pi/2' -1.5708, '0' 0, \
-          'pi/2' 1.5708, 'pi' 3.1415,'3pi/2' 4.712, '2pi' 6.283)"$
-
-          (%i4) plot2d([cos(x), sin(x), tan(x), cot(x)],
-                 [x, -2*%pi, 2.1*%pi], [y, -2, 2],
-                 [gnuplot_preamble, my_preamble]);
-
-        * Uses a very complicated `gnuplot_preamble' to produce fancy
-          x-axis labels, and produces PostScript output that takes
-          advantage of the advanced text formatting available in
-          gnuplot.  (Note that the `gnuplot_preamble' string must be
-          entered without any line breaks.)
-
-          (%i5) my_preamble: "set xzeroaxis; set xtics ('-2{/Symbol p}' \
-          -6.283, '-3{/Symbol p}/2' -4.712, '-{/Symbol p}' -3.1415, \
-          '-{/Symbol p}/2' -1.5708, '0' 0,'{/Symbol p}/2' 1.5708, \
-          '{/Symbol p}' 3.1415,'3{/Symbol p}/2' 4.712, '2{/Symbol p}' \
-          6.283)"$
-
-          (%i6) plot2d ([cos(x), sin(x), tan(x)], [x, -2*%pi, 2*%pi],
-              [y, -2, 2], [gnuplot_preamble, my_preamble],
-              [gnuplot_term, ps], [gnuplot_out_file, "trig.eps"]);
-
-        * A three-dimensional plot using the gnuplot pm3d terminal.
-
-          (%i7) plot3d (atan (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
-                  [grid, 50, 50], [gnuplot_pm3d, true])$
-
-        * A three-dimensional plot without a mesh and with contours
-          projected on the bottom plane.
-
-          (%i8) my_preamble: "set pm3d at s;unset surface;set contour;\
-          set cntrparam levels 20;unset key"$
-          (%i9) plot3d(atan(-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
-              [grid, 50, 50], [gnuplot_pm3d, true],
-              [gnuplot_preamble, my_preamble])$
-
-        * A plot where the z-axis is represented by color only.  (Note
-          that the `gnuplot_preamble' string must be entered without
-          any line breaks.)
-
-          (%i10) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
-              [gnuplot_preamble, "set view map; unset surface"],
-              [gnuplot_pm3d, true], [grid, 150, 150])$
 
 
  -- Function: plot3d ([<expr_1>, <expr_2>, <expr_3>], <x_range>,
@@ -6864,10 +7180,13 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
      names of functions or lambda expressions, each function must be a
      function of three arguments.
 
-     This example shows a plot of the real part of `z^1/3'.
+     This example shows a plot of the real part of `z^1/3', using polar
+     coordinates. The options `box' and `legend' were also used to
+     suppress the title and the axes box.
 
           (%i4) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
-                ['grid, 12, 80], ['transform_xy, polar_to_xy]);
+                ['grid, 12, 80], ['transform_xy, polar_to_xy],
+                [box, false],[legend,false]);
 
      Other examples are the Klein bottle:
 
@@ -6899,7 +7218,26 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
           (%i14) f(x, y) := float (M [?round(x), ?round(y)])$
           (%i15) plot3d (f, [x, 1, 4], [y, 1, 4], ['grid, 4, 4])$
 
-     See `plot_options' for more examples.
+     Here is a three-dimensional plot using the gnuplot pm3d terminal.
+          (%i7) plot3d (atan (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
+                  [grid, 50, 50], [gnuplot_pm3d, true])$
+
+     And a three-dimensional plot without a mesh and with contours
+     projected on the bottom plane.  (Note that the `gnuplot_preamble'
+     string must be entered without any line breaks.)
+
+          (%i8) my_preamble: "set pm3d at s;unset surface;set contour;\
+          set cntrparam levels 20;unset key"$
+          (%i9) plot3d(atan(-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
+              [grid, 50, 50], [gnuplot_pm3d, true],
+              [gnuplot_preamble, my_preamble])$
+
+     Finally, a plot where the z-axis is represented by color only.
+          (%i10) plot3d (cos (-x^2 + y^3/4), [x, -4, 4], [y, -4, 4],
+              [gnuplot_preamble, "set view map; unset surface"],
+              [gnuplot_pm3d, true], [grid, 150, 150])$
+
+     See the available options in `plot_options'.
 
 
  -- Function: make_transform (<vars>, <fx>, <fy>, <fz>)
@@ -6907,6 +7245,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
      Use with the plot option `transform_xy'.
           make_transform ([r, th, z], r*cos(th), r*sin(th), z)$
      is a transformation to polar coordinates.
+
 
  -- Function: set_plot_option (<option>)
      Assigns one of the global variables for plotting.  <option> is
@@ -6955,7 +7294,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Prev: Plotting,
           eps enhanced color solid 24]]
 
 
-8.1.1 Functions for working with the gnuplot_pipes format
+8.2.1 Functions for working with the gnuplot_pipes format
 ---------------------------------------------------------
 
  -- Function: gnuplot_start ()

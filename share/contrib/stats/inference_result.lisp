@@ -50,7 +50,7 @@
 (defun d-matrixz (linear? direction h d)
   (declare (fixnum h d))
   (d-vbar linear? h d 
-	  (getcharn (if (eq direction 'right) '|&\ | '|&\|| ) 2)))  ; <- right and left characters
+	  (getcharn (if (eq direction 'right) " " "|" ) 1)))  ; <- right and left characters
 
 
 (defun matoutz (dmstr cstr rstr result)
@@ -60,8 +60,8 @@
     (declare (fixnum w))
     (do ((d (car d) (cdr d)) (r rstr (cdr r))) ((null d))
       (rplaca (cddar d) (f- height (car r)))
-      (rplaca (cdar d) (f- (// (f- (car c) (caar d)) 2) w))
-      (setq w (// (f+ (car c) (caar d)) 2))
+      (rplaca (cdar d) (f- (truncate (f- (car c) (caar d)) 2) w))
+      (setq w (truncate (f+ (car c) (caar d)) 2))
       (rplaca d (cdar d)))
     (setq result (cons (list (f+ 2 (f- (car c) w)) 0) (nreconc (car d) result))))
   (setq width (f+ 2 width))
@@ -82,10 +82,10 @@
     (do ((r (car r) (cdr r))) ((null r))
       (setq h (f+ 1 h (cadar r) (caddar r)))
       (rplaca (cddar r) (f- h (cadar r)))
-      (rplaca (cdar r) (f- (// (f- (car c) (caar r)) 2) w))
-      (setq w (// (f+ (car c) (caar r)) 2))
+      (rplaca (cdar r) (f- (truncate (f- (car c) (caar r)) 2) w))
+      (setq w (truncate (f+ (car c) (caar r)) 2))
       (rplaca r (cdar r)))
-    (setq d (// h 2) h (f- h d))
+    (setq d (truncate h 2) h (f- h d))
     (push `(d-matrixz left ,h ,d) result)
     (push #\space result)
     (push `(0 ,(f- d) . ,(nreverse (car r))) result)
@@ -112,7 +112,7 @@
 	 ((or consp (null r))
 	  (setq width 0)
 	  (do ((cs cstr (cdr cs))) ((null cs)) (setq width (f+ 2 (car cs) width)))
-	  (setq h1 (f1- (f+ h1 d1)) depth (// h1 2) height (f- h1 depth)))
+	  (setq h1 (f1- (f+ h1 d1)) depth (truncate h1 2) height (f- h1 depth)))
        (declare (fixnum h1 d1))
        (do ((c (cdar r) (cdr c))
 	    (nc dmstr (cdr nc))
@@ -155,23 +155,36 @@
    (dim-$inference_result output result)))
 
 
-;; The following two functions make wxmaxima to be happy
-;; with $inference_result. Code written by Andrej Vodopivec.
-(defun wxxml-inference (x l r)
-  (let ((name (cadr x))
-	(values (caddr x))
-	(dis (cadddr x))
-	(m ()))
-    (labels
-	((build-eq (e)
-	   `((mequal simp) ,(cadr e) ,(caddr e))))
-      (dolist (i (cdr dis))
-	(setq m (append m `(((mlist simp) ,(build-eq (nth i values)))))))
-      (setq m (cons `((mlist simp) ,name) m))
-      (setq m (cons '($matrix simp inference) m))
-      (wxxml m l r 'mparen 'mparen))))
+;; Format TeX output
+(defprop $inference_result tex-inference_result tex)
 
-(defprop $inference_result wxxml-inference wxxml)
+(defun tex-inference_result (x l r)
+  ;; inference_result looks like 
+  ;; ((inference_result) string ((mlist) ((mlist)..) ((mlist)..)..))
+  (append l `("\\left | \\matrix{" )
+          (list "\\hbox{" (cadr x) "} \\cr \\matrix{")
+	  (mapcan #'(lambda(y)
+		      (tex-list `(((mequal) ,(cadr y) ,(caddr y))) nil (list "\\cr ") "&"))
+		  (cdar (butlast (cddr x))))
+	  '("}} \\right .") r))
+
+;; Format MathML output
+(defprop $inference_result mathml-inference_result mathml)
+
+(defun mathml-inference_result (x l r)
+  ;; inference_result looks like 
+  ;; ((inference_result) string ((mlist) ((mlist)..) ((mlist)..)..))
+  (append l `("<mfenced separators=\"\" open=\"|\" close=\"\"><mtable>")
+         (list "<mtr><mtd>" (cadr x) "</mtd></mtr><mtable>")
+	 (mapcan #'(lambda(y)
+			  (mathml-list `(((mequal) ,(cadr y) ,(caddr y)))
+                                        (list "<mtr><mtd>")
+                                        (list "</mtd></mtr> ")
+                                        "</mtd><mtd>"))
+		 (cdar (butlast (cddr x))))
+	 '("</mtable></mtable></mfenced> ") r))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                  ;;

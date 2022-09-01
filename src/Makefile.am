@@ -264,6 +264,36 @@ openmcl-depends.mk: maxima.system
 include openmcl-depends.mk
 endif
 
+if ECL
+EXECUTEECL = $(ECL_NAME)
+all-local: binary-ecl/maxima
+install-exec-local: install-ecl
+uninstall-hook: uninstall-ecl
+clean: clean-ecl
+distclean: clean-ecl
+
+ecl:binary-ecl/maxima
+
+binary-ecl/maxima:
+	test -d binary-ecl || mkdir binary-ecl
+	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (build-maxima-lib))' -eval '(ext:quit)'
+
+install-ecl:
+	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-ecl"
+	$(INSTALL_PROGRAM) binary-ecl/maxima "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
+
+uninstall-ecl:
+	rm -f "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
+
+clean-ecl:
+	rm -rf binary-ecl libmaxima.a
+
+ecl-depends.mk: maxima.system
+	test -d binary-ecl || mkdir binary-ecl
+	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-ecl/maxima" "ecl-depends.mk") (quit))'
+include ecl-depends.mk
+endif
+
 echo_%:
 	@echo "$(subst echo_,,$@)=$($(subst echo_,,$@))"
 	@echo "origin $(subst echo_,,$@) returns $(origin $(subst echo_,,$@))"
@@ -300,14 +330,17 @@ desoln.lisp \
 displa.lisp \
 displm.lisp \
 dskfn.lisp \
+ecl-port.lisp \
 elim.lisp \
 ellipt.lisp \
 evalw.lisp \
+expintegral.lisp \
 ezgcd.lisp \
 factor.lisp \
 fcall.lisp \
 float.lisp \
 fortra.lisp \
+gamma.lisp \
 generate-sys-proclaim.lisp \
 generr.lisp \
 gnuplot.lisp \
@@ -367,8 +400,6 @@ nparse.lisp \
 nrat4.lisp \
 nregex.lisp \
 nset.lisp \
-numer.lisp \
-numerm.lisp \
 nummod.lisp \
 numth.lisp \
 openmath.lisp \
@@ -573,4 +604,4 @@ numerical/slatec/zwrsk.lisp
 
 genericdirDATA = $(real_lisp_sources) autoconf-variables.lisp
 
-EXTRA_DIST = $(real_lisp_sources) maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs
+EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs

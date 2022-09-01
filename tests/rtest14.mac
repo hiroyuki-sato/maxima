@@ -4,11 +4,14 @@ j0(1);
 j0(1); /*0.7651976865579665 ;*/
 bessel_j(0,1.0);
 0.7651976865579665 ;
+
+/* BESSEL is gone. This makes sure it's gone. */
 bessel(2,3);
-bessel_j(3,2)$
+bessel(2,3)$
 
 bessel(2,3.0);
-0.1289432494744021;
+bessel(2, 3.0);
+
 bessel_j(3,2.0);
 0.1289432494744021;
 
@@ -28,11 +31,11 @@ diff(bessel_y(1,x),x);
 diff(bessel_i(0,x),x);
 bessel_i(1,x);
 diff(bessel_i(1,x),x);
-bessel_i(0,x)-bessel_i(1,x)/x;
+(bessel_i(2,x)+bessel_i(0,x))/2;
 diff(bessel_k(0,x),x);
 -bessel_k(1,x);
 diff(bessel_k(1,x),x);
--bessel_k(1,x)/x-bessel_k(0,x);
+-((bessel_k(2,x)+bessel_k(0,x))/2);
 
 besselexpand:true;
 true$
@@ -281,9 +284,12 @@ ratsimp(specint(t^(3/2)*hstruve[1](t^(1/2))*%e^(-p*t),t));
 	/(8*sqrt(%pi)*p^(9/2)) $
 
 /* Trivial result because %ibes is not bessel_i
+   After specializing the pattern match of arbpow1 we get a more
+   correct noun form. The result is adjusted. DK. 
  */ 
 specint(t*%ibes[0](a*t/2)*%ibes[1](a*t/2)*%e^(-p*t),t);
-%ibes[0](a*t/2)*%ibes[1](a*t/2)/p^2 $
+/* %ibes[0](a*t/2)*%ibes[1](a*t/2)/p^2 $ */
+specint(t*%ibes[0](a*t/2)*%ibes[1](a*t/2)*%e^(-p*t),t);
 
 /*
  * t^(3/4)*bessel_j(1/2,t)*bessel_j(1/4,t)
@@ -999,7 +1005,7 @@ done;
 /* A&S Table 1.1, to 15 DP */
 closeto(gamma(1/2)-1.772453850905516,2e-15);
 true;
-closeto(gamma(1/3)-2.678938534707748,2e-15);
+closeto(gamma(1/3)-2.678938534707748,3.0e-15);
 true;
 closeto(gamma(7/4)-0.919062526848883,1e-15);
 true;
@@ -1027,9 +1033,6 @@ true;
 closeto(bessel_k(0,1.0) - .4210244382407085, 1e-14);
 true;
 
-kill(closeto);
-done;
-
 /*
  * Tests for failed cases to see if we're returning the noun forms
  */
@@ -1037,9 +1040,12 @@ done;
 specint(t^(-3/2)*exp(-t^2/8/a)*exp(-p*t),t);
 'specint(t^(-3/2)*exp(-t^2/8/a)*exp(-p*t),t);
 
-/* fail-on-f35p147test */
+/* fail-on-f35p147test
+   Because we modified the construction of a noun form, we get a sligthly
+   different noun form as result. DK. */
 specint((2*t)^(-3/2)*exp(-2*sqrt(a)*sqrt(t))*exp(-p*t),t);
-'specint(exp(-p*t -2*sqrt(a)*sqrt(t))/(8*t^(3/2)),t);
+/*'specint(exp(-p*t -2*sqrt(a)*sqrt(t))/(8*t^(3/2)),t);*/
+'specint(%e^(-p*t-2*sqrt(a)*sqrt(t))/(2*sqrt(2)*t^(3/2)),t);
 
 /* fail-on-f29p146test */
 specint(t^(v-1)*exp(1/8/t)*exp(-p*t),t);
@@ -1064,5 +1070,598 @@ specint(8*t^1*exp(3*t)*bessel_y(8,7*sqrt(t))*exp(-p*t),t);
 specint(8*t^1*exp(3*t)*bessel_y(8,7*t^(3/2))*exp(-p*t),t);
 'specint(8*bessel_y(8,7*t^(3/2))*t*exp(-((p-3)*t)),t);
 
+/* The additionally phase factor in the calculation vanish, because of
+   the modificaton of the transformation to Bessel J in the code. DK.
+*/
 (assume(t>0,v2>1), radcan(specint(bessel_i(-v2,t)*exp(-p*t),t)));
-'specint((%e^((%i*%pi*v2-2*p*t)/2)*bessel_i(-v2,t))/(-1)^(v2/2),t);
+/*'specint((%e^((%i*%pi*v2-2*p*t)/2)*bessel_i(-v2,t))/(-1)^(v2/2),t);*/
+'(specint(bessel_i(-v2,t)*exp(-p*t),t));
+
+/* Verify fix for [ 1877522 ] erf(1.0),nouns wrong; causes plot2d(erf) to fail
+ */
+erf(1.0), nouns;
+0.8427007929497148;
+
+erf(1.0), erf;
+0.8427007929497148;
+
+erf(1.0);
+0.8427007929497148;
+
+/* [ 789059 ] simpexpt problem: sign called on imag arg */
+(-(-1)^(1/6))^(1/2);
+sqrt(-(-1)^(1/6));
+
+/* Further tests of bessel functions */
+/* The following numerical values are evaluated with the evaluation tool
+   of the website wwww.functions.wolfram.com with a precision of 16 digits
+   1998-2008 Wolfram Research, Inc. */
+
+(test_bessel(actual, ref, digits) := closeto(realpart(actual)-realpart(ref), 10^(-digits)) and closeto(imagpart(actual)-imagpart(ref), 10^(-digits)), 0);
+0;
+
+/* Numerical values for the bessel functions J with negative order */
+
+test_bessel(bessel_j(-1,-2.0),0.5767248077568734, 15);
+true;
+
+test_bessel(bessel_j(-1,2.0), -0.5767248077568734, 15);
+true;
+
+test_bessel(bessel_j(-1,-1.5), 0.5579365079100996, 15);
+true;
+
+test_bessel(bessel_j(-1,1.5), -0.5579365079100996, 15);
+true;
+
+test_bessel(bessel_j(-1.5, -2.0), -0.3956232813587035*%i, 15);
+true;
+
+test_bessel(bessel_j(-1.5, 2.0), -0.3956232813587035, 15);
+true;
+
+test_bessel
+  (bessel_j(-1.8, -1.5),- 0.2033279902093184 - 0.1477264320209275 * %i,15);
+true;
+
+test_bessel(bessel_j(-1.8, 1.5), -0.251327217627129314,15);
+true;
+
+test_bessel(bessel_j(-2,-1.5), 0.2320876721442147, 15);
+true;
+
+test_bessel(bessel_j(-2,1.5), 0.2320876721442147, 15);
+true;
+
+test_bessel(bessel_j(-2.5,-1.5), -1.315037204805194 * %i,15);
+true;
+
+test_bessel(bessel_j(-2.5,1.5), 1.315037204805194,15);
+true;
+
+test_bessel
+  (bessel_j(-2.3,-1.5), 0.5949438455752484 - 0.8188699527453657 * %i,14);
+true;
+
+test_bessel(bessel_j(-2.3,1.5), 1.012178926325313, 14);
+true;
+
+/* Numerical values for the bessel functions J with positiv order */
+
+test_bessel(bessel_j(1.5,1.0), 0.2402978391234270, 15);
+true;
+
+test_bessel(bessel_j(1.5,-1.0), -0.2402978391234270 * %i, 15);
+true;
+
+test_bessel(bessel_j(1.8,1.0), 0.1564953153109239, 14);
+true;
+
+test_bessel
+  (bessel_j(1.8,-1.0), 0.1266073696266034 - 0.0919856383926216 * %i, 15);
+true;
+
+test_bessel(bessel_j(2.0,1.0), 0.1149034849319005,15);
+true;
+
+test_bessel(bessel_j(2.0,-1.0),0.1149034849319005,15);
+true;
+
+test_bessel(bessel_j(2.5,1.0),0.04949681022847794,15);
+true;
+
+test_bessel(bessel_j(2.5,-1.0),0.04949681022847794 * %i,15);
+true;
+
+/* Numerical values for the bessel functions J with complex arg 
+   and positive or negative order*/
+
+test_bessel
+  (bessel_j(0,1.0+%i),0.9376084768060293 - 0.4965299476091221 * %i,15);
+true;
+
+test_bessel
+  (bessel_j(1,1.0+%i),0.6141603349229036 + 0.3650280288270878 * %i,15);
+true;
+
+test_bessel
+  (bessel_j(-1,1.0+%i),-0.6141603349229036 - 0.3650280288270878 * %i,14);
+true;
+
+test_bessel
+  (bessel_j(2,1.0+%i),0.0415798869439621 + 0.2473976415133063 * %i,15);
+true;
+
+test_bessel
+  (bessel_j(-2,1.0+%i),0.0415798869439621 + 0.2473976415133063 * %i,15);
+true;
+
+test_bessel
+  (bessel_j(2.3,1.0+%i),-0.0141615213034667 + 0.1677798241687935 * %i,15);
+true;
+
+test_bessel
+  (bessel_j(-2.3,1.0+%i),0.1920598664138632 - 0.5158676904105332 * %i,14);
+true;
+
+/******************************************************************/
+/* Numerical values for the bessel functions Y with negativ order */
+
+test_bessel
+  (bessel_y(-1,-2.0),-0.1070324315409375 + 1.1534496155137468 * %i,14);
+true;
+
+test_bessel(bessel_y(-1,2.0),0.1070324315409375,15);
+true;
+
+test_bessel
+  (bessel_y(-1,-1.5),-0.4123086269739113 + 1.1158730158201993 * %i,15);
+true;
+
+test_bessel(bessel_y(-1,1.5),0.4123086269739113,15);
+true;
+
+test_bessel(bessel_y(-1.5, -2.0),0.4912937786871623 * %i,15);
+true;
+
+test_bessel(bessel_y(-1.5, 2.0),-0.4912937786871623,15);
+true;
+
+test_bessel
+  (bessel_y(-1.8, -1.5),-0.6777414340388011 + 0.0857519944018923 * %i,14);
+true;
+
+test_bessel(bessel_y(-1.8, 1.5),-0.8377344836401481,14);
+true;
+
+test_bessel
+  (bessel_y(-2,-1.5),-0.9321937597629739 + 0.4641753442884295 * %i,15);
+true;
+
+test_bessel(bessel_y(-2,1.5),-0.9321937597629739,14);
+true;
+
+test_bessel(bessel_y(-2.5,-1.5),0.1244463597983876 * %i,14);
+true;
+
+test_bessel(bessel_y(-2.5,1.5),0.1244463597983876,15);
+true;
+
+test_bessel
+  (bessel_y(-2.3,-1.5),-0.3148570865836879 + 0.7565240896444820 * %i,14);
+true;
+
+test_bessel(bessel_y(-2.3,1.5),-0.5356668704355646,14);
+true;
+
+/* Numerical values for the bessel functions Y with positiv order */
+
+test_bessel(bessel_y(1.5,1.0),-1.102495575160179,14);
+true;
+
+test_bessel(bessel_y(1.5,-1.0),-1.102495575160179 * %i,14);
+true;
+
+test_bessel(bessel_y(1.8,1.0),-1.382351995367631,14);
+true;
+
+test_bessel
+  (bessel_y(1.8,-1.0),-1.1183462564605324 - 0.5593113771009602 * %i,14);
+true;
+
+test_bessel(bessel_y(2.0,1.0),-1.650682606816254,14);
+true;
+
+test_bessel
+  (bessel_y(2.0,-1.0),-1.650682606816254 + 0.229806969863801 * %i,14);
+true;
+
+test_bessel(bessel_y(2.5,1.0),-2.876387857462161,14);
+true;
+
+test_bessel(bessel_y(2.5,-1.0),2.876387857462161 * %i,14);
+true;
+
+
+/* Numerical values for the bessel functions Y with complex arg 
+   and positive or negative order*/
+
+test_bessel
+  (bessel_y(0,1.0+%i),0.4454744889360325 + 0.7101585820037345 * %i,15);
+true;
+
+test_bessel
+  (bessel_y(1,1.0+%i),-0.6576945355913452 + 0.6298010039928844 * %i,15);
+true;
+
+test_bessel
+(bessel_y(-1,1.0+%i),0.6576945355913452 - 0.6298010039928844 * %i,15);
+true;
+
+test_bessel
+  (bessel_y(2,1.0+%i),-0.4733680205344934 + 0.5773369575804951 * %i,14);
+true;
+
+test_bessel
+  (bessel_y(-2,1.0+%i),-0.4733680205344934 + 0.5773369575804951 * %i,14);
+true;
+
+test_bessel
+  (bessel_y(2.3,1.0+%i),-0.2476879981252862 + 0.7595467103431256 * %i,15);
+true;
+
+test_bessel
+  (bessel_y(-2.3,1.0+%i),-0.1570442638685963 + 0.5821870838327466 * %i,14);
+true;
+
+
+/******************************************************************/
+/* Numerical values for the bessel functions I with negativ order */
+
+test_bessel(bessel_i(-1,-2.0),-1.590636854637329,15);
+true;
+
+test_bessel(bessel_i(-1,2.0),1.590636854637329,15);
+true;
+
+test_bessel(bessel_i(-1,-1.5),-0.9816664285779076,15);
+true;
+
+test_bessel(bessel_i(-1,1.5),0.9816664285779076,15);
+true;
+
+test_bessel(bessel_i(-1.5, -2.0),0.9849410530002364 * %i,14);
+true;
+
+test_bessel(bessel_i(-1.5, 2.0),0.9849410530002364,14);
+true;
+
+test_bessel
+  (bessel_i(-1.8, -1.5),0.2026903980307014 + 0.1472631941876387 * %i,15);
+true;
+
+test_bessel(bessel_i(-1.8, 1.5),0.2505391103524365,15);
+true;
+
+test_bessel(bessel_i(-2,-1.5),0.3378346183356807,15);
+true;
+
+test_bessel(bessel_i(-2,1.5),0.3378346183356807,15);
+true;
+
+test_bessel(bessel_i(-2.5,-1.5),-0.8015666610717216*%i,14);
+true;
+
+test_bessel(bessel_i(-2.5,1.5),0.8015666610717216,14);
+true;
+
+test_bessel
+  (bessel_i(-2.3,-1.5),0.3733945265830230 - 0.5139334755917659 * %i,15);
+true;
+
+test_bessel(bessel_i(-2.3,1.5),0.6352567117441516,15);
+true;
+
+/* Numerical values for the bessel functions Y with positiv order */
+
+test_bessel(bessel_i(1.5,1.0),0.2935253263474798,15);
+true;
+
+test_bessel(bessel_i(1.5,-1.0),-0.2935253263474798*%i,13);
+true;
+
+test_bessel(bessel_i(1.8,1.0),0.1871011888310777,15);
+true;
+
+test_bessel
+  (bessel_i(1.8,-1.0),0.1513680414320980 - 0.1099753194812967 * %i,14);
+true;
+
+test_bessel(bessel_i(2.0,1.0),0.1357476697670383,15);
+true;
+
+test_bessel(bessel_i(2.0,-1.0),0.1357476697670383,15);
+true;
+
+test_bessel(bessel_i(2.5,1.0),0.05709890920304825,15);
+true;
+
+test_bessel(bessel_i(2.5,-1.0),0.05709890920304825 * %i,15);
+true;
+
+
+/* Numerical values for the bessel functions Y with complex arg 
+   and positive or negative order*/
+
+test_bessel
+  (bessel_i(0,1.0+%i),0.9376084768060293 + 0.4965299476091221 * %i,15);
+true;
+
+test_bessel
+  (bessel_i(1,1.0+%i),0.3650280288270878 + 0.6141603349229036 * %i,15);
+true;
+
+test_bessel
+  (bessel_i(-1,1.0+%i),0.3650280288270878 + 0.6141603349229036 * %i,15);
+true;
+
+test_bessel
+  (bessel_i(2,1.0+%i),-0.0415798869439621 + 0.2473976415133063 * %i,15);
+true;
+
+test_bessel
+  (bessel_i(-2,1.0+%i),-0.0415798869439621 + 0.2473976415133063 * %i,15);
+true;
+
+test_bessel
+  (bessel_i(2.3,1.0+%i),-0.0635524383467825 + 0.1559221140952053 * %i,15);
+true;
+
+test_bessel
+  (bessel_i(-2.3,1.0+%i),-0.4053256245784623 - 0.3724481230406298 * %i,14);
+true;
+
+/******************************************************************/
+/* Numerical values for the bessel functions I with negativ order */
+
+test_bessel
+  (bessel_k(-1,-2.0),-0.139865881816522-4.997133057057809*%i,14);
+true;
+
+test_bessel(bessel_k(-1,2.0),0.139865881816522,14);
+true;
+
+test_bessel
+  (bessel_k(-1,-1.5),-0.277387800456844 - 3.083996040296084*%i,14);
+true;
+
+test_bessel(bessel_k(-1,1.5),0.2773878004568438,15);
+true;
+
+test_bessel(bessel_k(-1.5, -2.0),-3.2741902342766302*%i,13);
+true;
+
+test_bessel(bessel_k(-1.5, 2.0),0.1799066579520922,15);
+true;
+
+test_bessel
+  (bessel_k(-1.8, -1.5),0.3929372194683435 - 1.0725774293000646*%i,15);
+true;
+
+test_bessel(bessel_k(-1.8, 1.5),0.4856971141526263,15);
+true;
+
+test_bessel
+  (bessel_k(-2,-1.5),0.5836559632566508 - 1.0613387550916862*%i,14);
+true;
+
+test_bessel(bessel_k(-2,1.5),0.5836559632566508,15);
+true;
+
+test_bessel
+  (bessel_k(-2.3,-1.5),0.465598659425186 - 1.354876241730594*%i,14);
+true;
+
+test_bessel(bessel_k(-2.3,1.5),0.7921237520153218,15);
+true;
+
+/* Numerical values for the bessel functions Y with positiv order */
+
+test_bessel(bessel_k(1.5,1.0),0.9221370088957891,14);
+true;
+
+/* kein Wert von function-site !? Ist das eine Nullstelle??? */
+test_bessel(bessel_k(1.5,-1.0),0,13);
+true;
+
+test_bessel(bessel_k(1.8,1.0),1.275527037541854,15);
+true;
+
+test_bessel
+  (bessel_k(1.8,-1.0),1.0319230501560911 + 0.1619402612577788*%i,14);
+true;
+
+test_bessel(bessel_k(2.0,1.0),1.624838898635177,14);
+true;
+
+test_bessel(bessel_k(2.0,-1.0),1.624838898635177 - 0.426463882082061*%i,14);
+true;
+
+test_bessel(bessel_k(2.5,1.0),3.227479531135262,14);
+true;
+
+test_bessel(bessel_k(2.5,-1.0),-3.406861044815549*%i,14);
+true;
+
+/* Numerical values for the bessel functions Y with complex arg 
+   and positive or negative order*/
+
+test_bessel
+  (bessel_k(0,1.0+%i),0.0801977269465178 - 0.3572774592853303*%i,15);
+true;
+
+test_bessel
+  (bessel_k(1,1.0+%i),0.0245683055237403 - 0.4597194738011894 * %i,15);
+true;
+
+test_bessel
+  (bessel_k(-1,1.0+%i),0.0245683055237403 - 0.4597194738011894 * %i,15);
+true;
+
+test_bessel
+  (bessel_k(2,1.0+%i),-0.3549534413309312 - 0.8415652386102600 * %i,13);
+true;
+
+test_bessel
+  (bessel_k(-2,1.0+%i),-0.3549534413309312 - 0.8415652386102600 * %i,13);
+true;
+
+test_bessel
+  (bessel_k(2.3,1.0+%i),-0.6635905911278042 - 1.0258894849569300 * %i,15);
+true;
+
+test_bessel
+  (bessel_k(-2.3,1.0+%i),-0.6635905911278042 - 1.0258894849569300 * %i,13);
+true;
+
+kill(closeto, test_bessel);
+done;
+
+/* Numerical tests of the Bessel functions using the Wronskians
+
+   The Wronskians combines different types of Bessel functions and 
+   Bessel functions with negative and positve order.
+   The results are very simple. Therefore the numerical calculation of the
+   Wronskians is a good test for the different parts of the algorithmen.  
+
+   Based on code by Dieter Kaiser.
+*/
+
+/* Test the Wronskian.  wf is the Wronskian function.  w_true is simplified Wronskian.
+ * eps is the max absolute error allowed, and the Wronskian is tested
+ * for values of the arg between -zlimit and zlimit.
+ */ 
+(test_wronskian(wf, w_true, eps, zlimit) :=
+block([badpoints : [], 
+       ratprint : false,
+       abserr : 0,
+       maxerr : -1],
+  for order:-1 thru 1 step 1/10 do
+  (
+    for z: -zlimit thru zlimit step 1 do
+    (
+      if notequal(z,0.0) then
+      (
+        result : float(rectform(wf(float(order),z))),
+        answer : float(rectform(w_true(float(order),z))),
+        abserr : abs(result - answer),
+	maxerr : max(maxerr, abserr),
+        if abserr > eps then
+        (
+          badpoints : cons([[order, z], result, answer, abserr], badpoints)
+        ) 
+      )
+    )
+  ),
+  /* 
+   * For debugging, if there are any bad points, return the maximum error 
+   * found as the first element.
+   */
+  if badpoints # [] then
+    cons(maxerr, badpoints)
+  else
+    badpoints
+), 0);
+0;
+
+/*******************************************************************************
+
+   Wronskian w_jj 
+
+   A&S 9.1.15 : J[n+1](z)*J[-n](z)+J[n](z)*J[-(n+1)](z) = -2*sin(n*pi)/(pi*z)
+   
+*******************************************************************************/
+
+w_jj(n,z) := bessel_j(n+1,z)*bessel_j(-n,z) + bessel_j(n,z)*bessel_j(-n-1,z);
+w_jj(n,z) := bessel_j(n+1,z) *bessel_j(-n,z) + bessel_j(n,z)*bessel_j(-n-1,z);
+
+/* Calculation of w_jj for real argument */
+
+test_wronskian('w_jj, lambda([n,z], -2.0*sin(n*%pi)/(z*%pi)), 1e-14, 10);
+[];
+
+
+/* Calculation of w_jj for complex argument */
+
+test_wronskian(lambda([n,z], expand(w_jj(n,%i*z))), 
+               lambda([n,z],-2.0*sin(n*%pi)/(%i*z*%pi)),
+               1e-8, 10);
+[];
+
+/*******************************************************************************
+
+   Wronskian w_jy
+
+   A&S 9.1.16: J[n+1](z)*Y[n](z)-J[n](z)*Y[n+1,z] = 2/(pi*z)
+
+*******************************************************************************/
+
+w_jy(n,z) := bessel_j(n+1,z)*bessel_y(n,z) - bessel_j(n,z)*bessel_y(n+1,z);
+w_jy(n,z) := bessel_j(n+1,z)*bessel_y(n,z) - bessel_j(n,z)*bessel_y(n+1,z);
+
+/* Calculation of w_yj for real argument */
+
+test_wronskian(w_jy, lambda([n,z], 2.0/(z*%pi)), 1e-14, 10);
+[];
+
+
+/* Calculation of w_jy for complex argument */
+
+test_wronskian(lambda([n,z], w_jy(n,z*%i)), lambda([n,z],2.0/(z*%i*%pi)), 1e-8, 10);
+[];
+
+/*******************************************************************************
+
+   Wronskian w_ii
+
+   A&S 9.6.14: I[n](z)*I[-(n+1)](z)-I[n+1](z)*I[-n](z) = -2*sin(n*pi)/(pi*z)
+
+*******************************************************************************/
+
+w_ii(n,z) := bessel_i(n,z)*bessel_i(-n-1,z) - bessel_i(n+1,z)*bessel_i(-n,z);
+w_ii(n,z) := bessel_i(n,z)*bessel_i(-n-1,z) - bessel_i(n+1,z)*bessel_i(-n,z);
+
+/* Calculation of w_ii for real argument */
+
+test_wronskian(w_ii, lambda([n,z],-2.0*sin(n*%pi)/(z*%pi)), 1e-10, 5);
+[];
+
+/* Calculation of w_ii for complex argument */
+
+test_wronskian(lambda([n,z], w_ii(n,z*%i)), 
+               lambda([n,z], -2.0*sin(n*%pi)/(z*%i*%pi)), 
+               1e-10, 5);
+[];
+
+/*******************************************************************************
+
+   Test Wronskian w_ik
+
+   A&S 9.6.15: I[n](z)*K[n+1](z)+I[n+1](z)*K[n](z) = 1/z
+
+*******************************************************************************/
+
+w_ik(n,z) := bessel_i(n,z)*bessel_k(n+1,z) + bessel_i(n+1,z)*bessel_k(n,z);
+w_ik(n,z) := bessel_i(n,z)*bessel_k(n+1,z) + bessel_i(n+1,z)*bessel_k(n,z);
+
+/* Calculation of w_ik for real argument */
+
+test_wronskian(w_ik, lambda([n,z], 1/z), 1e-10, 5);
+[];
+
+/* Calculation of w_ik for complex argument */
+
+test_wronskian(lambda([n,z], w_ik(n,z*%i)), lambda([n,z], 1/(z*%i)), 1e-12, 5);
+[];
+
+/******************************************************************************/

@@ -94,45 +94,43 @@ relational knowledge is contained in the default context GLOBAL."
 
 ;;; This "turns on" a context, making its facts visible.
 
-(defmfun $activate n
-  (do ((i 1 (1+ i)))
-      ((> i n))
-    (cond ((not (symbolp (arg i))) (nc-err))
-	  ((member (arg i) (cdr $activecontexts) :test #'eq))
-	  ((member (arg i) (cdr $contexts) :test #'eq)
-	   (setq $activecontexts (mcons (arg i) $activecontexts))
-	   (activate (arg i)))
-	  (t (merror "There is no context with the name ~:M" (arg i)))))
+(defmfun $activate (&rest args)
+  (dolist (c args)
+    (cond ((not (symbolp c)) (nc-err))
+	  ((member c (cdr $activecontexts) :test #'eq))
+	  ((member c (cdr $contexts) :test #'eq)
+	   (setq $activecontexts (mcons c $activecontexts))
+	   (activate c))
+	  (t (merror "There is no context named ~:M" c))))
   '$done)
 
-;;; This "turns off" a context, keeping the facts, but making them
-;;; invisible
+;;; This "turns off" a context, keeping the facts, but making them invisible
 
-(defmfun $deactivate n
-  (do ((i 1 (1+ i))) ((> i n))
-    (cond ((not (symbolp (arg i))) (nc-err))
-	  ((member (arg i) (cdr $contexts) :test #'eq)
-	   (setq $activecontexts ($delete (arg i) $activecontexts))
-	   (deactivate (arg i)))
-	  (t (merror "There is no context with the name ~:M" (arg i)))))
+(defmfun $deactivate (&rest args)
+  (dolist (c args)
+    (cond ((not (symbolp c)) (nc-err))
+	  ((member c (cdr $contexts) :test #'eq)
+	   (setq $activecontexts ($delete c $activecontexts))
+	   (deactivate c))
+	  (t (merror "There is no context named ~:M" c))))
   '$done)
 
-;;; This function of 0 or 1 argument prints out a list of the facts
-;;; in the specified context.  No argument implies the current context.
+;;; This function prints out a list of the facts in the specified context.
+;;; No argument implies the current context.
 
-(defmfun $facts n
-  (cond ((= n 0) (facts1 $context))
-	((= n 1) (facts1 (arg n)))
-	(t (merror "`facts' takes zero or one argument only."))))
+(defmfun $facts (&optional (ctxt $context))
+  (facts1 ctxt))
 
 (defun facts1 (con)
   (contextmark)
-  (do ((l (zl-get con 'data) (cdr l)) (nl) (u))
+  (do ((l (zl-get con 'data) (cdr l))
+       (nl)
+       (u))
       ((null l) (cons '(mlist) nl))
     (when (visiblep (car l))
       (setq u (intext (caaar l) (cdaar l)))
       (unless (memalike u nl)
-	(setq nl (cons u nl))))))
+	(push u nl)))))
 
 (defun intext (rel body)
   (setq body (mapcar #'doutern body))
@@ -184,13 +182,12 @@ relational knowledge is contained in the default context GLOBAL."
 
 ;;; This function kills a context or a list of contexts
 
-(defmfun $killcontext n
-  (do ((i 1 (1+ i)))
-      ((> i n))
-    (if (symbolp (arg i))
-	(killcontext (arg i))
+(defmfun $killcontext (&rest args)
+  (dolist (c args)
+    (if (symbolp c)
+	(killcontext c)
 	(nc-err)))
-  (if (and (= n 1) (eq (arg 1) '$global))
+  (if (and (= (length args) 1) (eq (car args) '$global))
       '$not_done
       '$done))
 
@@ -305,9 +302,10 @@ relational knowledge is contained in the default context GLOBAL."
       a
       `((,(caar x) simp) ,a))))
 
-(defmfun $is (pat)
+(defmspec $is (form)
   (let*
-    ((x (mevalp1 pat))
+    ((pat (cadr form))
+     (x (mevalp1 pat))
      (ans (car x))
      (patevalled (cadr x)))
     (cond
@@ -316,8 +314,10 @@ relational knowledge is contained in the default context GLOBAL."
       ($prederror (pre-err patevalled))
       (t '$unknown))))
 
-(defmfun $maybe (pat)
-  (let* ((x (let (($prederror nil)) (mevalp1 pat)))
+(defmspec $maybe (form)
+  (let*
+    ((pat (cadr form))
+     (x (let (($prederror nil)) (mevalp1 pat)))
 	 (ans (car x)))
     (if (member ans '(t nil) :test #'eq)
 	ans
@@ -829,16 +829,19 @@ relational knowledge is contained in the default context GLOBAL."
 
 (defun meqp-by-csign (z a b)
   (let ((sgn) ($niceindicespref `((mlist) ,(gensym) ,(gensym) ,(gensym))))
-    (setq z ($niceindices z))
-    (setq sgn (csign z))
-    (cond ((eq '$zero sgn) t)
-	  ((eq sgn t)
-	   (setq z ($rectform z))
-	   (if (or (eq nil (meqp ($realpart z) 0)) (eq nil (meqp ($imagpart z) 0)))
-	       nil
-	       `(($equal) ,a ,b)))
-	  ((member sgn '($pos $neg $pn)) nil)
-	  (t `(($equal) ,a ,b)))))
+    (cond ((and (mexptp z) (eq t (mnqp (third z) '$minf)) (eq t (mnqp (second z) 0))) nil)
+	  (t
+	   (setq z ($niceindices z))
+	   (setq sgn (csign (sratsimp z)))
+	   (cond ((eq '$zero sgn) t)
+		 ((and (eq sgn t) (islinear z '$%i))
+		  (let ((r (meqp ($realpart z) 0))
+			(i (meqp ($imagpart z) 0)))
+		    (cond ((or (eq r nil) (eq i nil)) nil)
+			  ((and (eq r t) (eq i t)) t)
+			  (t `(($equal) ,a ,b)))))
+		 ((member sgn '($pos $neg $pn)) nil)
+		 (t `(($equal) ,a ,b)))))))
 
 ;; For each fact of the form equal(a,b) in the active context, do e : ratsubst(b,a,e).
 
@@ -866,10 +869,6 @@ relational knowledge is contained in the default context GLOBAL."
     ((stringp a)
      (and (stringp b) (equal a b)))
     ((stringp b) nil)
-
-    ((mstringp a)
-     (and (mstringp b) (equal a b)))
-    ((mstringp b) nil)
 
     ((arrayp a)
      (and (arrayp b) (array-meqp a b)))
@@ -904,7 +903,7 @@ relational knowledge is contained in the default context GLOBAL."
 
           ((and (op-equalp a 'lambda) (op-equalp b 'lambda)) (lambda-meqp a b))
           (($setp a) (set-meqp a b))
-          (t (meqp-by-csign (equal-facts-simp ($ratsimp (sub a b))) a b)))))))
+          (t (meqp-by-csign (equal-facts-simp (sratsimp (sub a b))) a b)))))))
 
 ;; Two arrays are equal (according to MEQP)
 ;; if (1) they have the same dimensions,
@@ -978,7 +977,7 @@ relational knowledge is contained in the default context GLOBAL."
   (let ((sgn (csign a)))
     (cond ((eq sgn '$pos) t)
 	  ((eq sgn t) nil) ;; csign thinks a - b isn't real
-	  ((memq sgn '($neg $zero $nz)) nil)
+	  ((member sgn '($neg $zero $nz) :test #'eq) nil)
 	  (t `((mgreaterp) ,a 0)))))
 
 (defun mlsp (x y)
@@ -987,7 +986,7 @@ relational knowledge is contained in the default context GLOBAL."
 (defun mgqp (a b)
   (setq a (sub a b))
   (let ((sgn (csign a)))
-    (cond ((memq sgn '($pos $zero $pz)) t)
+    (cond ((member sgn '($pos $zero $pz) :test #'eq) t)
 	  ((eq sgn t) nil) ;; csign thinks a - b isn't real 
 	  ((eq sgn '$neg) nil)
 	  (t `((mgeqp) ,a 0)))))
@@ -1043,7 +1042,7 @@ relational knowledge is contained in the default context GLOBAL."
 		     (or (null dum)
 			 (and (numberp dum)
 			      (prog2 (setq exp dum)
-				  (< (abs dum) 1.0d-6))))))
+				  (< (abs dum) 1.0e-6))))))
 	    (cond ($signbfloat
 		   (and (setq dum ($bfloat x)) ($bfloatp dum) (setq exp dum)))
 		  (t (setq sign '$pnz evens nil odds (ncons x) minus nil)
@@ -1093,6 +1092,7 @@ relational knowledge is contained in the default context GLOBAL."
 	((eq (caar x) 'mexpt) (sign-mexpt x))
 	((eq (caar x) '%log) (compare (cadr x) 1))
 	((eq (caar x) 'mabs) (sign-mabs x))
+	((member (caar x) '($min $max) :test #'eq) (sign-minmax (caar x) (cdr x)))
 	((member (caar x) '(%csc %csch) :test #'eq)
 	 (sign (inv* (cons (ncons (zl-get (caar x) 'recip)) (cdr x)))))
 	((specrepp x) (sign (specdisrep x)))
@@ -1166,32 +1166,36 @@ relational knowledge is contained in the default context GLOBAL."
 	  ((signdiff-special lhs rhs)))))
 
 (defun signdiff-special (xlhs xrhs)
-  (when (or (and (numberp xrhs) (minusp xrhs)
-		 (not (atom xlhs)) (eq (sign* xlhs) '$pos))
+  ;; xlhs may be a constant
+  (let ((sgn nil))
+    (when (or (and (numberp xrhs) (minusp xrhs)
+		   (not (atom xlhs)) (eq (sign* xlhs) '$pos))
 					; e.g. sign(a^3+%pi-1) where a>0
-	    (and (mexptp xlhs)		
-		 ;; e.g. sign(%e^x-1) where x>0
-		 (eq (sign* (caddr xlhs)) '$pos)
-		 (or (and
-		      ;; Q^Rpos - S, S<=1, Q>1
-		      (memq (sign* (sub 1 xrhs)) '($pos $zero $pz))
-		      (eq (sign* (sub (cadr xlhs) 1)) '$pos))
-		     (and
-		      ;; Qpos ^ Rpos - Spos => Qpos - Spos^(1/Rpos)
-		      (eq (sign* (cadr xlhs)) '$pos)
-		      (eq (sign* xrhs) '$pos)
-		      (eq (sign* (sub (cadr xlhs)
-				      (power xrhs (div 1 (caddr xlhs)))))
-			  '$pos))))
-	    (and (mexptp xlhs) (mexptp xrhs)
-		 ;; Q^R - Q^T, Q>1, (R-T) > 0
-		 ;; e.g. sign(2^x-2^y) where x>y
-		 (alike1 (cadr xlhs) (cadr xrhs))
-		 (eq (sign* (sub (cadr xlhs) 1)) '$pos)
-		 (eq (sign* (sub (caddr xlhs) (caddr xrhs))) '$pos)))
-    (setq sign '$pos minus nil odds nil evens nil)
-    t)
-  )
+	      (and (mexptp xlhs)
+		   ;; e.g. sign(%e^x-1) where x>0
+		   (eq (sign* (caddr xlhs)) '$pos)
+		   (or (and
+			;; Q^Rpos - S, S<=1, Q>1
+			(member (sign* (sub 1 xrhs)) '($pos $zero $pz) :test #'eq)
+			(eq (sign* (sub (cadr xlhs) 1)) '$pos))
+		       (and
+			;; Qpos ^ Rpos - Spos => Qpos - Spos^(1/Rpos)
+			(eq (sign* (cadr xlhs)) '$pos)
+			(eq (sign* xrhs) '$pos)
+			(eq (sign* (sub (cadr xlhs)
+					(power xrhs (div 1 (caddr xlhs)))))
+			    '$pos))))
+	      (and (mexptp xlhs) (mexptp xrhs)
+		   ;; Q^R - Q^T, Q>1, (R-T) > 0
+		   ;; e.g. sign(2^x-2^y) where x>y
+		   (alike1 (cadr xlhs) (cadr xrhs))
+		   (eq (sign* (sub (cadr xlhs) 1)) '$pos)
+		   (eq (sign* (sub (caddr xlhs) (caddr xrhs))) '$pos)))
+      (setq sgn '$pos))
+    (when (and $useminmax (or (minmaxp xlhs) (minmaxp xrhs)))
+      (setq sgn (signdiff-minmax xlhs xrhs)))
+    (when sgn (setq sign sgn minus nil odds nil evens nil)
+	  t)))
 
 (defun signsum (x)
   (do ((l (cdr x) (cdr l)) (s '$zero))
@@ -1295,6 +1299,106 @@ relational knowledge is contained in the default context GLOBAL."
   (cond ((member sign '($pos $zero) :test #'eq))
 	((member sign '($neg $pn) :test #'eq) (setq sign '$pos))
 	(t (setq sign '$pz minus nil evens (nconc odds evens) odds nil))))
+
+;;; Compare min/max
+
+;;; Macros used in simp min/max
+;;; If op is min, use body; if not, negate sign constants in body
+;;; Used to avoid writing min and max code separately: just write the min code
+;;; in such a way that its dual works for max
+(defmacro minmaxforms (op &rest body)
+  `(cond ((eq ,op '$min) ,@body)
+	 (t ,@(sublis '(($neg . $pos)
+			($nz . $pz)
+			($pz . $nz)
+			($pos . $neg)
+			;;($zero . $zero)
+			;;($pn . $pn)
+			;;($pnz . $pnz)
+			;;
+			($max . $min)
+			($min . $max)
+			;;
+			($inf . $minf)
+			($minf . $inf))
+		      body))))
+
+(defun sign-minmax (op l)
+  (do ((sgn (minmaxforms op '$pos)	;identity element for min
+	    (sminmax op sgn (sign* (car l))))
+       (end (minmaxforms op '$neg))
+       (l l (cdr l)))
+      ((or (null l) (eq sgn end))
+       (setq minus nil odds nil evens nil
+	     sign sgn))))
+
+;; sign(op(a,b)) = sminmax(sign(a),sign(b))
+;; op is $min/$max; s1/s2 in neg, nz, zero, pz, pos, pn, pnz
+(defun sminmax (op s1 s2)
+  (minmaxforms
+   op
+   ;; Many of these cases don't come up in simplified expressions,
+   ;; since e.g. sign(a)=neg and sign(b)=pos implies min(a,b)=a
+   ;; the order of these clauses is important
+   (cond ((eq s1 '$pos) s2)
+	 ((eq s2 '$pos) s1)
+	 ((eq s1 s2) s1)
+	 ((or (eq s1 '$neg) (eq s2 '$neg)) '$neg)
+	 ((or (eq s1 '$nz) (eq s2 '$nz)) '$nz)
+	 ((eq s1 '$zero) (if (eq s2 '$pz) '$zero '$nz))
+	 ((eq s2 '$zero) (if (eq s2 '$pz) '$zero '$nz))
+	 (t '$pnz))))
+
+(setq $useminmax t)
+
+(defun minmaxp (ex)
+  (cond ((atom ex) nil)
+	((member (caar ex) '($min $max)) (caar ex) :test #'eq)
+	(t nil)))
+
+(setq tryhard t)
+
+(defun signdiff-minmax (l r)
+  ;; sign of l-r; nil if unknown (not PNZ)
+  (let ((lm (minmaxp l))
+	(rm (minmaxp r))
+	(sgn nil)			;distinguish between < and <=
+	ll rr)				;argument lists of min/max
+    (if lm (setq ll (cdr l)))
+    (if rm (setq rr (cdr r)))
+    (minmaxforms
+     (or rm lm)
+     (cond ((eq lm rm)			; min(a,...) - min(b,...)
+	    (multiple-value-bind (both onlyl onlyr)
+		(intersect-info ll rr)
+	      (cond
+	       ((null onlyl) '$pz)	; min(a,b) - min(a,b,c)
+	       ((null onlyr) '$nz)	; min(a,b,c) - min(a,b)
+	       ;; TBD: add processing for full onlyl/onlyr case
+	       (t nil))))
+	   ;; TBD: memalike and set-disjointp are crude approx.
+	   ((null lm) (if (memalike l rr) '$pz)) ; a - min(a,b)
+	   ((null rm) (if (memalike r ll) '$nz)) ; min(a,b) - a
+	   (t				; min/max or max/min
+	    (if (not (set-disjointp ll rr)) '$pz)))))) ; max(a,q,r) - min(a,s,t)
+
+(defun intersect-info (a b)
+  (let ((both nil)
+	(onlya nil)
+	(onlyb nil))
+    (do-merge-asym
+     a b
+     #'like
+     #'$orderlessp
+     #'(lambda (x) (push x both))
+     #'(lambda (x) (push x onlya))
+     #'(lambda (x) (push x onlyb)))
+    (values
+     (nreverse both)
+     (nreverse onlya)
+     (nreverse onlyb))))
+
+;;; end compare min/max
 
 (defun sign-posfun (xx)
   (declare (ignore xx))
@@ -1800,8 +1904,8 @@ relational knowledge is contained in the default context GLOBAL."
 ;; %initiallearnflag is only necessary so that %PI, %E, etc. can be LEARNed.
 
 (eval-when
-    #+gcl (load)
-    #-gcl (:load-toplevel)
+    #+gcl (load eval)
+    #-gcl (:load-toplevel :execute)
 
   (setq %initiallearnflag t)
 
@@ -1830,6 +1934,7 @@ relational knowledge is contained in the default context GLOBAL."
 	  (kind %csch $oddfun)
 	  (kind %sech $posfun)
 	  (kind $li $complex)
+	  (kind $lambert_w $complex)
 	  (kind %cabs $complex)))
 
   ;; Create an initial context for the user which is a subcontext of $global.

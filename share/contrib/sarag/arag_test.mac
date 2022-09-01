@@ -1,6 +1,6 @@
 /* This is a test for the examples from   */
 /* the interactive electronic version of  */
-/* "Algorithms in Real Algebraic Geometry */
+/* "Algorithms in Real Algebraic Geometry"*/
 /* by S. Basu, R. Pollack, M.-F. Roy      */
 /* coded by F. Caruso                     */
 
@@ -8,6 +8,9 @@
 /* -------------------------------------- */
 /* Chapter                              8 */
   
+(kill(all), load(sarag),0);
+0$
+
 list2poly(getCoeffFromNewton([3,0,2,0]),x);
 x^3-x;
 
@@ -32,25 +35,17 @@ babyGiantCharPol(
 x^4-17*x^3-26*x^2;
 
 /* sRem */
-factor(sRem(x^4+a*x^2+b*x+c,diff(x^4+a*x^2+b*x+c,x),x));
-[
-x^4  + a*x^2  + b*x + c, 
-4*x^3  + 2*a*x + b,
--(2*a*x^2  + 3*b*x + 4*c)/4,
-((8*a*c - 9*b^2  - 2*a^3 )*x - 12*b*c - a^2*  b)/a^2,
-(256*a^2*c^3  - 128*a^4*c^2  + (144*a^3*b^2  + 16*a^6 )*c 
-- 27*a^2*b^4  - 4*a^5*b^2)/
-(256*a^2*c^2  + (- 576*a*b^2  - 128*a^4 )*c 
-+ 324*b^4  + 144*a^3*b^2  + 16*a^6)
-];
-
+string(ratsimp(sRem(x^4+a*x^2+b*x+c,diff(x^4+a*x^2+b*x+c,x),x)));
+"[x^4+a*x^2+b*x+c,4*x^3+2*a*x+b,-(2*a*x^2+3*b*x+4*c)/4,((8*a*c-9*b^2-2*a^\
+3)*x-12*b*c-a^2*b)/a^2,(256*a^2*c^3-128*a^4*c^2+(144*a^3*b^2+16*a^6)*c-27*a^2*\
+b^4-4*a^5*b^2)/(256*a^2*c^2+(-576*a*b^2-128*a^4)*c+324*b^4+144*a^3*b^2+16*a^6)]";
 
 
 sRem(x^11-x^10+1,11*x^10-10*x^9,x);
 [x^11-x^10+1,
 11*x^10-10*x^9,
 (10*x^9-121)/121,
--(1331*x-1210)/10,
+-((1331*x-1210)/10),
 275311670611/285311670611];
 
 
@@ -58,10 +53,10 @@ sRemExt(x^3+2*x^2+3*x+4,3*x^2+4*x+3,x);
 [[
 x^3+2*x^2+3*x+4,
 3*x^2+4*x+3,
--(10*x+30)/9,
+-((10*x+30)/9),
 -18],
-[1,0,-1,27*x/10-9/2],
-[0,1,x/3+2/9,9*x/10-9*x^2/10]];
+[1,0,-1,27*x/10-9/2,x^2/6+2*x/9+1/6],
+[0,1,x/3+2/9,9*x/10-(9*x^2/10),-(x^3/18+x^2/9+x/6+2/9)]];
 
 
 /* sSubRes */
@@ -138,6 +133,12 @@ sRemTarskiQuery(1,x^11-x^10+1,x);
 sRemTarskiQuery(x,x^11-x^10+1,x);
 -1;
 
+sRemTarskiQueryBetween(1,x^11-x^10+1,x,-1,0);
+1;
+
+sRemTarskiQueryBetween(x,x^11-x^10+1,x,-1,0);
+-1;
+
 sSubResCauchyIndex(
 (x-5)*(x-4)*(x-2)*(x+1)*(x+2)*(x+4),
 (x-3)^2*(x-1)*(x+3),x);
@@ -161,6 +162,14 @@ sSubResTarskiQuery(1,x^11-x^10+1,x);
 sSubResTarskiQuery(x,x^11-x^10+1,x);
 -1;
 
+
+sSubResTarskiQueryBetween(1,x^11-x^10+1,x,-1,0);
+1;
+
+
+sSubResTarskiQueryBetween(x,x^11-x^10+1,x,-1,0);
+-1;
+
 posNegDiff((x^2-1)*(x^3-1),x);
 -1;
 
@@ -169,7 +178,7 @@ posNegDiff((x^2-1)*(x^3-1),x);
 /* Chapter                             10 */
 
 gcdFreePart((x^2-1)*(x+2),(x+1)*x,x);
-[2*x+2,-2*x];
+[2*x+2,2*x^2+2*x-4];
 
 convert2Bernstein(x^2,2,x,0,1);
 [0,0,1];

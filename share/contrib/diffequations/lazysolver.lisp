@@ -19,7 +19,7 @@
     #-gcl (:load-toplevel :compile-toplevel :execute)
     ($load "odeutils"))
 
-(defmvar $aalgsys_is_loquacious t)
+(defmvar $aalgsys_is_loquacious nil)
 
 (defun variablep (e)
   (or ($symbolp e) ($subvarp e)))
@@ -36,9 +36,9 @@
     (and 
      (every #'mequalp (cdr sol))
      (every #'(lambda (s) (variablep ($lhs s))) (cdr sol))
-     (every #'(lambda (s) (like 0 s)) (cdr ($ratsimp ($substitute sol eqs))))
+     (every #'(lambda (s) (like 0 s)) (cdr (sratsimp ($substitute sol eqs))))
      (every #'(lambda (s) (not (like 0 s)))
-	    (cdr ($ratsimp ($substitute sol nz)))))))
+	    (cdr (sratsimp ($substitute sol nz)))))))
 
 ;; The function 'checkedalgsys' tries to return the "simplest" solution.
 ;; it uses this simple-minded measure of simple.
@@ -62,7 +62,7 @@
 (defun $checkedalgsys (eqs vars &optional (nz `((mlist))))
   
   (let ((sol) ($ratfac nil) ($ratprint nil) ($realonly nil) ($algexact t) 
-	($gcd '$spmod) ($algebraic t) ($solve_inconsistent_error nil) 
+	($gcd '$spmod) ($algebraic t) 
 	($programmode t) ($globalsolve nil) ($solveexplicit t) 
 	($listconstvars t) ($solveradcan nil) ($ratvars nil))
 
@@ -99,9 +99,9 @@
     (and 
      (every #'mequalp (cdr sol))
      (every #'(lambda (s) (variablep ($lhs s))) (cdr sol))
-     (every #'(lambda (s) (like 0 s)) (cdr ($ratsimp ($substitute sol eqs))))
+     (every #'(lambda (s) (like 0 s)) (cdr (sratsimp ($substitute sol eqs))))
      (every #'(lambda (s) (not (like 0 s)))
-	    (cdr ($ratsimp ($substitute sol nz)))))))
+	    (cdr (sratsimp ($substitute sol nz)))))))
 
 (defun unks-in-eq (eq unks)
   (let (($listconstvars nil))

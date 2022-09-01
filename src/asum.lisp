@@ -14,7 +14,7 @@
 
 (load-macsyma-macros rzmac)
 
-(declare-top (special opers *a *n $factlim sum msump *i *opers-list opers-list $ratsimpexpons makef))
+(declare-top (special opers *a *n $factlim sum msump *i *opers-list opers-list $ratsimpexpons makef $factorial_expand))
 
 (loop for (x y) on '(%cot %tan %csc %sin %sec %cos %coth %tanh %csch %sinh %sech %cosh)
    by #'cddr do (putprop x y 'recip) (putprop y x 'recip))
@@ -62,7 +62,8 @@
 
 ;; factorial stuff
 
-(setq $factlim -1 makef nil)
+(setq $factlim 100000 ; set to a big integer which will work (not -1)
+      makef nil)
 
 (defmfun $genfact (&rest l)
   (cons '(%genfact) l))
@@ -97,11 +98,52 @@
       1
       (k n 1)))
 
+;;; Factorial has mirror symmetry
+
+(defprop mfactorial t commutes-with-conjugate)
+
 (defmfun simpfact (x y z)
   (oneargcheck x)
   (setq y (simpcheck (cadr x) z))
-  (cond ((or (floatp y) (and (not makef) (ratnump y) (equal (caddr y) 2)))
-	 (simplifya (makegamma1 (list '(mfactorial) y)) nil))
+  (cond ((and (mnump y)
+              (eq ($sign y) '$neg)
+              (zerop1 (sub (simplify (list '(%truncate) y)) y)))
+         ;; Negative integer or a real representation of a negative integer.
+         (merror "factorial(~:M) is undefined." y))
+        ((or (floatp y)             
+             ($bfloatp y)
+             (and (not (integerp y))
+                  (not (ratnump y))
+                  (or (and (complex-number-p y 'float-or-rational-p)
+                           (or $numer 
+                               (floatp ($realpart y)) 
+                               (floatp ($imagpart y))))
+                      (and (complex-number-p y 'bigfloat-or-number-p)
+                           (or $numer
+                               ($bfloatp ($realpart y))
+                               ($bfloatp ($imagpart y))))))
+             (and (not makef) (ratnump y) (equal (caddr y) 2)))
+         ;; Numerically evaluate for real or complex argument in float or
+         ;; bigfloat precision using the Gamma function
+	 (simplify (list '(%gamma) (add 1 y))))
+        ((eq y '$inf) '$inf)
+        ((and $factorial_expand
+              (mplusp y)
+              (integerp (cadr y)))
+         ;; factorial(n+m) and m integer. Expand.
+         (let ((m (cadr y))
+               (n (simplify (cons '(mplus) (cddr y)))))
+           (cond ((>= m 0)
+                  (mul 
+                    (simplify (list '($pochhammer) (add n 1) m))
+                    (simplify (list '(mfactorial) n))))
+                 ((< m 0)
+                  (setq m (- m))
+                  (div
+                    (mul (power -1 m) (simplify (list '(mfactorial) n)))
+                    ;; We factor to get the ordering (n-1)*(n-2)*...
+                    ($factor
+                      (simplify (list '($pochhammer) (mul -1 n) m))))))))
 	((or (not (fixnump y)) (not (> y -1)))
 	 (eqtest (list '(mfactorial) y) x))
 	((or (minusp $factlim) (not (> y $factlim)))
@@ -134,6 +176,19 @@
 	     (power z y))
 	    (take '(%gamma) (sub (add (div x z) 1) y)))))
 	;; End code copied from orthopoly/orthopoly-init.lisp
+
+        ;; Double factorial
+
+        ((eq (caar e) '%factorial_double)
+         (let ((x (makegamma1 (nth 1 e))))
+           (mul
+             (power
+               (div 2 '$%pi)
+               (mul
+                 (div 1 4)
+                 (sub 1 (simplify (list '(%cos) (mul '$%pi x))))))
+             (power 2 (div x 2))
+             (simplify (list '(%gamma) (add 1 (div x 2)))))))
 
 	((eq (caar e) '%elliptic_kc)
 	 ;; Complete elliptic integral of the first kind
@@ -295,8 +350,15 @@
   (if (not (= (length x) 4)) (wna-err '$genfact))
   (setq z (mapcar #'(lambda (q) (simpcheck q z)) (cdr x)))
   (let ((a (car z)) (b (take '($floor) (cadr z))) (c (caddr z)))
-    (cond ((and (fixnump b) (> b -1)) (gfact a b c))
-	  ((integerp b) (merror "Bad second argument to `genfact': ~:M" b))
+    (cond ((and (fixnump a)
+                (fixnump b)
+                (fixnump c))
+           (if (and (> a -1)
+                    (> b -1) 
+                    (or (<= c a) (= b 0))
+                    (<= b (/ a c)))
+             (gfact a b c)
+             (merror "Bad argument to `genfact'")))
 	  (t (eqtest (list '(%genfact) a
 			   (if (and (not (atom b))
 				    (eq (caar b) '$floor))
@@ -355,7 +417,7 @@ summation when necessary."
 (defmspec $sum (l)
   (setq l (cdr l))
   (if (= (length l) 4)
-      (dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) t)
+      (dosum (car l) (cadr l) (meval (caddr l)) (meval (cadddr l)) t :evaluate-summand t)
       (wna-err '$sum)))
 
 (defmspec $lsum (l)
@@ -393,6 +455,25 @@ summation when necessary."
 	      (getl '%sum '($outative $linear)))
 	 (freesum exp lo hi 1))
 	((null $simpsum) (list (get '%sum 'msimpind) exp i lo hi))
+	((and (or (eq lo '$minf)
+		  (alike1 lo '((mtimes simp) -1 $inf)))
+	      (equal hi '$inf))
+	 (let ((pos-part (simpsum2 exp i 0 '$inf))
+	       (neg-part (simpsum2 (maxima-substitute (m- i) i exp) i 1 '$inf)))
+	   (cond
+	     ((or (eq neg-part '$und)
+		  (eq pos-part '$und))
+	      '$und)
+	     ((eq pos-part '$inf)
+	      (if (eq neg-part '$minf) '$und '$inf))
+	     ((eq pos-part '$minf)
+	      (if (eq neg-part '$inf) '$und '$minf))
+	     ((or (eq neg-part '$inf) (eq neg-part '$minf))
+	      neg-part)
+	     (t (m+ neg-part pos-part)))))
+	((or (eq lo '$minf)
+	     (alike1 lo '((mtimes simp) -1 '$inf)))
+	 (simpsum2 (maxima-substitute (m- i) i exp) i (m- hi) '$inf))
 	(t (simpsum2 exp i lo hi))))
 
 ;; DOSUM, MEVALSUMARG, DO%SUM -- general principles
@@ -402,7 +483,7 @@ summation when necessary."
 ;;  - return 0/1 for empty sum/product. sumhack/prodhack are ignored
 ;;  - distribute sum/product over mbags when listarith = true
 
-(defun dosum (expr ind low hi sump)
+(defun dosum (expr ind low hi sump &key (evaluate-summand t))
   (setq low (ratdisrep low) hi (ratdisrep hi)) ;; UGH, GAG WITH ME A SPOON
   (if (not (symbolp ind))
       (merror "~:M: bad index ~M (must be a symbol)~%" (if sump '$sum '$product) ind))
@@ -410,8 +491,8 @@ summation when necessary."
        (prog (u *i lind l*i *hl)
 	  (setq lind (cons ind nil))
 	  (cond
-	    ((not (fixnump (setq *hl (m- hi low))))
-	     (setq expr (mevalsumarg expr ind low hi))
+	    ((not (fixnump (setq *hl (mfuncall '$floor (m- hi low)))))
+	     (if evaluate-summand (setq expr (mevalsumarg expr ind low hi)))
 	     (return (cons (if sump '(%sum) '(%product))
 			   (list expr ind low hi))))
 	    ((signp l *hl)
@@ -581,7 +662,7 @@ summation when necessary."
             
             (($freeof i ex) (power ex n))
             
-            ((and (integerp n) (eq sgn '$pos))
+            ((and (integerp n) (eq sgn '$pos) $simpproduct)
              (unwind-protect
 		  (dotimes (j n acc)
 		    (setq acc (mult acc (resimplify (subst (add j lo) i ex)))))

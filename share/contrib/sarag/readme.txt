@@ -4,12 +4,12 @@
 
        SOME ALGORITHMS IN REAL ALGEBRAIC GEOMETRY
 
-                    BETA Version 0.3
+                    BETA Version 0.4
 
 ---------------------------------------------------------------
 developed by Fabrizio Caruso 
 
-under the scientific guidance of Marie-Françoise Roy
+under the scientific guidance of Marie-Francoise Roy
 
 at the University of Rennes 1, France
 

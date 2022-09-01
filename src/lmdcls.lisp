@@ -32,16 +32,16 @@
 	     when (eql (car v) 'unspecial)
 	     collect `(progn
 		       ,@(loop for w in (cdr v)
-				collect #-(or gcl scl cmu)
+				collect #-(or gcl scl cmu ecl)
                                        `(remprop ',w
 						 #-excl 'special
 						 #+excl 'excl::.globally-special.)
-				#+(or gcl scl cmu)
+				#+(or gcl scl cmu ecl)
 			        `(make-unspecial ',w)))
 	     else collect `(proclaim ',v))))
 
-;;this list should contain all specials required by runtime or more than one maxima file,
-;;except for some specials declared in the macro files, eg displm
+;;; This list should contain all specials required by runtime or more than one maxima file,
+;;; except for some specials declared in the macro files, eg displm
 
 (declaim (special
 	  $% $%% $%edispflag $%emode $%enumer $%e_to_numlog $%iargs $%piargs
@@ -83,7 +83,7 @@
 	  $rules $savedef $savefactors $scalarmatrixp $setcheck
 	  $setcheckbreak $setval $showtime $signbfloat $simp $simpsum
 	  $solvedecomposes $solveexplicit $solvefactors $solvenullwarn
-	  $solveradcan $solvetrigwarn $solve_inconsistent_error $sparse
+	  $solveradcan $solvetrigwarn $sparse
 	  $special $sqrtdispflag $stardisp $storenum $sublis_apply_lambda
 	  $subnumsimp $subscrmap $sumexpand $sumsplitfact
 	  $superlogcon $suspend $taylor_logexpand
@@ -100,7 +100,7 @@
 	  $tr_warn_fexpr $tr_warn_meval $tr_warn_mode $tr_warn_undeclared
 	  $tr_warn_undefined_variable $tr_windy $ttyintfun $ttyintnum
 	  $universe $user_mesfile $use_fast_arrays $values $vect_cross
-	  $zerobern %e-val %p%i %pi-val %pi//2 %pi//4 %pi2 &** *$any-modes*
+	  $zerobern %e-val %p%i %pi-val %pi//2 %pi//4 %pi2 *$any-modes*
 	  *alpha *const* *fnewvarsw *gcdl* *in *in-$batchload* *in-compile*
 	  *in-macsyma-indexer* *in-translate-file* *inv* *irreds *min* *mx*
 	  *n *opers-list *out *ratweights *tr-warn-break* *transl-backtrace*
@@ -126,9 +126,9 @@
 	  plusflag preserve-direction prods putl radcanp radpe rd*
 	  real-infinities realonlyratnum refchkl return-mode returns rulefcnl
 	  rulesw scanmapp sfindex sign-imag-errp simplimplus-problems
-	  smallprimes specials sqrt2//2 sqrt3//2 state-pdl $stringdisp substp
+	  *small-primes* specials sqrt2//2 sqrt3//2 state-pdl $stringdisp substp
 	  sums tellratlist timesinp timesp tr-abort tr-progret tr-unique
-	  tramp1$ tramp2$ tramp3$ transl-file translate-time-evalables transp
+	  transl-file translate-time-evalables transp
 	  tstack typel user-mesfile user-timesofar varlist wflag
 	  $wtlevel $cflength $weightlevels *trunclist $taylordepth
 	  $maxtaydiff $verbose $psexpand ps-bmt-disrep

@@ -355,8 +355,8 @@
 			      (cons integrand stack)
 			      integrand))
 		       '%integrate)))
-	    (return (add2* (list '(mtimes) const w arcpart)
-			   (list '(mtimes) -1 const y))))
+	    (return (add* (list '(mtimes) const w arcpart)
+			  (list '(mtimes) -1 const y))))
 	   (t
 	    ;;(format t "t part~%")
 	    (return
@@ -467,7 +467,7 @@
 		   ,@(cddr wrt)))
 	     `((%derivative) ,expr	;Higher order, reduce order
 	       ,.(nreverse old-wrt)
-	       ,(car wrt) ,(add2* (cadr wrt) -1)
+	       ,(car wrt) ,(add* (cadr wrt) -1)
 	       ,@ (cddr wrt))))
 	((null (cddr wrt)) () )		;Say it doesn't apply here
 	(t (checkderiv1 expr (cddr wrt)	;Else we check later terms
@@ -516,9 +516,9 @@
 	       ((or (equal (caddr exp) -1)
 		    (and (not (mnump (caddr exp)))
 			 (freeof '$%i (caddr exp))
-			 (eq (asksign (power (add2 (caddr exp) 1) 2)) '$zero)))
+			 (eq (asksign (power (add (caddr exp) 1) 2)) '$zero)))
 		(maxima-substitute (cadr exp) 'x (logmabs 'x)))
-	       (t (maxima-substitute (add2* (caddr exp) 1)
+	       (t (maxima-substitute (add (caddr exp) 1)
 				     'n
 				     (maxima-substitute (cadr exp)
 							'x
@@ -869,7 +869,7 @@
 						   ((mtimes) -1 c1))
 						  r1))))
 			    var))))
-       ((integerp2 (add2* r1 r2))
+       ((integerp2 (add* r1 r2))
 	#+nil (format t "integer r1+r2~%")
 	;; If we're here,  (r1-q+1)/q+r2 is an integer.
 	;;
@@ -969,10 +969,10 @@
 	(t (cons (subst2s (car ex) pat)
 		 (subst2s (cdr ex) pat)))))
 
-;; Match (c*x+b), where c and b are free of x and c is a number
+;; Match (c*x+b), where c and b are free of x 
 (defun simple-trig-arg (exp)
   (m2 exp '((mplus) ((mtimes)
-		     ((coefftt) (c $numberp))
+		     ((coefftt) (c freevar))
 		     ((coefftt) (v varp)))
 	    ((coeffpp) (b freevar)))
       nil))
@@ -988,16 +988,21 @@
 	     ;; takes longer and longer as n gets larger and larger.
 	     ;; This is caused by the Risch integrator.  This is a
 	     ;; work-around for this issue.
-	     (let ((c (cdras 'c arg))
-		   (b (cdras 'b arg))
-		   (new-var (gensym "NEW-VAR-")))
-	       (let ((new-int (div ($integrate (maxima-substitute (div (sub new-var b) c)
-								  var exp)
-					       new-var)
-				   c)))
-		 (return-from monstertrig (maxima-substitute *trigarg* new-var new-int)))))
+	     (let* ((c (cdras 'c arg))
+		    (b (cdras 'b arg))
+		    (new-var (gensym "NEW-VAR-"))
+		    (new-exp (maxima-substitute (div (sub new-var b) c)
+						var exp))
+		    (new-int
+		     (if (every-trigarg-alike exp *trigarg*)
+			 ;; avoid endless recursion when more than one
+			 ;; trigarg exists
+			 (div ($integrate new-exp new-var) c)
+		       (rischint exp var))))
+		 (return-from monstertrig (maxima-substitute *trigarg* new-var new-int))))
 	    (t
-	     (return-from monstertrig (rischint exp var))))))
+	     (return-from monstertrig (rischint exp var)))
+)))
   (prog (*notsame* w *a* *b* y *d*) 
      (declare (special *notsame*))
 	(cond
@@ -1397,6 +1402,9 @@
      get2 (setq y (simplify y))
      (return (substint repl 'x (integrator y 'x)))))
 
+(defmvar $integration_constant_counter 0)
+(defmvar $integration_constant '$%c)
+
 (defmfun sinint (exp var)
   ;; *integrator-level* is a recursion counter for INTEGRATOR.  See
   ;; INTEGRATOR for more details.  Initialize it here.
@@ -1410,8 +1418,8 @@
 		 (mapcar #'(lambda (y) (sinint y var)) (cdr exp))))
 	  ((mequalp exp)
 	   (list (car exp) (sinint (cadr exp) var)
-		 (add2 (sinint (caddr exp) var)
-		       (gentemp (symbol-name '$integrationconstant)))))
+		 (add (sinint (caddr exp) var)
+              ($concat $integration_constant (incf $integration_constant_counter)))))
 	  ((and (atom var)
 		(isinop exp var))
 	   (list '(%integrate) exp var))
@@ -1454,8 +1462,8 @@
 		(eq (caddr pair) var))
        (setq val (maxima-substitute ll idx (cadddr pair)))
        (cond ((equal val -1)
-	      (return (add2 (integrator (maxima-substitute ll idx exp) var)
-			    (intsum1 exp idx (add2 1 ll) ul var))))
+	      (return (add (integrator (maxima-substitute ll idx exp) var)
+			    (intsum1 exp idx (add 1 ll) ul var))))
 	     ((mlsp val -1)
 	      (return (list '(%integrate) form var)))))
      (return (intsum1 exp idx ll ul var))))
@@ -1492,10 +1500,14 @@
 			     (list '(mtimes) y *d*)
 			     (list '(mtimes) -1 z))))))
 
-(defun find1 (y a) 
-  (cond ((eq y a) t)
-	((atom y) nil)
-	(t (or (find1 (car y) a) (find1 (cdr y) a)))))
+;; returns t if argument of every trig operation in y matches arg
+(defun every-trigarg-alike (y arg)
+  (cond ((atom y) t)
+	((optrig (caar y)) (alike1 arg (cadr y)))
+	(t (every (lambda (exp)
+		    (every-trigarg-alike exp arg))
+		  (cdr y)))))
+
 
 (defun matchsum (alist blist) 
   (prog (r s *c* *d*) 
@@ -1564,7 +1576,7 @@
   (prog (y *a* x v *d* z w r) 
      (cond ((and (mexptp exp)
 		 (mplusp (cadr exp))
-		 (integerp2 (caddr exp))
+		 (integerp (caddr exp))
 		 (< (caddr exp) 6)
 		 (> (caddr exp) 0))
 	    (return (integrator (expandexpt (cadr exp) (caddr exp)) var))))

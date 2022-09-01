@@ -41,10 +41,11 @@ host_triplet = @host@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/acl-depends.mk $(srcdir)/autoconf-variables.lisp.in \
 	$(srcdir)/clisp-depends.mk $(srcdir)/cmucl-depends.mk \
-	$(srcdir)/gcl-depends.mk $(srcdir)/maxima.bat.in \
-	$(srcdir)/maxima.in $(srcdir)/openmcl-depends.mk \
-	$(srcdir)/rmaxima.in $(srcdir)/sbcl-depends.mk \
-	$(srcdir)/scl-depends.mk $(top_srcdir)/common.mk
+	$(srcdir)/ecl-depends.mk $(srcdir)/gcl-depends.mk \
+	$(srcdir)/maxima.bat.in $(srcdir)/maxima.in \
+	$(srcdir)/openmcl-depends.mk $(srcdir)/rmaxima.in \
+	$(srcdir)/sbcl-depends.mk $(srcdir)/scl-depends.mk \
+	$(top_srcdir)/common.mk
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -83,6 +84,12 @@ DEFS = @DEFS@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+ECL_FALSE = @ECL_FALSE@
+ECL_NAME = @ECL_NAME@
+ECL_TRUE = @ECL_TRUE@
+EGREP = @EGREP@
+EMACS = @EMACS@
+EMACSLOADPATH = @EMACSLOADPATH@
 GCL_ALT_LINK_FALSE = @GCL_ALT_LINK_FALSE@
 GCL_ALT_LINK_TRUE = @GCL_ALT_LINK_TRUE@
 GCL_FALSE = @GCL_FALSE@
@@ -104,6 +111,7 @@ LANG_PT_FALSE = @LANG_PT_FALSE@
 LANG_PT_TRUE = @LANG_PT_TRUE@
 LANG_PT_UTF8_FALSE = @LANG_PT_UTF8_FALSE@
 LANG_PT_UTF8_TRUE = @LANG_PT_UTF8_TRUE@
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
@@ -151,6 +159,7 @@ clisp_found = @clisp_found@
 cmucl_found = @cmucl_found@
 datadir = @datadir@
 default_layout_autotools = @default_layout_autotools@
+ecl_found = @ecl_found@
 exec_prefix = @exec_prefix@
 expanded_datadir = @expanded_datadir@
 expanded_exec_prefix = @expanded_exec_prefix@
@@ -170,6 +179,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+lispdir = @lispdir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
@@ -211,6 +221,7 @@ DEFSYSTEMTESTLOAD = (funcall (intern (symbol-name :operate-on-system) :mk) "maxi
 @SBCL_TRUE@EXECUTESBCL = $(SBCL_NAME) --noinform --noprint --eval
 @GCL_TRUE@EXECUTEGCL = $(GCL_NAME) -batch -eval
 @OPENMCL_TRUE@EXECUTEOPENMCL = $(OPENMCL_NAME) -e
+@ECL_TRUE@EXECUTEECL = $(ECL_NAME)
 genericdir = $(instsrcdir)
 real_lisp_sources = acall.lisp \
 airy.lisp \
@@ -243,14 +254,17 @@ desoln.lisp \
 displa.lisp \
 displm.lisp \
 dskfn.lisp \
+ecl-port.lisp \
 elim.lisp \
 ellipt.lisp \
 evalw.lisp \
+expintegral.lisp \
 ezgcd.lisp \
 factor.lisp \
 fcall.lisp \
 float.lisp \
 fortra.lisp \
+gamma.lisp \
 generate-sys-proclaim.lisp \
 generr.lisp \
 gnuplot.lisp \
@@ -310,8 +324,6 @@ nparse.lisp \
 nrat4.lisp \
 nregex.lisp \
 nset.lisp \
-numer.lisp \
-numerm.lisp \
 nummod.lisp \
 numth.lisp \
 openmath.lisp \
@@ -514,11 +526,11 @@ numerical/slatec/zuoik.lisp \
 numerical/slatec/zwrsk.lisp
 
 genericdirDATA = $(real_lisp_sources) autoconf-variables.lisp
-EXTRA_DIST = $(real_lisp_sources) maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs
+EXTRA_DIST = $(real_lisp_sources) maxima.asd maxima.system clisp-depends.mk  cmucl-depends.mk  scl-depends.mk  gcl-depends.mk acl-depends.mk openmcl-depends.mk ecl-depends.mk sbcl-depends.mk numerical/slatec/fortran maxima-build.lisp maxima-command.ico set_lang.vbs
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(srcdir)/clisp-depends.mk $(srcdir)/cmucl-depends.mk $(srcdir)/scl-depends.mk $(srcdir)/acl-depends.mk $(srcdir)/sbcl-depends.mk $(srcdir)/gcl-depends.mk $(srcdir)/openmcl-depends.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/common.mk $(srcdir)/clisp-depends.mk $(srcdir)/cmucl-depends.mk $(srcdir)/scl-depends.mk $(srcdir)/acl-depends.mk $(srcdir)/sbcl-depends.mk $(srcdir)/gcl-depends.mk $(srcdir)/openmcl-depends.mk $(srcdir)/ecl-depends.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -612,7 +624,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@all-local:
+@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@ECL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@all-local:
 all-am: Makefile $(SCRIPTS) all-local
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -642,13 +654,13 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@install-exec-local:
-@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@uninstall-hook:
-@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@clean: clean-am
+@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@ECL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@install-exec-local:
+@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@ECL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@uninstall-hook:
+@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@ECL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@clean: clean-am
 
 clean-am: clean-generic mostlyclean-am
 
-@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@distclean: distclean-am
+@ACL_FALSE@@CLISP_FALSE@@CMUCL_FALSE@@ECL_FALSE@@GCL_FALSE@@OPENMCL_FALSE@@SBCL_FALSE@@SCL_FALSE@distclean: distclean-am
 	-rm -f Makefile
 distclean-am: clean-am distclean-generic
 
@@ -790,7 +802,6 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : displm.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : ratmac.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mhayat.lisp
-@CLISP_TRUE@binary-clisp/maxima.mem : numerm.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : opers.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : utils.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : sumcon.lisp
@@ -982,7 +993,6 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : bessel.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : ellipt.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : airy.lisp
-@CLISP_TRUE@binary-clisp/maxima.mem : numer.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : intpol.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : nparse.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : displa.lisp
@@ -1040,6 +1050,8 @@ uninstall-datafiles:
 @CLISP_TRUE@binary-clisp/maxima.mem : maxmin.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : nummod.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : conjugate.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : expintegral.lisp
+@CLISP_TRUE@binary-clisp/maxima.mem : gamma.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : mstuff.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : ratpoi.lisp
 @CLISP_TRUE@binary-clisp/maxima.mem : pois2.lisp
@@ -1111,7 +1123,6 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : displm.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : ratmac.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mhayat.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : numerm.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : opers.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : utils.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : sumcon.lisp
@@ -1303,7 +1314,6 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : bessel.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : ellipt.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : airy.lisp
-@CMUCL_TRUE@binary-cmucl/maxima.core : numer.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : intpol.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : nparse.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : displa.lisp
@@ -1361,6 +1371,8 @@ uninstall-datafiles:
 @CMUCL_TRUE@binary-cmucl/maxima.core : maxmin.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : nummod.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : conjugate.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : expintegral.lisp
+@CMUCL_TRUE@binary-cmucl/maxima.core : gamma.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : mstuff.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : ratpoi.lisp
 @CMUCL_TRUE@binary-cmucl/maxima.core : pois2.lisp
@@ -1432,7 +1444,6 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : displm.lisp
 @SCL_TRUE@binary-scl/maxima.core : ratmac.lisp
 @SCL_TRUE@binary-scl/maxima.core : mhayat.lisp
-@SCL_TRUE@binary-scl/maxima.core : numerm.lisp
 @SCL_TRUE@binary-scl/maxima.core : opers.lisp
 @SCL_TRUE@binary-scl/maxima.core : utils.lisp
 @SCL_TRUE@binary-scl/maxima.core : sumcon.lisp
@@ -1624,7 +1635,6 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : bessel.lisp
 @SCL_TRUE@binary-scl/maxima.core : ellipt.lisp
 @SCL_TRUE@binary-scl/maxima.core : airy.lisp
-@SCL_TRUE@binary-scl/maxima.core : numer.lisp
 @SCL_TRUE@binary-scl/maxima.core : intpol.lisp
 @SCL_TRUE@binary-scl/maxima.core : nparse.lisp
 @SCL_TRUE@binary-scl/maxima.core : displa.lisp
@@ -1682,6 +1692,8 @@ uninstall-datafiles:
 @SCL_TRUE@binary-scl/maxima.core : maxmin.lisp
 @SCL_TRUE@binary-scl/maxima.core : nummod.lisp
 @SCL_TRUE@binary-scl/maxima.core : conjugate.lisp
+@SCL_TRUE@binary-scl/maxima.core : expintegral.lisp
+@SCL_TRUE@binary-scl/maxima.core : gamma.lisp
 @SCL_TRUE@binary-scl/maxima.core : mstuff.lisp
 @SCL_TRUE@binary-scl/maxima.core : ratpoi.lisp
 @SCL_TRUE@binary-scl/maxima.core : pois2.lisp
@@ -1751,7 +1763,6 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : displm.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : ratmac.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mhayat.lisp
-@ACL_TRUE@binary-acl/maxima.dxl : numerm.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : opers.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : utils.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : sumcon.lisp
@@ -1943,7 +1954,6 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : bessel.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : ellipt.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : airy.lisp
-@ACL_TRUE@binary-acl/maxima.dxl : numer.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : intpol.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : nparse.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : displa.lisp
@@ -2001,6 +2011,8 @@ uninstall-datafiles:
 @ACL_TRUE@binary-acl/maxima.dxl : maxmin.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : nummod.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : conjugate.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : expintegral.lisp
+@ACL_TRUE@binary-acl/maxima.dxl : gamma.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : mstuff.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : ratpoi.lisp
 @ACL_TRUE@binary-acl/maxima.dxl : pois2.lisp
@@ -2071,7 +2083,6 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : displm.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : ratmac.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mhayat.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : numerm.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : opers.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : utils.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : sumcon.lisp
@@ -2263,7 +2274,6 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : bessel.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : ellipt.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : airy.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : numer.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : intpol.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : nparse.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : displa.lisp
@@ -2321,6 +2331,8 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : maxmin.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : nummod.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : conjugate.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : expintegral.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : gamma.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mstuff.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : ratpoi.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : pois2.lisp
@@ -2332,9 +2344,9 @@ uninstall-datafiles:
 @SBCL_TRUE@binary-sbcl/maxima.core : hyp.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : todd-coxeter.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : mactex.lisp
+@SBCL_TRUE@binary-sbcl/maxima.core : plot.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : gnuplot.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : openmath.lisp
-@SBCL_TRUE@binary-sbcl/maxima.core : plot.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : autol.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : max_ext.lisp
 @SBCL_TRUE@binary-sbcl/maxima.core : init-cl.lisp
@@ -2409,7 +2421,6 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : displm.lisp
 @GCL_TRUE@binary-gcl/maxima : ratmac.lisp
 @GCL_TRUE@binary-gcl/maxima : mhayat.lisp
-@GCL_TRUE@binary-gcl/maxima : numerm.lisp
 @GCL_TRUE@binary-gcl/maxima : optimize.lisp
 @GCL_TRUE@binary-gcl/maxima : opers.lisp
 @GCL_TRUE@binary-gcl/maxima : utils.lisp
@@ -2602,7 +2613,6 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : bessel.lisp
 @GCL_TRUE@binary-gcl/maxima : ellipt.lisp
 @GCL_TRUE@binary-gcl/maxima : airy.lisp
-@GCL_TRUE@binary-gcl/maxima : numer.lisp
 @GCL_TRUE@binary-gcl/maxima : intpol.lisp
 @GCL_TRUE@binary-gcl/maxima : nparse.lisp
 @GCL_TRUE@binary-gcl/maxima : displa.lisp
@@ -2660,6 +2670,8 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : maxmin.lisp
 @GCL_TRUE@binary-gcl/maxima : nummod.lisp
 @GCL_TRUE@binary-gcl/maxima : conjugate.lisp
+@GCL_TRUE@binary-gcl/maxima : expintegral.lisp
+@GCL_TRUE@binary-gcl/maxima : gamma.lisp
 @GCL_TRUE@binary-gcl/maxima : mstuff.lisp
 @GCL_TRUE@binary-gcl/maxima : ratpoi.lisp
 @GCL_TRUE@binary-gcl/maxima : pois2.lisp
@@ -2671,9 +2683,9 @@ uninstall-datafiles:
 @GCL_TRUE@binary-gcl/maxima : hyp.lisp
 @GCL_TRUE@binary-gcl/maxima : todd-coxeter.lisp
 @GCL_TRUE@binary-gcl/maxima : mactex.lisp
+@GCL_TRUE@binary-gcl/maxima : plot.lisp
 @GCL_TRUE@binary-gcl/maxima : gnuplot.lisp
 @GCL_TRUE@binary-gcl/maxima : openmath.lisp
-@GCL_TRUE@binary-gcl/maxima : plot.lisp
 @GCL_TRUE@binary-gcl/maxima : autol.lisp
 @GCL_TRUE@binary-gcl/maxima : max_ext.lisp
 @GCL_TRUE@binary-gcl/maxima : init-cl.lisp
@@ -2724,7 +2736,6 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : displm.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : ratmac.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mhayat.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : numerm.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : opers.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : utils.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sumcon.lisp
@@ -2869,7 +2880,6 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : mdefun.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : bessel.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : ellipt.lisp
-@OPENMCL_TRUE@binary-openmcl/maxima.image : numer.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : intpol.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nparse.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : displa.lisp
@@ -2886,6 +2896,8 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : maxmin.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : nummod.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : conjugate.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : expintegral.lisp
+@OPENMCL_TRUE@binary-openmcl/maxima.image : gamma.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : askp.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sinint.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : sin.lisp
@@ -2948,6 +2960,324 @@ uninstall-datafiles:
 @OPENMCL_TRUE@binary-openmcl/maxima.image : max_ext.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : autoconf-variables.lisp
 @OPENMCL_TRUE@binary-openmcl/maxima.image : init-cl.lisp
+@ECL_TRUE@all-local: binary-ecl/maxima
+@ECL_TRUE@install-exec-local: install-ecl
+@ECL_TRUE@uninstall-hook: uninstall-ecl
+@ECL_TRUE@clean: clean-ecl
+@ECL_TRUE@distclean: clean-ecl
+
+@ECL_TRUE@ecl:binary-ecl/maxima
+
+@ECL_TRUE@binary-ecl/maxima:
+@ECL_TRUE@	test -d binary-ecl || mkdir binary-ecl
+@ECL_TRUE@	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(DEFSYSTEMCOMPILE) (build-maxima-lib))' -eval '(ext:quit)'
+
+@ECL_TRUE@install-ecl:
+@ECL_TRUE@	$(mkinstalldirs) "$(DESTDIR)$(verpkglibdir)/binary-ecl"
+@ECL_TRUE@	$(INSTALL_PROGRAM) binary-ecl/maxima "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
+
+@ECL_TRUE@uninstall-ecl:
+@ECL_TRUE@	rm -f "$(DESTDIR)$(verpkglibdir)/binary-ecl/maxima"
+
+@ECL_TRUE@clean-ecl:
+@ECL_TRUE@	rm -rf binary-ecl libmaxima.a
+
+@ECL_TRUE@ecl-depends.mk: maxima.system
+@ECL_TRUE@	test -d binary-ecl || mkdir binary-ecl
+@ECL_TRUE@	$(EXECUTEECL) -eval '(progn $(LOADDEFSYSTEM) $(LOADMAKEDEPENDS) (funcall (intern "CREATE-DEPENDENCY-FILE" :mk) "binary-ecl/maxima" "ecl-depends.mk") (quit))'
+@ECL_TRUE@binary-ecl/maxima : maxima-package.lisp
+@ECL_TRUE@binary-ecl/maxima : ecl-port.lisp
+@ECL_TRUE@binary-ecl/maxima : autoconf-variables.lisp
+@ECL_TRUE@binary-ecl/maxima : nregex.lisp
+@ECL_TRUE@binary-ecl/maxima : cl-info.lisp
+@ECL_TRUE@binary-ecl/maxima : sloop.lisp
+@ECL_TRUE@binary-ecl/maxima : lmdcls.lisp
+@ECL_TRUE@binary-ecl/maxima : letmac.lisp
+@ECL_TRUE@binary-ecl/maxima : generr.lisp
+@ECL_TRUE@binary-ecl/maxima : clmacs.lisp
+@ECL_TRUE@binary-ecl/maxima : commac.lisp
+@ECL_TRUE@binary-ecl/maxima : mormac.lisp
+@ECL_TRUE@binary-ecl/maxima : compat.lisp
+@ECL_TRUE@binary-ecl/maxima : command-line.lisp
+@ECL_TRUE@binary-ecl/maxima : defopt.lisp
+@ECL_TRUE@binary-ecl/maxima : defcal.lisp
+@ECL_TRUE@binary-ecl/maxima : maxmac.lisp
+@ECL_TRUE@binary-ecl/maxima : mopers.lisp
+@ECL_TRUE@binary-ecl/maxima : mforma.lisp
+@ECL_TRUE@binary-ecl/maxima : mrgmac.lisp
+@ECL_TRUE@binary-ecl/maxima : procs.lisp
+@ECL_TRUE@binary-ecl/maxima : rzmac.lisp
+@ECL_TRUE@binary-ecl/maxima : strmac.lisp
+@ECL_TRUE@binary-ecl/maxima : displm.lisp
+@ECL_TRUE@binary-ecl/maxima : ratmac.lisp
+@ECL_TRUE@binary-ecl/maxima : mhayat.lisp
+@ECL_TRUE@binary-ecl/maxima : opers.lisp
+@ECL_TRUE@binary-ecl/maxima : utils.lisp
+@ECL_TRUE@binary-ecl/maxima : sumcon.lisp
+@ECL_TRUE@binary-ecl/maxima : sublis.lisp
+@ECL_TRUE@binary-ecl/maxima : runtim.lisp
+@ECL_TRUE@binary-ecl/maxima : merror.lisp
+@ECL_TRUE@binary-ecl/maxima : mformt.lisp
+@ECL_TRUE@binary-ecl/maxima : mutils.lisp
+@ECL_TRUE@binary-ecl/maxima : outmis.lisp
+@ECL_TRUE@binary-ecl/maxima : ar.lisp
+@ECL_TRUE@binary-ecl/maxima : comm.lisp
+@ECL_TRUE@binary-ecl/maxima : comm2.lisp
+@ECL_TRUE@binary-ecl/maxima : mlisp.lisp
+@ECL_TRUE@binary-ecl/maxima : mmacro.lisp
+@ECL_TRUE@binary-ecl/maxima : buildq.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/f2cl-package.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/f2cl-lib.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/fdump.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/j4save.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/xercnt.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/xerhlt.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/xgetua.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/xerprn.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/xersve.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/xermsg.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/initds.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dcsevl.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/d9lgmc.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dgamlm.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dgamma.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dgamln.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dlngam.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/d9b0mp.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/d9b1mp.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesj0.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesj1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/djairy.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dasyjy.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesj.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbsi0e.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbsi1e.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesi0.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesi1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dasyik.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesi.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zabs.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zdiv.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zexp.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zmlt.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zsqrt.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zasyi.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zuchk.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zlog.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zunik.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zunhj.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zuoik.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zuni1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zkscl.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zshch.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbknu.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zmlri.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zs1s2.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zseri.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zacai.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zairy.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zuni2.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbuni.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zrati.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zwrsk.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbinu.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbesi.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbesj.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesy0.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesy1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbsynu.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dyairy.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesy.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zacon.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zunk1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zunk2.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbunk.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbesh.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbesy.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbsk0e.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesk0.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbsk1e.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesk1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbsknu.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbesk.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbesk.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/d9aimp.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/daie.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dai.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbie.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dbi.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/zbiry.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/derfc.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/derf.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/de1.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dei.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/d9upak.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dspenc.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqwgtf.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqcheb.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk15w.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqwgts.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqwgtc.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dgtsl.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk15.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk31.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk41.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk51.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk61.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk21.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqk15i.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqelg.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqpsrt.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqc25s.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqmomo.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqc25c.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqc25f.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqage.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqagie.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqagpe.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqagse.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawoe.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawfe.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawse.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawce.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqng.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqag.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqags.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqagi.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawf.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawo.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqaws.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/dqawc.lisp
+@ECL_TRUE@binary-ecl/maxima : numerical/slatec/quadpack.lisp
+@ECL_TRUE@binary-ecl/maxima : simp.lisp
+@ECL_TRUE@binary-ecl/maxima : float.lisp
+@ECL_TRUE@binary-ecl/maxima : csimp.lisp
+@ECL_TRUE@binary-ecl/maxima : csimp2.lisp
+@ECL_TRUE@binary-ecl/maxima : zero.lisp
+@ECL_TRUE@binary-ecl/maxima : logarc.lisp
+@ECL_TRUE@binary-ecl/maxima : rpart.lisp
+@ECL_TRUE@binary-ecl/maxima : server.lisp
+@ECL_TRUE@binary-ecl/maxima : macsys.lisp
+@ECL_TRUE@binary-ecl/maxima : mload.lisp
+@ECL_TRUE@binary-ecl/maxima : suprv1.lisp
+@ECL_TRUE@binary-ecl/maxima : dskfn.lisp
+@ECL_TRUE@binary-ecl/maxima : lesfac.lisp
+@ECL_TRUE@binary-ecl/maxima : factor.lisp
+@ECL_TRUE@binary-ecl/maxima : algfac.lisp
+@ECL_TRUE@binary-ecl/maxima : nalgfa.lisp
+@ECL_TRUE@binary-ecl/maxima : ufact.lisp
+@ECL_TRUE@binary-ecl/maxima : result.lisp
+@ECL_TRUE@binary-ecl/maxima : ifactor.lisp
+@ECL_TRUE@binary-ecl/maxima : rat3a.lisp
+@ECL_TRUE@binary-ecl/maxima : rat3b.lisp
+@ECL_TRUE@binary-ecl/maxima : rat3d.lisp
+@ECL_TRUE@binary-ecl/maxima : rat3c.lisp
+@ECL_TRUE@binary-ecl/maxima : rat3e.lisp
+@ECL_TRUE@binary-ecl/maxima : nrat4.lisp
+@ECL_TRUE@binary-ecl/maxima : ratout.lisp
+@ECL_TRUE@binary-ecl/maxima : transm.lisp
+@ECL_TRUE@binary-ecl/maxima : transl.lisp
+@ECL_TRUE@binary-ecl/maxima : transs.lisp
+@ECL_TRUE@binary-ecl/maxima : trans1.lisp
+@ECL_TRUE@binary-ecl/maxima : trans2.lisp
+@ECL_TRUE@binary-ecl/maxima : trans3.lisp
+@ECL_TRUE@binary-ecl/maxima : trans4.lisp
+@ECL_TRUE@binary-ecl/maxima : trans5.lisp
+@ECL_TRUE@binary-ecl/maxima : transf.lisp
+@ECL_TRUE@binary-ecl/maxima : troper.lisp
+@ECL_TRUE@binary-ecl/maxima : trutil.lisp
+@ECL_TRUE@binary-ecl/maxima : trmode.lisp
+@ECL_TRUE@binary-ecl/maxima : trdata.lisp
+@ECL_TRUE@binary-ecl/maxima : trpred.lisp
+@ECL_TRUE@binary-ecl/maxima : transq.lisp
+@ECL_TRUE@binary-ecl/maxima : acall.lisp
+@ECL_TRUE@binary-ecl/maxima : fcall.lisp
+@ECL_TRUE@binary-ecl/maxima : evalw.lisp
+@ECL_TRUE@binary-ecl/maxima : trprop.lisp
+@ECL_TRUE@binary-ecl/maxima : mdefun.lisp
+@ECL_TRUE@binary-ecl/maxima : trigi.lisp
+@ECL_TRUE@binary-ecl/maxima : trigo.lisp
+@ECL_TRUE@binary-ecl/maxima : trgred.lisp
+@ECL_TRUE@binary-ecl/maxima : bessel.lisp
+@ECL_TRUE@binary-ecl/maxima : ellipt.lisp
+@ECL_TRUE@binary-ecl/maxima : airy.lisp
+@ECL_TRUE@binary-ecl/maxima : intpol.lisp
+@ECL_TRUE@binary-ecl/maxima : nparse.lisp
+@ECL_TRUE@binary-ecl/maxima : displa.lisp
+@ECL_TRUE@binary-ecl/maxima : nforma.lisp
+@ECL_TRUE@binary-ecl/maxima : ldisp.lisp
+@ECL_TRUE@binary-ecl/maxima : grind.lisp
+@ECL_TRUE@binary-ecl/maxima : spgcd.lisp
+@ECL_TRUE@binary-ecl/maxima : ezgcd.lisp
+@ECL_TRUE@binary-ecl/maxima : option.lisp
+@ECL_TRUE@binary-ecl/maxima : macdes.lisp
+@ECL_TRUE@binary-ecl/maxima : inmis.lisp
+@ECL_TRUE@binary-ecl/maxima : db.lisp
+@ECL_TRUE@binary-ecl/maxima : compar.lisp
+@ECL_TRUE@binary-ecl/maxima : askp.lisp
+@ECL_TRUE@binary-ecl/maxima : sinint.lisp
+@ECL_TRUE@binary-ecl/maxima : sin.lisp
+@ECL_TRUE@binary-ecl/maxima : risch.lisp
+@ECL_TRUE@binary-ecl/maxima : hayat.lisp
+@ECL_TRUE@binary-ecl/maxima : defint.lisp
+@ECL_TRUE@binary-ecl/maxima : residu.lisp
+@ECL_TRUE@binary-ecl/maxima : specfn.lisp
+@ECL_TRUE@binary-ecl/maxima : mat.lisp
+@ECL_TRUE@binary-ecl/maxima : matrix.lisp
+@ECL_TRUE@binary-ecl/maxima : sprdet.lisp
+@ECL_TRUE@binary-ecl/maxima : newinv.lisp
+@ECL_TRUE@binary-ecl/maxima : newdet.lisp
+@ECL_TRUE@binary-ecl/maxima : schatc.lisp
+@ECL_TRUE@binary-ecl/maxima : matcom.lisp
+@ECL_TRUE@binary-ecl/maxima : matrun.lisp
+@ECL_TRUE@binary-ecl/maxima : nisimp.lisp
+@ECL_TRUE@binary-ecl/maxima : tlimit.lisp
+@ECL_TRUE@binary-ecl/maxima : limit.lisp
+@ECL_TRUE@binary-ecl/maxima : solve.lisp
+@ECL_TRUE@binary-ecl/maxima : psolve.lisp
+@ECL_TRUE@binary-ecl/maxima : algsys.lisp
+@ECL_TRUE@binary-ecl/maxima : polyrz.lisp
+@ECL_TRUE@binary-ecl/maxima : cpoly.lisp
+@ECL_TRUE@binary-ecl/maxima : mtrace.lisp
+@ECL_TRUE@binary-ecl/maxima : mdebug.lisp
+@ECL_TRUE@binary-ecl/maxima : scs.lisp
+@ECL_TRUE@binary-ecl/maxima : asum.lisp
+@ECL_TRUE@binary-ecl/maxima : fortra.lisp
+@ECL_TRUE@binary-ecl/maxima : optim.lisp
+@ECL_TRUE@binary-ecl/maxima : marray.lisp
+@ECL_TRUE@binary-ecl/maxima : mdot.lisp
+@ECL_TRUE@binary-ecl/maxima : irinte.lisp
+@ECL_TRUE@binary-ecl/maxima : series.lisp
+@ECL_TRUE@binary-ecl/maxima : numth.lisp
+@ECL_TRUE@binary-ecl/maxima : laplac.lisp
+@ECL_TRUE@binary-ecl/maxima : pade.lisp
+@ECL_TRUE@binary-ecl/maxima : homog.lisp
+@ECL_TRUE@binary-ecl/maxima : combin.lisp
+@ECL_TRUE@binary-ecl/maxima : nset.lisp
+@ECL_TRUE@binary-ecl/maxima : rand-mt19937.lisp
+@ECL_TRUE@binary-ecl/maxima : maxmin.lisp
+@ECL_TRUE@binary-ecl/maxima : nummod.lisp
+@ECL_TRUE@binary-ecl/maxima : conjugate.lisp
+@ECL_TRUE@binary-ecl/maxima : expintegral.lisp
+@ECL_TRUE@binary-ecl/maxima : gamma.lisp
+@ECL_TRUE@binary-ecl/maxima : mstuff.lisp
+@ECL_TRUE@binary-ecl/maxima : ratpoi.lisp
+@ECL_TRUE@binary-ecl/maxima : pois2.lisp
+@ECL_TRUE@binary-ecl/maxima : pois3.lisp
+@ECL_TRUE@binary-ecl/maxima : desoln.lisp
+@ECL_TRUE@binary-ecl/maxima : elim.lisp
+@ECL_TRUE@binary-ecl/maxima : invert.lisp
+@ECL_TRUE@binary-ecl/maxima : hypgeo.lisp
+@ECL_TRUE@binary-ecl/maxima : hyp.lisp
+@ECL_TRUE@binary-ecl/maxima : todd-coxeter.lisp
+@ECL_TRUE@binary-ecl/maxima : mactex.lisp
+@ECL_TRUE@binary-ecl/maxima : plot.lisp
+@ECL_TRUE@binary-ecl/maxima : gnuplot.lisp
+@ECL_TRUE@binary-ecl/maxima : openmath.lisp
+@ECL_TRUE@binary-ecl/maxima : autol.lisp
+@ECL_TRUE@binary-ecl/maxima : max_ext.lisp
+@ECL_TRUE@binary-ecl/maxima : init-cl.lisp
 
 echo_%:
 	@echo "$(subst echo_,,$@)=$($(subst echo_,,$@))"

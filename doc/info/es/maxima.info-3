@@ -832,10 +832,7 @@ File: maxima.info,  Node: Funciones y variable para las ecuaciones,  Prev: Ecuac
      argumentos. La primera lista tiene las ecuaciones a resolver y la
      segunda son las incógnitas cuyos valores se quieren calcular. Si
      el número de variables en las ecuaciones es igual al número de
-     incógnitas, el segundo argumento puede omitirse. En caso de
-     sistemas lineales incompatibles se mostrará el mensaje
-     `inconsistent' (véase la variable `solve_inconsistent_error'); si
-     no existe una única solución, se mostrará el mensaje `singular'.
+     incógnitas, el segundo argumento puede omitirse.
 
      Si `programmode' vale `false', `solve' muestra la solución con
      etiquetas de expresiones intermedias (`%t') y devuelve las lista
@@ -986,25 +983,6 @@ File: maxima.info,  Node: Funciones y variable para las ecuaciones,  Prev: Ecuac
      ignorando algunas soluciones.
 
 
- -- Variable opcional: solve_inconsistent_error
-     Valor por defecto: `true'
-
-     Si `solve_inconsistent_error' vale `true', `solve' y `linsolve'
-     devuelven un error si las ecuaciones a resolver son incompatibles.
-     Si vale `false', `solve' y `linsolve' devuelven la lista vacía
-     `[]' en caso de incompatibilidad.
-
-     Ejemplo:
-
-          (%i1) solve_inconsistent_error: true$
-          (%i2) solve ([a + b = 1, a + b = 2], [a, b]);
-          Inconsistent equations:  (2)
-           -- an error.  Quitting.  To debug this try debugmode(true);
-          (%i3) solve_inconsistent_error: false$
-          (%i4) solve ([a + b = 1, a + b = 2], [a, b]);
-          (%o4)                          []
-
-
 
 File: maxima.info,  Node: Ecuaciones Diferenciales,  Next: Métodos numéricos,  Prev: Ecuaciones,  Up: Top
 
@@ -1048,7 +1026,7 @@ File: maxima.info,  Node: Funciones y variables para ecuaciones diferenciales,  
 
  -- Función: desolve (<ecu>, <x>)
  -- Función: desolve ([<eqn_1>, ..., <eqn_n>], [<x_1>, ..., <x_n>])
-     La función `dsolve' resuelve sistemas de ecuaciones diferenciales
+     La función `desolve' resuelve sistemas de ecuaciones diferenciales
      ordinarias lineales utilizando la transformada de Laplace.  Aquí
      las <eqi> (`i'=1,..,n) son ecuaciones diferenciales con variables
      dependientes <x_1>, ..., <x_n>. La dependencia funcional de <x_1>,
@@ -2778,19 +2756,22 @@ File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra l
 
 
  -- Función: gramschmidt (<x>)
- -- Función: gschmit (<x>)
-     Ejecuta el algoritmo de ortogonalización de Gram-Schmidt sobre
-     <x>, que puede ser una matriz o una lista de listas. La función
-     `gramschmidt' no altera el valor de <x>.
+ -- Función: gramschmidt (<x>, <F>)
+     Ejecuta el algoritmo de ortogonalización de Gram-Schmidt sobre <x>,
+     que puede ser una matriz o una lista de listas. La función
+     `gramschmidt' no altera el valor de <x>.  El producto interno por
+     defecto empleado en `gramschmidt' es `innerproduct', o <F>, si se
+     ha hecho uso de esta opción.
 
-     Si <x> es una matriz, el algoritmo se aplica a las filas de <x>.
-     Si  <x> es una lista de listas, el algoritmo se aplica a las
-     sublistas, las cuales deben tener el mismo número de miembros. En
-     cualquier caso, el valor devuelto es una lista de listas, cuyas
-     sublistas son ortogonales.  La función `factor' es invocada  en
-     cada paso del algoritmo para simplificar resultados intermedios.
-     Como consecuencia, el valor retornado puede contener enteros
-     factorizados.
+     Si <x> es una matriz, el algoritmo se aplica a las filas de <x>. Si
+     <x> es una lista de listas, el algoritmo se aplica a las sublistas,
+     las cuales deben tener el mismo número de miembros. En cualquier
+     caso, el valor devuelto es una lista de listas, cuyas sublistas
+     son ortogonales.
+
+     La función `factor' es invocada  en cada paso del algoritmo para
+     simplificar resultados intermedios. Como consecuencia, el valor
+     retornado puede contener enteros factorizados.
 
      El nombre `gschmit' es sinónimo de `gramschmidt'.
 
@@ -2798,9 +2779,10 @@ File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra l
 
      Ejemplo:
 
-          (%i1) load ("eigen")$
-          Warning - you are redefining the Macsyma function eigenvalues
-          Warning - you are redefining the Macsyma function eigenvectors
+     Algoritmo de Gram-Schmidt utilizando el producto interno por
+     defecto.
+
+          (%i1) load (eigen)$
           (%i2) x: matrix ([1, 2, 3], [9, 18, 30], [12, 48, 60]);
                                    [ 1   2   3  ]
                                    [            ]
@@ -2812,9 +2794,21 @@ File: maxima.info,  Node: Funciones y variables para las matrices y el álgebra l
                                 3      3   3 5      2  3  2  3
           (%o3)  [[1, 2, 3], [- ---, - --, ---], [- ----, ----, 0]]
                                 2 7    7   2 7       5     5
-          (%i4) i: innerproduct$
-          (%i5) [i (y[1], y[2]), i (y[2], y[3]), i (y[3], y[1])];
-          (%o5)                       [0, 0, 0]
+          (%i4) map (innerproduct, [y[1], y[2], y[3]], [y[2], y[3], y[1]]);
+          (%o4)                       [0, 0, 0]
+
+     Algoritmo de Gram-Schmidt utilizando un producto interno
+     especificado por el usuario.
+
+          (%i1) load (eigen)$
+          (%i2) ip (f, g) := integrate (f * g, u, a, b);
+          (%o2)          ip(f, g) := integrate(f g, u, a, b)
+          (%i3) y : gramschmidt ([1, sin(u), cos(u)], ip), a= -%pi/2, b=%pi/2;
+                                         %pi cos(u) - 2
+          (%o3)              [1, sin(u), --------------]
+                                              %pi
+          (%i4) map (ip, [y[1], y[2], y[3]], [y[2], y[3], y[1]]), a= -%pi/2, b=%pi/2;
+          (%o4)                       [0, 0, 0]
 
 
  -- Función: ident (<n>)
@@ -3493,6 +3487,7 @@ File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up:
      La función `fast_linsolve' es más rápida que `linsolve' para
      sistemas de ecuaciones con coeficientes dispersos.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: grobner_basis ([<expr_1>, ..., <expr_m>])
      Devuelve una base de Groebner para las ecuaciones <expr_1>, ...,
@@ -3508,6 +3503,7 @@ File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up:
      combinación  polinómica de los elementos de <expr_1>, ...,
      <expr_m>.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: set_up_dot_simplifications (<eqns>, <check_through_degree>)
  -- Función: set_up_dot_simplifications (<eqns>)
@@ -3519,23 +3515,27 @@ File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up:
      El grado es el devuelto por `nc_degree'. Éste a su vez depende de
      los pesos de las variables individuales.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
- -- Función: declare_weight (<x_1>, <w_1>, ..., <x_n>, <w_n>)
+ -- Función: declare_weights (<x_1>, <w_1>, ..., <x_n>, <w_n>)
      Asigna los pesos <w_1>, ..., <w_n> a <x_1>, ..., <x_n>,
      respectivamente.  Estos pesos son los utilizados en el cálculo de
      `nc_degree'.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: nc_degree (<p>)
      Devuelve el grado de un polinomio no conmutativo <p>. Véase
      `declare_weights'.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: dotsimp (<f>)
      Devuelve 0 si y sólo si  <f> está en el ideal generado por las
      ecuaciones, esto es, si y sólo si <f> es una combinación lineal de
      los elementos de las ecuaciones.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
      Si se ha ejecutado `set_up_dot_simplifications' con antelación,
@@ -3547,6 +3547,7 @@ File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up:
           fast_central_elements ([x, y], 2);
           [y.y, x.x];
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: check_overlaps (<n>, <add_to_simps>)
      Revisa la superposición hasta el grado <n>, asegurándose de que el
@@ -3558,13 +3559,17 @@ File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up:
      de los monomios, no se debería especificar una `rank_function'.
      Un tercer argumento opcional es `reset'.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: mono ([<x_1>, ..., <x_n>], <n>)
-     Devuelve la lista de monomios independientes.
+     Devuelve la lista de monomios independientes.  Antes de utilizar
+     esta función ejecútese `load(affine)'.
 
  -- Función: monomial_dimensions (<n>)
      Calcula el desarrollo de Hilbert de grado <n> para el algebra
      actual.
+
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Función: extract_linear_equations ([<p_1>, ..., <p_n>], [<m_1>,
           ..., <m_n>])
@@ -3573,11 +3578,15 @@ File: maxima.info,  Node: Funciones y variables para Afines,  Prev: Afines,  Up:
      <m_1>, ..., <m_n>. Los coeficientes deben escalares. Hágase uso de
      `list_nc_monomials' para construir la lista de monomios.
 
+     Antes de utilizar esta función ejecútese `load(affine)'.
+
  -- Función: list_nc_monomials ([<p_1>, ..., <p_n>])
  -- Función: list_nc_monomials (<p>)
      Devuelve  una lista de los monomios no conmutativos que aparecen
      en el polinomio  <p> o una lista de polinomios en <p_1>, ...,
      <p_n>.
+
+     Antes de utilizar esta función ejecútese `load(affine)'.
 
  -- Variable: all_dotsimp_denoms
      Valor por defecto: `false'
@@ -3656,6 +3665,24 @@ transparente. Por otro lado, debido a la forma especial de la
 representación indexada de tensores en `itensor', en algunos casos el
 usuario encontrará dificultades con la especificación de la métrica o
 la definición de funciones.
+
+   El paquete `itensor' puede derivar respecto de una variable
+indexada, lo que permite utilizar el paquete cuando se haga uso del
+formalismo de lagrangiano y hamiltoniano. Puesto que es posible derivar
+un campo lagrangiano respecto de una variable de campo indexada, se
+puede hacer uso de Maxima para derivar las ecuaciones de Euler-Lagrange
+correspondientes en forma indexada. Estas ecuaciones pueden traducirse
+a componentes tensoriales (`ctensor') con la función `ic_convert', lo
+que permite resolver las ecuaciones de campo en cualquier sistema de
+coordenadas, o obtener las ecuaciones de movimiento en forma
+hamiltoniana. Véanse dos ejemplos en `einhil.dem' y `bradic.dem'; el
+primero utiliza la acción de Einstein-Hilbert para derivar el campo
+tensorial de Einstein en el caso homogéneo e isotrópico (ecuaciones de
+Friedmann), así como en el caso esferosimétrico estático (solución de
+Schwarzschild); el segundo demuestra cómo calcular las ecuaciones de
+Friedmann a partir de la acción de la teoría de la gravedad de
+Brans-Dicke, y también muestra cómo derivar el hamiltoniano asociado
+con la teoría del campo escalar.
 
 27.1.1 Notación tensorial
 -------------------------
@@ -3789,11 +3816,11 @@ cálculos sencillos.
      (%t11)                        v    - v   ichr2
                                     i,j    %4      i j
      (%i12) ishow(ev(%,ichr2))$
-                    %4 %5
-     (%t12) v    - g      v   (e p       + e   p     - e p       - e    p
-             i,j           %4     j %5,i    ,i  j %5      i j,%5    ,%5  i j
+                     %4 %5
+     (%t12) v    - (g      v   (e p       + e   p     - e p       - e    p
+             i,j            %4     j %5,i    ,i  j %5      i j,%5    ,%5  i j
 
-                                              + e p       + e   p    )/2
+                                              + e p       + e   p    ))/2
                                                    i %5,j    ,j  i %5
      (%i13) iframe_flag:true;
      (%o13)                               true
@@ -3806,13 +3833,13 @@ cálculos sencillos.
      (%t15)                        v    - v   ifc2
                                     i,j    %6     i j
      (%i16) ishow(radcan(ev(%,ifc2,ifc1)))$
-                  %6 %8                    %6 %8
+                  %6 %7                    %6 %7
      (%t16) - (ifg      v   ifb       + ifg      v   ifb       - 2 v
-                         %6    j %8 i             %6    i j %8      i,j
+                         %6    j %7 i             %6    i j %7      i,j
 
-                                                  %6 %8
+                                                  %6 %7
                                              - ifg      v   ifb      )/2
-                                                         %6    %8 i j
+                                                         %6    %7 i j
      (%i17) ishow(canform(s([i,j],[])-s([j,i])))$
      (%t17)                            s    - s
                                         i j    j i
@@ -4049,13 +4076,21 @@ File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducció
 
      2) Como una matriz:
 
+          (%i5) lg:-ident(4)$lg[1,1]:1$lg;
+                                      [ 1   0    0    0  ]
+                                      [                  ]
+                                      [ 0  - 1   0    0  ]
+          (%o5)                       [                  ]
+                                      [ 0   0   - 1   0  ]
+                                      [                  ]
+                                      [ 0   0    0   - 1 ]
 
           (%i6) components(g([i,j],[]),lg);
           (%o6)                                done
           (%i7) ishow(g([i,j],[]))$
           (%t7)                                g
                                                 i j
-          (%i8) g([3,3],[]);
+          (%i8) g([1,1],[]);
           (%o8)                                  1
           (%i9) g([4,4],[]);
           (%o9)                                 - 1
@@ -4280,8 +4315,9 @@ File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducció
                   kdelta  ) a
                         %4   j k
           (%i11) ishow(contract(expand(%)))$
-                                            l i      l i
-          (%t11)                           a    - a g
+                                            l i    l i  j
+          (%t11)                           a    - g    a
+                                                        j
 
 
  -- Función: lc_l
@@ -4301,9 +4337,9 @@ File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducció
                                                  i j k
           (%t3)                       levi_civita      a  a
                                                         i  j
-          (%i4) ishow(canform(contract(expand(applyb1(el1,lc_l,lc_u)))))$
+          (%i4) canform(contract(expand(applyb1(el1,lc_l,lc_u))));
           (%t4)                                  0
-          (%i5) ishow(canform(contract(expand(applyb1(el2,lc_l,lc_u)))))$
+          (%i5) canform(contract(expand(applyb1(el2,lc_l,lc_u))));
           (%t5)                                  0
 
 
@@ -4402,6 +4438,7 @@ File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducció
      índices covariantes y <n> contravariantes.
 
  -- Función: canform (<expr>)
+ -- Función: canform (<expr>, <rename>)
      Simplifica <expr> renombrando índices mudos y reordenando todos
      los índices según las condiciones de simetría que se le hayan
      impuesto. Si `allsym' vale `true' entonces todos los índices se
@@ -4414,6 +4451,9 @@ File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducció
      La función `canform' puede que no reduzca completamente una
      expresión a su forma más sencilla, pero en todo caso devolverá un
      resultado matemáticamente correcto.
+
+     Si al parámetro opcional <rename> se le asigna el valor `false',
+     no se renombrarán los índices mudos.
 
 27.2.3 Cálculo tensorial indexado
 ---------------------------------
@@ -4430,6 +4470,16 @@ File: maxima.info,  Node: Funciones y variables para itensor,  Prev: Introducció
      entonces esa variable será la que se utilice en la derivación. Con
      esto se hace posible la utilización de una lista con nombres de
      coordenadas subindicadas, como `x[1]', `x[2]', ...
+
+     El paquete sobre tensores amplía las capacidades de `diff' con el
+     fin de poder calcular derivadas respecto de variables indexadas.
+     En particular, es posible derivar expresiones que contengan
+     combinaciones del tensor métrico y sus derivadas respecto del
+     tensor métrico y su primera y segunda derivadas.  Estos métodos
+     son particularmente útiles cuando se consideran los formalismos
+     lagrangianos de la teoría gravitatoria, permitiendo obtener el
+     tensor de Einstein y las ecuaciones de campo a partir del principio
+     de acción.
 
  -- Función: idiff (<expr>, <v_1>, [<n_1>, [<v_2>, <n_2>] ...])
      Diferenciación inicial. Al contrario que `diff', que deriva
@@ -4861,28 +4911,32 @@ siguiente ejemplo:
      (%t3)                         v   + icc2     v
                                     ,j       %1 j
      (%i4) ishow(ev(%,icc2))$
-                             %1      i           i        i
-     (%t4)                  v   (ifc2     + ichr2    ) + v
-                                     %1 j        %1 j     ,j
+                                    %1     i       i
+     (%t4)                         v   ifc2     + v
+                                           %1 j    ,j
      (%i5) ishow(ev(%,ifc2))$
+                               %1    i %2                i
+     (%t5)                    v   ifg     ifc1        + v
+                                              %1 j %2    ,j
+     (%i6) ishow(ev(%,ifc1))$
                  %1    i %2
                 v   ifg     (ifb        - ifb        + ifb       )
                                 j %2 %1      %2 %1 j      %1 j %2     i
-     (%t5)      -------------------------------------------------- + v
+     (%t6)      -------------------------------------------------- + v
                                         2                             ,j
-     (%i6) ishow(ifb([a,b,c]))$
-                            %5    %4
-     (%t6)               ifr   ifr   (ifri        - ifri       )
-                            a     b       c %4,%5       c %5,%4
+     (%i7) ishow(ifb([a,b,c]))$
+                                                        %3    %4
+     (%t7)               (ifri        - ifri       ) ifr   ifr
+                              a %3,%4       a %4,%3     b     c
 
    Se utiliza un método alternativo  para calcular el sistema de
 referencia `ifb' si la variable `iframe_bracket_form' vale `false':
 
 
      (%i8) block([iframe_bracket_form:false],ishow(ifb([a,b,c])))$
-                            %7    %6        %6      %7
-     (%t8)              (ifr   ifr     - ifr     ifr  ) ifri
-                            a     b,%7      a,%7    b       c %6
+                                     %6    %5        %5      %6
+     (%t8)              ifri     (ifr   ifr     - ifr     ifr  )
+                            a %5     b     c,%6      b,%6    c
 
  -- Variable: ifb
      Es el sistema de referencia soporte. La contribución de la métrica
@@ -5268,8 +5322,8 @@ defecto), se utiliza la primera definición, si vale `true', la segunda.
           (%t6)                             v    - v
                                              j,i    i,j
           (%i7) ishow(extdiff(a([i,j]),k))$
-          (%t7)                      a      - a      + a
-                                      j k,i    i k,j    i j,k
+          (%t7)                    - (a      - a      + a     )
+                                       k j,i    k i,j    j i,k
 
 
  -- Función: hodge (<expr>)

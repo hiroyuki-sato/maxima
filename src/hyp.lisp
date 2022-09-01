@@ -9,9 +9,6 @@
 
 (declare-top (special var *par* checkcoefsignlist $exponentialize $bestriglim $radexpand))
 
-;; Why is this needed?
-(setq checkcoefsignlist nil)
-
 ;; I (rtoy) don't know what the default should be. but $hgfred sets it
 ;; to 3.  But we also need to define it because some of the specint
 ;; demos need it set.
@@ -24,8 +21,6 @@
     #+gcl (eval compile)
     #-gcl (:execute :compile-toplevel)
     (defmacro fixp (x) `(typep ,x 'fixnum))
-
-    (setq checkcoefsignlist '())
 
     (defmacro simp (x) `(simplifya ,x ()))
 
@@ -83,13 +78,22 @@
 ;;
 ;; L1 is a (maxima) list of an's, L2 is a (maxima) list of bn's.
 (defun $hgfred (arg-l1 arg-l2 arg)
+  (flet ((arg-ok (a)
+	   (and (listp a)
+		(eq (caar a) 'mlist))))
+    (unless (arg-ok arg-l1)
+      (merror "First argument must be a Maxima list"))
+    (unless (arg-ok arg-l2)
+      (merror "Second argument must be a Maxima list")))
+  
   ;; Do we really want $radexpand set to '$all?  This is probably a
   ;; bad idea in general, but we'll leave this in for now until we can
   ;; verify find all of the code that does or does not need this and
   ;; until we can verify all of the test cases are correct.
   (let (;;($radexpand '$all)
 	(var arg)
-	(*par* arg))
+	(*par* arg)
+	(checkcoefsignlist nil))
     (hgfsimp-exec (cdr arg-l1) (cdr arg-l2) arg)))
 
 
@@ -98,9 +102,14 @@
 	 (l2 (copy-tree arg-l2))
 	 ($exponentialize nil)
 	 (res (hgfsimp l1 l2 arg)))
-    (if (or (numberp res) (not (atom res)))
-	res
-	(fpqform l1 l2 arg))))
+    ;; I think hgfsimp returns FAIL and UNDEF for cases where it
+    ;; couldn't reduce the function.
+    (cond ((eq res 'fail)
+	   (fpqform l1 l2 arg))
+	  ((eq res 'undef)
+	   '$und)
+	  (t
+	   res))))
 
 (defun hgfsimp (arg-l1 arg-l2 var)
   (prog (resimp listcmdiff)
@@ -153,10 +162,14 @@
 	   ;; A negative integer in the first series means we have a
 	   ;; polynomial.
 	   (create-poly arg-l1 arg-l2 n))
-	  ((or (zerop-in-l arg-l2)
-	       (hyp-negp-in-l arg-l2))
+	  ((and (or (zerop-in-l arg-l2)
+		    (hyp-negp-in-l arg-l2))
+		(every #'mnump arg-l1)
+		(every #'mnump arg-l2))
 	   ;; A zero or negative number in the second index means we
-	   ;; eventually divide by zero, so we're undefined.
+	   ;; eventually divide by zero, so we're undefined.  But only
+	   ;; do this if both indices contain numbers.  See Bug
+	   ;; 1858964 for discussion.
 	   'undef)
 	  (t
 	   ;; We failed so more complicated stuff needs to be done.
@@ -264,10 +277,26 @@
 	   ;;
 	   ;; Or hgfred([-n],[alpha],x) =
 	   ;; gen_laguerre(n,alpha-1,x)/binomial(n+alpha-1,n)
-	   (mul (factorial n)
-		(gm c)
-		(inv (gm (add c n)))
-		(lagpol n (sub c 1) var))))))
+	   ;;
+	   ;; But 1/binomial(n+alpha-1,n) = n!*(alpha-1)!/(n+alpha-1)!
+	   ;;    = n! / (alpha * (alpha + 1) * ... * (alpha + n - 1)
+	   ;;    = n! / poch(alpha, n)
+	   ;;
+	   ;; See Bug 1858939.
+	   ;;
+	   ;; However, if c is not a number leave the result in terms
+	   ;; of gamma functions.  I (rtoy) think this makes for a
+	   ;; simpler result, especially if n is rather large.  If the
+	   ;; user really wants the answer expanded out, makefact and
+	   ;; minfactorial will do that.
+	   (if (numberp c)
+	       (mul (factorial n)
+		    (inv (factf c n))
+		    (lagpol n (sub c 1) var))
+	       (mul (factorial n)
+		    (gm c)
+		    (inv (gm (add c n)))
+		    (lagpol n (sub c 1) var)))))))
 
 ;; Hermite polynomial.  Note: The Hermite polynomial used here is the
 ;; He polynomial, defined as (A&S 22.5.18, 22.5.19)
@@ -881,17 +910,16 @@
 	    (return (hyp-algv k l m n a b c))))
      (return nil)))
 
-(defun getxy
-    (k l m n)
+(defun getxy (k l m n)
   (prog (x y)
      (setq y 0)
      loop
-     (cond ((hyp-integerp (setq x (// (+ y
-					 (// k l)
-					 (* -2 (// m n)))
-				      2)))
+     (cond ((hyp-integerp (setq x (truncate (+ y
+					       (truncate k l)
+					       (* -2 (// m n)))
+					    2)))
 	    (return (list x y))))
-     (setq y (+ 2 y))
+     (incf y 2)
      (go loop)))
 
 (defun hyp-algv  (k l m n a b c)
@@ -2369,10 +2397,16 @@
 	   ;;
 	   ;; F(n,2*n,z) =
 	   ;; gamma(n+1/2)*exp(z/2)*(z/4)^(-n-3/2)*bessel_i(n-1/2,z/2);
-	   (let ((z (div var 2)))
-	     (mul (power '$%e z)
-		  (bestrig (add a (inv 2))
-			   (div (mul z z) 4)))))
+	   ;;
+	   ;; If n is a negative integer, we use laguerre polynomial.
+	   (if (and (maxima-integerp a)
+		    (eq (asksign a) '$negative))
+	       (let ((n (m- a)))
+		 (mul (m^ -1  n) (inv (mbinom (m+ n n) n)) (lagpol n (m- c 1) var)))
+	       (let ((z (div var 2)))
+		 (mul (power '$%e z)
+		      (bestrig (add a (inv 2))
+			       (div (mul z z) 4))))))
 	  ((not (hyp-integerp a-c))
 	   (cond ((hyp-integerp a)
 		  (kummer arg-l1 arg-l2))
