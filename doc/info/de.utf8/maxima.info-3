@@ -4937,20 +4937,20 @@ File: maxima.info,  Node: Funktionen und Variablen für QUADPACK,  Prev: Einfüh
      Reihenfolge angegeben werden.  Sie haben die Form `key=val'.  Die
      Schlüsselwortargumente sind:
 
-    <epsabs>
+    `epsabs'
           Gewünschter absoluter Fehler der Näherung.  Der Standardwert
           ist `1.0e-10'.
 
-    <limit>
+    `limit'
           `(<limit> - <limlst>)/2' ist die maximale Zahl an
           Teilintervallen des adaptiven Algorithmus.  Der Standardwert
           ist `200'.
 
-    <maxp1>
+    `maxp1'
           Die maximale Anzahl an Chebyshev-Gewichten.  Der Wert muss
           größer als 0 sein.  Der Standardwert ist `100'.
 
-    <limlst>
+    `limlst'
           Obere Grenze für die Anzahl an Zyklen.  Der Wert muss größer
           oder gleich 3 sein.  Der Standardwert ist 10.
 
@@ -5136,15 +5136,15 @@ File: maxima.info,  Node: Funktionen und Variablen für QUADPACK,  Prev: Einfüh
      Reihenfolge angegeben werden.  Sie haben die Form `key=val'.  Die
      Schlüsselwortargumente sind:
 
-    <epsrel>
+    `epsrel'
           Gewünschter relativer Fehler der Näherung.  Der Standardwert
           ist `1.0e-8'
 
-    <epsabs>
+    `epsabs'
           Gewünschter absoluter Fehler der Näherung.  Der Standardwert
           ist `0'.
 
-    <limit>
+    `limit'
           Maximale Anzahl der Teilintervalle des adaptiven Algorithmus.
           Der Standardwert ist `200'.
 
@@ -5217,13 +5217,13 @@ File: maxima.info,  Node: Funktionen und Variablen für QUADPACK,  Prev: Einfüh
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit> is the maximum number
           of subintervals to use.  Default is 200.
 
@@ -5741,15 +5741,21 @@ File: maxima.info,  Node: Funktionen und Variablen für Polynome,  Prev: Einfüh
 
      Die folgende Definition der Funktion `coeff_list' liefert eine
      Liste mit den Koeffizienten, die in einem Polynom auftreten.
-     Neben der Funktion `coeff' kommt die Funktion `hipow'  zum
-     Einsatz, um den höchsten Exponenten zu ermitteln und `reverse' ,
-     um die Liste (falls gewünscht) herum zu drehen.
+     Neben der Funktion `coeff' kommt hier die Funktion `hipow'  zum
+     Einsatz, um den höchsten Exponenten zu ermitteln. `rat'  und
+     `ratdisrep'  werden verwendet, um das Polynom zwischenzeitlich in
+     die kanonische Form (CRE) zu bringen.
 
-          coeff_list(a, x) :=
-             reverse( makelist(coeff(a, x, i), i,0, hipow(a, x)) )$
+          (%i1) b : (x-y)^2;
+                                                 2
+          (%o1)                           (x - y)
+          (%i2) coeff_list(a, x) := (
+             a : rat(a),
+             reverse( makelist(ratdisrep(coeff(a, x, i)), i,0, hipow(a, x)) ))$
 
-          (%i1) coeff_list(2*x^4+3*x^2+1,x);
-          (%o1)                    [2, 0, 3, 0, 1]
+          (%i3) coeff_list(b, x);
+                                                   2
+          (%o3)                        [1, - 2 y, y ]
 
  -- Funktion: content (<p>, <x_1>, ..., <x_n>)
      Gibt eine Liste zurück, deren erstes Element der größte gemeinsame
@@ -7957,7 +7963,7 @@ File: maxima.info,  Node: Funktionen und Variablen für Gleichungen,  Prev: Glei
 
      Die Standardwerte der Argumente sind:
 
-    <unk>
+    `unk'
           `<p>(<x>)', wobei <p> die erste im Integranden aufgefundene
           Funktion ist, die Maxima unbekannt ist, und <x> die Variable
           ist, die im Falle einer Integralgleichung der zweiten Art als
@@ -7968,13 +7974,13 @@ File: maxima.info,  Node: Funktionen und Variablen für Gleichungen,  Prev: Glei
           finden, wird der Nutzer nach der unabhängigen Variablen
           gefragt.
 
-    <tech>
+    `tech'
           `first'
 
-    <n>
+    `n'
           `1'
 
-    <guess>
+    `guess'
           `none', bewirkt, dass der Ansatz `<f>(<x>)' als Startwert der
           Lösungsmethoden `neumann' und `firstkindseries' verwendet
           wird.

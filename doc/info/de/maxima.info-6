@@ -10,6 +10,932 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: maxima.info,  Node: abs_integrate,  Next: affine,  Prev: Verschiedenes,  Up: Top
+
+31 abs_integrate
+****************
+
+* Menu:
+
+* Introduction to abs_integrate::
+* Functions and Variables for abs_integrate::
+
+
+File: maxima.info,  Node: Introduction to abs_integrate,  Next: Functions and Variables for abs_integrate,  Prev: abs_integrate,  Up: abs_integrate
+
+31.1 Introduction to abs_integrate
+==================================
+
+The package `abs_integrate' extends Maxima's integration code to some
+integrands that involve the absolute value, max, min, signum, or unit
+step functions.  For integrands of the form p(x) |q(x)|, where p is a
+polynomial and q is a polynomial that `factor' is able to factor into a
+product of linear or constant terms, the `abs_integrate' package
+determines an antiderivative that is continuous on the entire real
+line.  Additionally, for an integrand that involves one or more
+parameters, the function `conditional_integrate'  tries to determine an
+antiderivative that is valid for all parameter values.
+
+Examples:
+
+To use the `abs_integrate' package, you'll first need to load it:
+
+     (%i1) load("abs_integrate.mac")$
+     (%i2) integrate(abs(x),x);
+                                 x abs(x)
+     (%o2)                       --------
+                                    2
+
+To convert (%o2) into an expression involving the absolute value
+function, apply `signum_to_abs' ; thus
+
+     (%i3) signum_to_abs(%);
+                                 x abs(x)
+     (%o3)                       --------
+                                    2
+
+When the integrand has the form p(x) |x - c1| |x - c2| ... |x - cn|,
+where p(x) is a polynomial and c1, c2, ..., cn are constants, the
+`abs_integrate' package returns an antiderivative that is valid on the
+entire real line; thus without making assumptions on a and b; for
+example
+
+     (%i4) factor(convert_to_signum(integrate(abs((x-a)*(x-b)),x,a,b)));
+                                 3       2
+                          (b - a)  signum (b - a)
+     (%o4)                -----------------------
+                                     6
+
+Additionally, `abs_integrate' is able to find antiderivatives of some
+integrands involving `max',  `min',  `signum',  and `unit_step',
+examples:
+
+     (%i5) integrate(max(x,x^2),x);
+                3      2                                        3    2
+             2 x  - 3 x    1                   1               x    x
+     (%o5) ((----------- + --) signum(x - 1) + --) signum(x) + -- + --
+                 12        12                  12              6    4
+     (%i6) integrate(signum(x) - signum(1-x),x);
+     (%o6)                  abs(x) + abs(x - 1)
+
+A plot indicates that indeed (%o5) and (%o6) are continuous at zero and
+at one.
+
+For definite integrals with numerical integration limits (including
+both minus and plus infinity), the `abs_integrate' package converts the
+integrand to signum form and then it tries to subdivide the integration
+region so that the integrand simplifies to a non-signum expression on
+each subinterval; for example
+
+     (%i1) load(abs_integrate)$
+     (%i2) integrate(1 / (1 + abs(x-5)),x,-5,6);
+     (%o2)                   log(11) + log(2)
+
+Finally, `abs_integrate' is able to determine antiderivatives of _some_
+functions of the form F(x, |x - a|); examples
+
+     (%i3) integrate(1/(1 + abs(x)),x);
+           signum(x) (log(x + 1) + log(1 - x))
+     (%o3) -----------------------------------
+                            2
+                                               log(x + 1) - log(1 - x)
+                                             + -----------------------
+                                                          2
+     (%i4) integrate(cos(x + abs(x)),x);
+              (signum(x) + 1) sin(2 x) - 2 x signum(x) + 2 x
+     (%o4)    ----------------------------------------------
+                                    4
+
+Barton Willis (Professor of Mathematics, University of Nebraska at
+Kearney) wrote the `abs_integrate' package and its English language
+user documentation.  This documentation also describes the `partition'
+package for integration.  Richard Fateman wrote `partition'.
+Additional documentation for `partition' is located at
+`http://www.cs.berkeley.edu/~fateman/papers/partition.pdf'
+
+
+File: maxima.info,  Node: Functions and Variables for abs_integrate,  Prev: Introduction to abs_integrate,  Up: abs_integrate
+
+31.2 Functions and Variables for abs_integrate
+==============================================
+
+ -- Option variable: extra_integration_methods
+     Default value: `['signum_int, 'abs_integrate_use_if]'
+
+     The list `extra_integration_methods' is a list of functions for
+     integration.  When `integrate'  is unable to find an
+     antiderivative, Maxima uses the methods in
+     `extra_integration_methods' to attempt to determine an
+     antiderivative.
+
+     Each function `f' in `extra_integration_methods' should have the
+     form `f(integrand, variable)'.  The function `f' may either return
+     `false' to indicate failure, or it may return an expression
+     involving an integration noun form.  The integration methods are
+     tried from the first to the last member of
+     `extra_integration_methods'; when no method returns an expression
+     that does not involve an integration noun form, the value of the
+     integral is the last value that does not fail (or a pure noun form
+     if all methods fail).
+
+     When the function `abs_integrate_use_if' is successful, it returns
+     a conditional expression; for example
+
+          (%i1) load(abs_integrate)$
+          (%i2) integrate(1/(1 + abs(x+1) + abs(x-1)),x);
+                                     log(1 - 2 x)            2
+          (%o2) %if(- (x + 1) > 0, - ------------ + log(3) - -,
+                                          2                  3
+                                             x   log(3)   1  log(2 x + 1)
+                          %if(- (x - 1) > 0, - + ------ - -, ------------))
+                                             3     2      3       2
+          (%i3) integrate(exp(-abs(x-1) - abs(x)),x);
+                               2 x - 1
+                             %e              - 1
+          (%o3) %if(- x > 0, --------- - 2 %e   ,
+                                 2
+                                                         - 1      1 - 2 x
+                                             - 1     3 %e       %e
+                        %if(- (x - 1) > 0, %e    x - -------, - ---------))
+                                                        2           2
+
+     For definite integration, these conditional expressions can cause
+     trouble:
+
+          (%i4) integrate(exp(-abs(x-1) - abs(x)),x, minf,inf);
+                                         - 1    2 x
+                                       %e    (%e    - 4)
+          (%o4) limit     %if(- x > 0, -----------------,
+                x -> inf-                      2
+                               - 1                1 - 2 x
+                             %e    (2 x - 3)    %e
+          %if(- (x - 1) > 0, ---------------, - ---------))
+                                    2               2
+                                       - 1    2 x
+                                     %e    (%e    - 4)
+           - limit      %if(- x > 0, -----------------,
+             x -> minf+                      2
+                               - 1                1 - 2 x
+                             %e    (2 x - 3)    %e
+          %if(- (x - 1) > 0, ---------------, - ---------))
+                                    2               2
+
+     For such definite integrals, try disallowing the method
+     `abs_integrate_use_if':
+
+          (%i5) integrate(exp(-abs(x-1) - abs(x)),x, minf,inf),
+                    extra_integration_methods : ['signum_int];
+                                           - 1
+          (%o5)                        2 %e
+
+     Related options `extra_definite_integration_methods'.
+
+     To use `load(abs_integrate)'
+
+ -- Option variable: extra_definite_integration_methods
+     Default value: `['abs_defint]'
+
+     The list `extra_definite_integration_methods' is a list of extra
+     functions for definite integration.  When `integrate'  is unable
+     to find a definite integral, Maxima uses the methods in
+     `extra_definite_integration_methods' to attempt to determine an
+     antiderivative.
+
+     Each function `f' in `extra_definite_integration_methods' should
+     have the form `f(integrand, variable, lo, hi)', where `lo' and
+     `hi' are the lower and upper limits of integration, respectively.
+     The function `f' may either return `false' to indicate failure, or
+     it may return an expression involving an integration noun form.
+     The integration methods are tried from the first to the last
+     member of `extra_definite_integration_methods'; when no method
+     returns an expression that does not involve an integration noun
+     form, the value of the integral is the last value that does not
+     fail (or a pure noun form if all methods fail).
+
+     Related options `extra_integration_methods'.
+
+     To use `load(abs_integrate)'.
+
+ -- Function: intfudu (<e>, <x>)
+     This function uses the derivative divides rule for integrands of
+     the form f(w(x)) * diff(w(x),x).  When `infudu' is unable to find
+     an antiderivative, it returns false.
+
+          (%i1) load(abs_integrate)$
+          (%i2) intfudu(cos(x^2) * x,x);
+                                            2
+                                       sin(x )
+          (%o2)                        -------
+                                          2
+          (%i3) intfudu(x * sqrt(1+x^2),x);
+                                       2     3/2
+                                     (x  + 1)
+          (%o3)                      -----------
+                                          3
+          (%i4) intfudu(x * sqrt(1 + x^4),x);
+          (%o4)                         false
+
+     For the last example, the derivative divides rule fails, so
+     `intfudu' returns false.
+
+     A hashed array `intable' contains the antiderivative data.  To
+     append a fact to the hash table, say integrate(f) = g, do this:
+
+          (%i5) intable[f] : lambda([u],  [g(u),diff(u,%voi)]);
+          (%o5)          lambda([u], [g(u), diff(u, %voi)])
+          (%i6) intfudu(f(z),z);
+          (%o6)                         g(z)
+          (%i7) intfudu(f(w(x)) * diff(w(x),x),x);
+          (%o7)                        g(w(x))
+
+     An alternative to calling `intfudu' directly is to use the
+     `extra_integration_methods'  mechanism; an example:
+
+          (%i1) load(abs_integrate)$
+          (%i2) load(basic)$
+          (%i3) load("partition.mac")$
+
+          (%i4) integrate(bessel_j(1,x^2) * x,x);
+                                                 2
+                                    bessel_j(0, x )
+          (%o4)                   - ---------------
+                                           2
+          (%i5) push('intfudu, extra_integration_methods)$
+
+          (%i6) integrate(bessel_j(1,x^2) * x,x);
+                                                 2
+                                    bessel_j(0, x )
+          (%o6)                   - ---------------
+                                           2
+
+     To use `load(partition)'.
+
+     Additional documentation
+     `http://www.cs.berkeley.edu/~fateman/papers/partition.pdf'.
+
+     Related functions `intfugudu'.
+
+
+ -- Function: intfugudu (<e>, <x>)
+     This function uses the derivative divides rule for integrands of
+     the form f(w(x)) * g(w(x)) * diff(w(x),x).  When `infugudu' is
+     unable to find an antiderivative, it returns false.
+
+          (%i1) load(abs_integrate)$
+          (%i2) diff(jacobi_sn(x,2/3),x);
+                                        2               2
+          (%o2)            jacobi_cn(x, -) jacobi_dn(x, -)
+                                        3               3
+          (%i3) intfugudu(%,x);
+                                                2
+          (%o3)                    jacobi_sn(x, -)
+                                                3
+          (%i4) diff(jacobi_dn(x^2,a),x);
+                                         2                2
+          (%o4)       - 2 a x jacobi_cn(x , a) jacobi_sn(x , a)
+          (%i5) intfugudu(%,x);
+                                             2
+          (%o5)                   jacobi_dn(x , a)
+
+     For a method for automatically calling `infugudu' from `integrate',
+     see the documentation for `intfudu'.
+
+     To use `load(partition)'.
+
+     Additional documentation
+     `http://www.cs.berkeley.edu/~fateman/papers/partition.pdf'
+
+     Related functions `intfudu'.
+
+
+ -- Function: signum_to_abs (<e>)
+     This function replaces subexpressions of the form q signum(q) by
+     abs(q).  Before it does these substitutions, it replaces
+     subexpressions of the form signum(p) * signum(q) by signum(p * q);
+     examples:
+
+          (%i1) load(abs_integrate)$
+          (%i2) map('signum_to_abs, [x * signum(x),
+                                     x * y * signum(x)* signum(y)/2]);
+                                        abs(x) abs(y)
+          (%o2)                [abs(x), -------------]
+                                              2
+
+     To use `load(abs_integrate)'.
+
+ -- Macro: simp_assuming (<e>, <f_1>, <f_2>, ..., <f_n>)
+     Appended the facts f_1, f_2, ..., f_n to the current context and
+     simplify e.  The facts are removed before returning the simplified
+     expression e.
+
+          (%i1) load(abs_integrate)$
+          (%i2) simp_assuming(x + abs(x), x < 0);
+          (%o2)                           0
+
+     The facts in the current context aren't ignored:
+
+          (%i3) assume(x > 0)$
+          (%i4) simp_assuming(x + abs(x),x < 0);
+          (%o4)                          2 x
+
+     Since `simp_assuming' is a macro, effectively `simp_assuming'
+     quotes is arguments; this allows
+
+          (%i5) simp_assuming(asksign(p), p < 0);
+          (%o5)                          neg
+
+     To use `load(abs_integrate)'.
+
+ -- Function: conditional_integrate (<e>, <x>)
+     For an integrand with one or more parameters, this function tries
+     to determine an antiderivative that is valid for all parameter
+     values.  When successful, this function returns a conditional
+     expression for the antiderivative.
+
+          (%i1) load(abs_integrate)$
+          (%i2) conditional_integrate(cos(m*x),x);
+                                          sin(m x)
+          (%o2)                %if(m # 0, --------, x)
+                                             m
+          (%i3) conditional_integrate(cos(m*x)*cos(x),x);
+
+          (%o3) %if((m - 1 # 0) %and (m + 1 # 0),
+          (m - 1) sin((m + 1) x) + (- m - 1) sin((1 - m) x)
+          -------------------------------------------------,
+                                 2
+                              2 m  - 2
+          sin(2 x) + 2 x
+          --------------)
+                4
+          (%i4) sublis([m=6],%);
+                               5 sin(7 x) + 7 sin(5 x)
+          (%o4)                -----------------------
+                                         70
+          (%i5) conditional_integrate(exp(a*x^2+b*x),x);
+                                            2
+                                           b
+                                         - ---
+                                           4 a      2 a x + b
+                             sqrt(%pi) %e      erf(-----------)
+                                                   2 sqrt(- a)
+          (%o5) %if(a # 0, - ----------------------------------,
+                                        2 sqrt(- a)
+                                                                   b x
+                                                                 %e
+                                                      %if(b # 0, -----, x))
+                                                                   b
+
+ -- Function: convert_to_signum (<e>)
+     This function replaces subexpressions of the form `abs(q),
+     unit_step(q), min(q1, q2, ..., qn)' and `max(q1, q2, ..., qn)' by
+     equivalent signum terms.
+
+          (%i1) load(abs_integrate)$
+          (%i2) map('convert_to_signum, [abs(x), unit_step(x),
+                                         max(a,2), min(a,2)]);
+
+                              signum(x) (signum(x) + 1)
+          (%o2) [x signum(x), -------------------------,
+                                          2
+            (a - 2) signum(a - 2) + a + 2  - (a - 2) signum(a - 2) + a + 2
+            -----------------------------, -------------------------------]
+                          2                               2
+
+     To convert `unit_step'  to signum form, the function
+     `convert_to_signum' uses unit_step(x) = (1 + signum(x))/2.
+
+     To use `load(abs_integrate)'.
+
+     Related functions `signum_to_abs'.
+
+
+
+File: maxima.info,  Node: affine,  Next: asympa,  Prev: abs_integrate,  Up: Top
+
+32 affine
+*********
+
+* Menu:
+
+* Introduction to Affine::
+* Functions and Variables for Affine::
+
+
+File: maxima.info,  Node: Introduction to Affine,  Next: Functions and Variables for Affine,  Prev: affine,  Up: affine
+
+32.1 Introduction to Affine
+===========================
+
+`affine' is a package to work with groups of polynomials.
+
+
+File: maxima.info,  Node: Functions and Variables for Affine,  Prev: Introduction to Affine,  Up: affine
+
+32.2 Functions and Variables for Affine
+=======================================
+
+ -- Function: fast_linsolve ([<expr_1>, ..., <expr_m>], [<x_1>, ...,
+          <x_n>])
+     Solves the simultaneous linear equations <expr_1>, ..., <expr_m>
+     for the variables <x_1>, ..., <x_n>.  Each <expr_i> may be an
+     equation or a general expression; if given as a general
+     expression, it is treated as an equation of the form `<expr_i> =
+     0'.
+
+     The return value is a list of equations of the form `[<x_1> =
+     <a_1>, ..., <x_n> = <a_n>]' where <a_1>, ..., <a_n> are all free
+     of <x_1>, ..., <x_n>.
+
+     `fast_linsolve' is faster than `linsolve'  for system of equations
+     which are sparse.
+
+     `load(affine)' loads this function.
+
+ -- Function: grobner_basis ([<expr_1>, ..., <expr_m>])
+     Returns a Groebner basis for the equations <expr_1>, ..., <expr_m>.
+     The function `polysimp' can then be used to simplify other
+     functions relative to the equations.
+
+     `polysimp(f)' yields 0 if and only if <f> is in the ideal
+     generated by <expr_1>, ..., <expr_m>, that is, if and only if <f>
+     is a polynomial combination of the elements of <expr_1>, ...,
+     <expr_m>.
+
+     `load(affine)' loads this function.
+
+     Beispiel:
+
+          (%i1) load(affine)$
+
+          (%i2) grobner_basis ([3*x^2+1, y*x]);
+          eliminated one
+           . 0 . 0                                   2
+          (%o2)/R/                [- y, - 3 x  - 1]
+          (%i3) polysimp(y^2*x+x^3*9+2);
+          (%o3)/R/                    - 3 x + 2
+
+ -- Function: set_up_dot_simplifications (<eqns>,
+          <check_through_degree>)
+ -- Function: set_up_dot_simplifications (<eqns>)
+     The <eqns> are polynomial equations in non commutative variables.
+     The value of `current_variables' is the list of variables used for
+     computing degrees.  The equations must be homogeneous, in order
+     for the procedure to terminate.
+
+     If you have checked overlapping simplifications in
+     `dot_simplifications' above the degree of <f>, then the following
+     is true: `dotsimp(<f>)' yields 0 if and only if <f> is in the ideal
+     generated by the equations, i.e., if and only if <f> is a
+     polynomial combination of the elements of the equations.
+
+     The degree is that returned by `nc_degree'.   This in turn is
+     influenced by the weights of individual variables.
+
+     `load(affine)' loads this function.
+
+ -- Function: declare_weights (<x_1>, <w_1>, ..., <x_n>, <w_n>)
+     Assigns weights <w_1>, ..., <w_n> to <x_1>, ..., <x_n>,
+     respectively.  These are the weights used in computing `nc_degree'.
+
+     `load(affine)' loads this function.
+
+ -- Function: nc_degree (<p>)
+     Returns the degree of a noncommutative polynomial <p>.  See
+     `declare_weights'.
+
+     `load(affine)' loads this function.
+
+ -- Function: dotsimp (<f>)
+     Returns 0 if and only if <f> is in the ideal generated by the
+     equations, i.e., if and only if <f> is a polynomial combination of
+     the elements of the equations.
+
+     `load(affine)' loads this function.
+
+ -- Function: fast_central_elements ([<x_1>, ..., <x_n>], <n>)
+     If `set_up_dot_simplifications'  has been previously done, finds
+     the central polynomials in the variables <x_1>, ..., <x_n> in the
+     given degree, <n>.
+
+     For example:
+
+          set_up_dot_simplifications ([y.x + x.y], 3);
+          fast_central_elements ([x, y], 2);
+          [y.y, x.x];
+
+     `load(affine)' loads this function.
+
+ -- Function: check_overlaps (<n>, <add_to_simps>)
+     Checks the overlaps thru degree <n>, making sure that you have
+     sufficient simplification rules in each degree, for `dotsimp'  to
+     work correctly.  This process can be speeded up if you know before
+     hand what the dimension of the space of monomials is.  If it is of
+     finite global dimension, then `hilbert' should be used.  If you
+     don't know the monomial dimensions, do not specify a
+     `rank_function'.  An optional third argument `reset', `false' says
+     don't bother to query about resetting things.
+
+     `load(affine)' loads this function.
+
+ -- Function: mono ([<x_1>, ..., <x_n>], <n>)
+     Returns the list of independent monomials relative to the current
+     dot simplifications of degree <n> in the variables <x_1>, ...,
+     <x_n>.
+
+     `load(affine)' loads this function.
+
+ -- Function: monomial_dimensions (<n>)
+     Compute the Hilbert series through degree <n> for the current
+     algebra.
+
+     `load(affine)' loads this function.
+
+ -- Function: extract_linear_equations ([<p_1>, ..., <p_n>], [<m_1>,
+          ..., <m_n>])
+     Makes a list of the coefficients of the noncommutative polynomials
+     <p_1>, ..., <p_n> of the noncommutative monomials <m_1>, ...,
+     <m_n>.  The coefficients should be scalars.  Use
+     `list_nc_monomials' to build the list of monomials.
+
+     `load(affine)' loads this function.
+
+ -- Function: list_nc_monomials ([<p_1>, ..., <p_n>])
+ -- Function: list_nc_monomials (<p>)
+     Returns a list of the non commutative monomials occurring in a
+     polynomial <p> or a list of polynomials <p_1>, ..., <p_n>.
+
+     `load(affine)' loads this function.
+
+ -- Option variable: all_dotsimp_denoms
+     Default value: `false'
+
+     When `all_dotsimp_denoms' is a list, the denominators encountered
+     by `dotsimp'  are appended to the list.  `all_dotsimp_denoms' may
+     be initialized to an empty list `[]' before calling `dotsimp'.
+
+     By default, denominators are not collected by `dotsimp'.
+
+
+File: maxima.info,  Node: asympa,  Next: augmented_lagrangian,  Prev: affine,  Up: Top
+
+33 asympa
+*********
+
+* Menu:
+
+* Introduction to asympa::
+* Functions and variables for asympa::
+
+
+File: maxima.info,  Node: Introduction to asympa,  Next: Functions and variables for asympa,  Prev: asympa,  Up: asympa
+
+33.1 Introduction to asympa
+===========================
+
+ -- Function: asympa
+     `asympa' is a package for asymptotic analysis. The package contains
+     simplification functions for asymptotic analysis, including the
+     "big O" and "little o" functions that are widely used in
+     complexity analysis and numerical analysis.
+
+     `load ("asympa")' loads this package.
+
+
+
+File: maxima.info,  Node: Functions and variables for asympa,  Prev: Introduction to asympa,  Up: asympa
+
+33.2 Functions and variables for asympa
+=======================================
+
+
+File: maxima.info,  Node: augmented_lagrangian,  Next: bernstein,  Prev: asympa,  Up: Top
+
+34 augmented_lagrangian
+***********************
+
+* Menu:
+
+* Functions and Variables for augmented_lagrangian::
+
+
+File: maxima.info,  Node: Functions and Variables for augmented_lagrangian,  Prev: augmented_lagrangian,  Up: augmented_lagrangian
+
+34.1 Functions and Variables for augmented_lagrangian
+=====================================================
+
+ -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>)
+ -- Function: augmented_lagrangian_method (<FOM>, <xx>, <C>, <yy>,
+          optional_args)
+ -- Function: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>)
+ -- Function: augmented_lagrangian_method ([<FOM>, <grad>], <xx>, <C>,
+          <yy>, optional_args)
+     Returns an approximate minimum of the expression <FOM> with
+     respect to the variables <xx>, holding the constraints <C> equal
+     to zero.  <yy> is a list of initial guesses for <xx>.  The method
+     employed is the augmented Lagrangian method (see Refs [1] and [2]).
+
+     <grad>, if present, is the gradient of <FOM> with respect to <xx>,
+     represented as a list of expressions, one for each variable in
+     <xx>.  If not present, the gradient is constructed automatically.
+
+     <FOM> and each element of <grad>, if present, must be ordinary
+     expressions, not names of functions or lambda expressions.
+
+     `optional_args' represents additional arguments, specified as
+     `<symbol> = <value>'.  The optional arguments recognized are:
+
+    `niter'
+          Number of iterations of the augmented Lagrangian algorithm
+
+    `lbfgs_tolerance'
+          Tolerance supplied to LBFGS
+
+    `iprint'
+          IPRINT parameter (a list of two integers which controls
+          verbosity) supplied to LBFGS
+
+    `%lambda'
+          Initial value of `%lambda' to be used for calculating the
+          augmented Lagrangian
+
+     This implementation minimizes the augmented Lagrangian by applying
+     the limited-memory BFGS (LBFGS) algorithm, which is a quasi-Newton
+     algorithm.
+
+     `load(augmented_lagrangian)' loads this function.
+
+     See also `lbfgs'.
+
+     References:
+
+     [1]
+     `http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html'
+
+     [2] `http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf'
+
+     Examples:
+
+          (%i1) load (lbfgs);
+          (%o1)     /maxima/share/lbfgs/lbfgs.mac
+          (%i2) load (augmented_lagrangian);
+          (%o2)
+             /maxima/share/contrib/augmented_lagrangian.mac
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) xx: [x, y];
+          (%o4)                        [x, y]
+          (%i5) C: [x + y - 1];
+          (%o5)                      [y + x - 1]
+          (%i6) yy: [1, 1];
+          (%o6)                        [1, 1]
+          (%i7) augmented_lagrangian_method(FOM, xx, C, yy, iprint=[-1,0]);
+          (%o7) [[x = 0.66665984108002, y = 0.33334027245545],
+                                           %lambda = [- 1.333337940892525]]
+
+     Same example as before, but this time the gradient is supplied as
+     an argument.
+
+          (%i1) load (lbfgs)$
+          (%i2) load (augmented_lagrangian)$
+          (%i3) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o3)                       2 y  + x
+          (%i4) FOM: x^2 + 2*y^2;
+                                         2    2
+          (%o4)                       2 y  + x
+          (%i5) xx: [x, y];
+          (%o5)                        [x, y]
+          (%i6) grad : [2*x, 4*y];
+          (%o6)                      [2 x, 4 y]
+          (%i7) C: [x + y - 1];
+          (%o7)                      [y + x - 1]
+          (%i8) yy: [1, 1];
+          (%o8)                        [1, 1]
+          (%i9) augmented_lagrangian_method ([FOM, grad], xx, C, yy,
+                                             iprint = [-1, 0]);
+          (%o9) [[x = 0.666659841080025, y = .3333402724554462],
+                                           %lambda = [- 1.333337940892543]]
+
+
+File: maxima.info,  Node: bernstein,  Next: bode,  Prev: augmented_lagrangian,  Up: Top
+
+35 bernstein
+************
+
+* Menu:
+
+* Functions and Variables for Bernstein::
+
+
+File: maxima.info,  Node: Functions and Variables for Bernstein,  Prev: bernstein,  Up: bernstein
+
+35.1 Functions and Variables for Bernstein
+==========================================
+
+ -- Function: bernstein_poly (<k>, <n>, <x>)
+     Provided `k' is not a negative integer, the Bernstein polynomials
+     are defined by `bernstein_poly(k,n,x) = binomial(n,k) x^k
+     (1-x)^(n-k)'; for a negative integer `k', the Bernstein polynomial
+     `bernstein_poly(k,n,x)' vanishes. When either `k' or `n' are non
+     integers, the option variable `bernstein_explicit' controls the
+     expansion of the Bernstein polynomials into its explicit form;
+     example:
+
+          (%i1) load(bernstein)$
+
+          (%i2) bernstein_poly(k,n,x);
+          (%o2)                bernstein_poly(k, n, x)
+          (%i3) bernstein_poly(k,n,x), bernstein_explicit : true;
+                                                 n - k  k
+          (%o3)            binomial(n, k) (1 - x)      x
+
+     The Bernstein polynomials have both a gradef property and an
+     integrate property:
+
+          (%i4) diff(bernstein_poly(k,n,x),x);
+          (%o4) (bernstein_poly(k - 1, n - 1, x)
+                                           - bernstein_poly(k, n - 1, x)) n
+          (%i5) integrate(bernstein_poly(k,n,x),x);
+          (%o5)
+                                                                      k + 1
+           hypergeometric([k + 1, k - n], [k + 2], x) binomial(n, k) x
+           ----------------------------------------------------------------
+                                        k + 1
+
+     For numeric inputs, both real and complex, the Bernstein
+     polynomials evaluate to a numeric result:
+
+          (%i6) bernstein_poly(5,9, 1/2 + %i);
+                                  39375 %i   39375
+          (%o6)                   -------- + -----
+                                    128       256
+          (%i7) bernstein_poly(5,9, 0.5b0 + %i);
+          (%o7)           3.076171875b2 %i + 1.5380859375b2
+
+     To use `bernstein_poly', first `load("bernstein")'.
+
+ -- Variable: bernstein_explicit
+     Default value: `false'
+
+     When either `k' or `n' are non integers, the option variable
+     `bernstein_explicit' controls the expansion of `bernstein(k,n,x)'
+     into its explicit form; example:
+
+          (%i1) bernstein_poly(k,n,x);
+          (%o1)                bernstein_poly(k, n, x)
+          (%i2) bernstein_poly(k,n,x), bernstein_explicit : true;
+                                                 n - k  k
+          (%o2)            binomial(n, k) (1 - x)      x
+
+     When both `k' and `n' are explicitly integers, `bernstein(k,n,x)'
+     _always_ expands to its explicit form.
+
+ -- Function: multibernstein_poly (<[k1, k2, ..., kp]>, <[n1, n2, ...,
+          np]>, <[x1, x2, ...,  xp]>)
+     The multibernstein polynomial `multibernstein_poly (<[k1, ...,
+     kp]>, <[n1, ..., np]>, <[x1, ..., xp]>)' is the product of
+     bernstein polynomials `bernstein_poly(k1, n1, x1) * ... *
+     bernstein_poly(kp, np, xp)'.
+
+     To use `multibernstein_poly', first `load("bernstein")'.
+
+ -- Function: bernstein_approx (<f>, <[x1, x1, ..., xn]>, <n>)
+     Return the `n'-th order uniform Bernstein polynomial approximation
+     for the function `(x1, x2, ..., xn) |--> f'.
+
+     Examples:
+
+          (%i1) bernstein_approx(f(x),[x], 2);
+                           2       1                          2
+          (%o1)      f(1) x  + 2 f(-) (1 - x) x + f(0) (1 - x)
+                                   2
+          (%i2) bernstein_approx(f(x,y),[x,y], 2);
+                         2  2       1                2
+          (%o2) f(1, 1) x  y  + 2 f(-, 1) (1 - x) x y
+                                    2
+                            2  2          1   2
+           + f(0, 1) (1 - x)  y  + 2 f(1, -) x  (1 - y) y
+                                          2
+                 1  1                               1         2
+           + 4 f(-, -) (1 - x) x (1 - y) y + 2 f(0, -) (1 - x)  (1 - y) y
+                 2  2                               2
+                      2        2       1                      2
+           + f(1, 0) x  (1 - y)  + 2 f(-, 0) (1 - x) x (1 - y)
+                                       2
+                            2        2
+           + f(0, 0) (1 - x)  (1 - y)
+
+     To use `bernstein_approx', first `load("bernstein")'.
+
+ -- Function: bernstein_expand (<e>, <[x1, x1, ..., xn]>)
+     Express the _polynomial_ `e' exactly as a linear combination of
+     multi-variable Bernstein polynomials.
+
+          (%i1) bernstein_expand(x*y+1,[x,y]);
+          (%o1)    2 x y + (1 - x) y + x (1 - y) + (1 - x) (1 - y)
+          (%i2) expand(%);
+          (%o2)                        x y + 1
+
+     Maxima signals an error when the first argument isn't a polynomial.
+
+     To use `bernstein_expand', first `load("bernstein")'.
+
+
+File: maxima.info,  Node: bode,  Next: cobyla,  Prev: bernstein,  Up: Top
+
+36 bode
+*******
+
+* Menu:
+
+* Functions and Variables for bode::
+
+
+File: maxima.info,  Node: Functions and Variables for bode,  Prev: bode,  Up: bode
+
+36.1 Functions and Variables for bode
+=====================================
+
+ -- Function: bode_gain (<H>, <range>, ... <plot_opts> ...)
+     Function to draw Bode gain plots. To use this function write first
+     `load(bode)'. See also `bode_phase'.
+
+     Examples:
+
+     Examples (1 through 7 from
+     `http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html',
+     8 from Ron Crummett):
+
+          (%i1) load("bode")$
+          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
+          (%i3) bode_gain (H1 (s), [w, 1/1000, 1000])$
+
+          (%i4) H2 (s) := 1 / (1 + s/omega0)$
+          (%i5) bode_gain (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
+          (%i7) bode_gain (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i8) H4 (s) := 1 + s/omega0$
+          (%i9) bode_gain (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i10) H5 (s) := 1/s$
+          (%i11) bode_gain (H5 (s), [w, 1/1000, 1000])$
+
+          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
+          (%i13) bode_gain (H6 (s), [w, 1/1000, 1000]),
+                                    omega0 = 10, zeta = 1/10$
+
+          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
+          (%i15) bode_gain (H7 (s), [w, 1/1000, 1000]),
+                                    omega0 = 10, zeta = 1/10$
+
+          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
+          (%i17) bode_gain (H8 (s), [w, 1/1000, 1000])$
+
+ -- Function: bode_phase (<H>, <range>, ... <plot_opts> ...)
+     Function to draw Bode phase plots. To use this function write first
+     `load(bode)'. See also `bode_gain'.
+
+     Examples:
+
+     Examples (1 through 7 from
+     `http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html',
+     8 from Ron Crummett):
+
+          (%i1) load("bode")$
+          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
+          (%i3) bode_phase (H1 (s), [w, 1/1000, 1000])$
+
+          (%i4) H2 (s) := 1 / (1 + s/omega0)$
+          (%i5) bode_phase (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
+          (%i7) bode_phase (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i8) H4 (s) := 1 + s/omega0$
+          (%i9) bode_phase (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i10) H5 (s) := 1/s$
+          (%i11) bode_phase (H5 (s), [w, 1/1000, 1000])$
+
+          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
+          (%i13) bode_phase (H6 (s), [w, 1/1000, 1000]),
+                             omega0 = 10, zeta = 1/10$
+
+          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
+          (%i15) bode_phase (H7 (s), [w, 1/1000, 1000]),
+                             omega0 = 10, zeta = 1/10$
+
+          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
+          (%i17) bode_phase (H8 (s), [w, 1/1000, 1000])$
+
+          (%i18) block ([bode_phase_unwrap : true],
+                        bode_phase (H8 (s), [w, 1/1000, 1000]));
+
+
 File: maxima.info,  Node: cobyla,  Next: contrib_ode,  Prev: bode,  Up: Top
 
 37 cobyla
@@ -6241,7 +7167,7 @@ File: maxima.info,  Node: Functions and Variables for draw,  Next: Functions and
                        xrange = [0,1],
                        yrange = [0,2],
                        proportional_axes=xy),
-                  gr2d(explicit(x^2,x,0,1))
+                  gr2d(explicit(x^2,x,0,1)))$
 
  -- Graphic option: surface_hide
      Default value: `false'

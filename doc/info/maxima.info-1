@@ -13,7 +13,7 @@ END-INFO-DIR-ENTRY
 
 File: maxima.info,  Node: Top,  Next: Introduction to Maxima,  Prev: (dir),  Up: (dir)
 
-Maxima 5.30.0 Manual
+Maxima 5.31.0 Manual
 ********************
 
 Maxima is a computer algebra system, implemented in Lisp.
@@ -689,21 +689,21 @@ File: maxima.info,  Node: Functions and Variables for Bug Detection and Reportin
 
      `run_testsuite' takes the following optional keyword arguments
 
-    <display_all>
+    `display_all'
           Display all tests.  Normally, the tests are not displayed,
           unless the test fails.  (Defaults to `false').
 
-    <display_known_bugs>
+    `display_known_bugs'
           Displays tests that are marked as known bugs.  (Default is
           `false').
 
-    <tests>
+    `tests'
           This is a single test or a list of tests that should be run.
           Each test can be specified by either a string or a symbol.
           By default, all tests are run.  The complete set of tests is
           specified by `testsuite_files'.
 
-    <time>
+    `time'
           Display time information.  If `true', the time taken for each
           test file is displayed.  If `all', the time for each
           individual test is shown if `display_all' is `true'.  The
@@ -959,9 +959,9 @@ File: maxima.info,  Node: Functions and Variables for Help,  Prev: Documentation
                [...]
 
      In this example, items 7 and 8 were selected (output is shortened
-     as indicated by `[...]'.  All or none of the items could have been
-     selected by entering `all' or `none', which can be abbreviated `a'
-     or `n', respectively.
+     as indicated by `[...]').  All or none of the items could have
+     been selected by entering `all' or `none', which can be
+     abbreviated `a' or `n', respectively.
 
 
  -- Function: example (<topic>)
@@ -1295,7 +1295,7 @@ File: maxima.info,  Node: Functions and Variables for Command Line,  Next: Funct
 
     `dependencies'
           All atoms which have functional dependencies, created by the
-          `depends'  or `gradef'  functions.
+          `depends' , `dependencies' , or `gradef'  functions.
 
     `gradefs'
           All functions which have user-defined derivatives, created by
@@ -2650,40 +2650,6 @@ File: maxima.info,  Node: Functions and Variables for Numbers,  Prev: Introducti
                                         x    28
           (%o7)                     sin(-- + --)
                                         10   5
-
-     Example use:
-
-          (%i1) unitfrac(r) := block([uf : [], q],
-              if not(ratnump(r)) then
-                 error("The input to 'unitfrac' must be a rational number"),
-              while r # 0 do (
-                  uf : cons(q : 1/ceiling(1/r), uf),
-                  r : r - q),
-              reverse(uf))$
-          (%i2) unitfrac (9/10);
-                                      1  1  1
-          (%o2)                      [-, -, --]
-                                      2  3  15
-          (%i3) apply ("+", %);
-                                         9
-          (%o3)                          --
-                                         10
-          (%i4) unitfrac (-9/10);
-                                            1
-          (%o4)                       [- 1, --]
-                                            10
-          (%i5) apply ("+", %);
-                                          9
-          (%o5)                         - --
-                                          10
-          (%i6) unitfrac (36/37);
-                                  1  1  1  1    1
-          (%o6)                  [-, -, -, --, ----]
-                                  2  3  8  69  6808
-          (%i7) apply ("+", %);
-                                         36
-          (%o7)                          --
-                                         37
 
 
  -- Function: ratnump (<expr>)
@@ -4095,7 +4061,7 @@ File: maxima.info,  Node: Functions and Variables for Arrays,  Prev: Arrays,  Up
 
      `subvar' evaluates its arguments.
 
-     `arraymake (<x>, [<i>]' constructs the expression `<x>[<i>]', but
+     `arraymake (<x>, [<i>])' constructs the expression `<x>[<i>]', but
      does not evaluate it.
 
      Examples:
@@ -8381,6 +8347,40 @@ File: maxima.info,  Node: Functions for Numbers,  Next: Functions for Complex Nu
           (%i3) ceiling (f(x) - 1);
           (%o3)                       f(x) - 1
 
+     Example use:
+
+          (%i1) unitfrac(r) := block([uf : [], q],
+              if not(ratnump(r)) then
+                 error("unitfrac: argument must be a rational number"),
+              while r # 0 do (
+                  uf : cons(q : 1/ceiling(1/r), uf),
+                  r : r - q),
+              reverse(uf))$
+          (%i2) unitfrac (9/10);
+                                      1  1  1
+          (%o2)                      [-, -, --]
+                                      2  3  15
+          (%i3) apply ("+", %);
+                                         9
+          (%o3)                          --
+                                         10
+          (%i4) unitfrac (-9/10);
+                                            1
+          (%o4)                       [- 1, --]
+                                            10
+          (%i5) apply ("+", %);
+                                          9
+          (%o5)                         - --
+                                          10
+          (%i6) unitfrac (36/37);
+                                  1  1  1  1    1
+          (%o6)                  [-, -, -, --, ----]
+                                  2  3  8  69  6808
+          (%i7) apply ("+", %);
+                                         36
+          (%o7)                          --
+                                         37
+
 
  -- Function: entier (<x>)
      Returns the largest integer less than or equal to <x> where <x> is
@@ -9649,7 +9649,7 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
 
 
  -- Property: bindtest
-     The command `declare(<x>, bindtest' tells Maxima to trigger an
+     The command `declare(<x>, bindtest') tells Maxima to trigger an
      error when the symbol <x> is evaluated unbound.
 
           (%i1) aa + bb;
@@ -9866,7 +9866,7 @@ File: maxima.info,  Node: Functions and Variables for Properties,  Next: Functio
  -- Property: decreasing
  -- Property: increasing
      The commands `declare(<f>, decreasing)' or `declare(<f>,
-     increasing' tell Maxima to recognize the function <f> as an
+     increasing)' tell Maxima to recognize the function <f> as an
      decreasing or increasing function.
 
      See also `declare'  for more properties.
@@ -11023,8 +11023,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      preamble:
 
           (%i1) contour_plot (u^3 + v^2, [u, -4, 4], [v, -4, 4],
-                              [legend,false],
-                              [gnuplot_preamble, "set cntrparam levels 12"])$
+                        [legend,false],
+                        [gnuplot_preamble, "set cntrparam levels 12"])$
 
 
  -- Function: get_plot_option (<keyword>, <index>)
@@ -11035,6 +11035,54 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
      See also `plot_options',  `set_plot_option'  and the section on
      Plotting Options.
+
+ -- System variable: gnuplot_command
+     This variable stores the name of the command used to run the
+     gnuplot program when the plot format is `gnuplot'. Its default
+     value is "wgnuplot" in Windows and "gnuplot" in other systems. If
+     the gnuplot program is not found unless you give its complete path
+     or if you want to try a different version of it, you may change
+     the value of this variable. For instance,
+
+          (%i1) gnuplot_command: "/usr/local/bin/my_gnuplot"$
+
+
+ -- System variable: gnuplot_file_args
+     When the plot format is `gnuplot' and a plotting command is going
+     to save the plot in a file, this variable is used to specify the
+     way the file name should be passed to gnuplot. Its default value
+     is "~s", which means that that the name of the file will be passed
+     directly. If you want to add some options before the file name,
+     you should change the value of this variable adding the options
+     before "~s".
+
+
+ -- System variable: gnuplot_view_args
+     This variable is used to parse the argument that will be passed to
+     the gnuplot program when the plot format is `gnuplot'. Its default
+     value is "-persist ~s", where "~s" will be replaced with the name
+     of the temporary file where the gnuplot commands have been written
+     (usually "maxout.gnuplot"). The option `-persist' tells gnuplot to
+     exit after the commands in the file have been executed, without
+     closing the window where the plot has been shown.
+
+     If you are familiar with gnuplot, you might want to change the
+     value of this variable. For example, if you do:
+
+          (%i1) gnuplot_view_args: "~s -"$
+
+     gnuplot will not be closed after the commands in the file have been
+     executed; thus, the window with the plot will remain, as well as
+     the gnuplot interactive shell where you can issue other additional
+     commands to modify the plot.
+
+     In Windows versions of gnuplot older than 4.6.3 the behavior of
+     "~s -" and "-persist ~s" were the opposite; namely, "-persist ~s"
+     made the plot window and the gnuplot interactive shell remain,
+     while "~s -" closed the gnuplot shell keeping the plot window.
+     Therefore, if you are using old gnuplot versions in Windows, you
+     might have to adjust the value of `gnuplot_view_args'.
+
 
  -- Function: implicit_plot (<expr>, <x_range>, <y_range>)
  -- Function: implicit_plot ([<expr_1>, ..., <expr_n>], <x_range>,
@@ -11152,7 +11200,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      will plot the axes using arrows:
 
           (%i1) plot2d ( x^2-1, [x, -3, 3], [y, -2, 10],
-                                [box, false], [plot_format, xmaxima])$
+                          [box, false], [plot_format, xmaxima])$
 
      A plot with a logarithmic scale:
 
@@ -11170,12 +11218,12 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
 
           (%i1) r: (exp(cos(t))-2*cos(4*t)-sin(t/12)^5)$
           (%i2) plot2d([parametric, r*sin(t), r*cos(t),
-                       [t, -8*%pi, 8*%pi], [nticks, 2000]])$
+                 [t, -8*%pi, 8*%pi], [nticks, 2000]])$
 
      A "circle" with two turns, when plotted with only 7 points:
 
           (%i1) plot2d ([parametric, cos(t), sin(t),
-                        [t, -2*%pi, 2*%pi], [nticks, 8]])$
+                  [t, -2*%pi, 2*%pi], [nticks, 8]])$
 
      Plot of a common function together with the parametric
      representation of a circle.  The size of the plot has been
@@ -11185,7 +11233,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      adjust the values for your screen.
 
           (%i1) plot2d([[parametric, cos(t), sin(t),
-                        [t,0,2*%pi], [nticks, 80]],
+                  [t,0,2*%pi], [nticks, 80]],
                   abs(x)], [x,-2,2], [y, -1.5, 1.5])$
           plot2d: some values were clipped.
 
@@ -11193,21 +11241,21 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      separately:
 
           (%i1) plot2d ([discrete, [10, 20, 30, 40, 50],
-                                   [.6, .9, 1.1, 1.3, 1.4]])$
+                             [.6, .9, 1.1, 1.3, 1.4]])$
 
      The same points shown in the previous example, defining each point
      separately and without any lines joining the points:
 
           (%i1) plot2d([discrete, [[10, .6], [20, .9], [30, 1.1],
-                                   [40, 1.3], [50, 1.4]]],
-                                  [style, points])$
+                             [40, 1.3], [50, 1.4]]],
+                            [style, points])$
 
      In this example, a table with three columns is saved in a file
      "data.txt" which is then read and the second and third column are
      plotted on the two axes:
 
           (%i1) with_stdout ("data.txt", for x:0 thru 10 do
-                                             print (x, x^2, x^3))$
+                                       print (x, x^2, x^3))$
           (%i2) data: read_matrix ("data.txt")$
           (%i3) plot2d ([discrete, transpose(data)[2], transpose(data)[3]],
             [style,points], [point_type,diamond], [color,red])$
@@ -11247,7 +11295,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      this also shows how to plot with only lines and no shading:
 
           (%i1) plot3d ( log ( x^2*y^2 ), [x, -2, 2], [y, -2, 2], [z, -8, 4],
-                         [palette, false], [color, magenta, blue])$
+                   [palette, false], [color, magenta, blue])$
 
      The infinite values of z can also be avoided by choosing a grid
      that does not fall on any asymptotes; this example also shows how
@@ -11255,27 +11303,27 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      one:
 
           (%i1) plot3d (log (x^2*y^2), [x, -2, 2], [y, -2, 2],
-                   [grid, 29, 29],
-                   [palette, get_plot_option(palette,5)])$
+             [grid, 29, 29],
+             [palette, get_plot_option(palette,5)])$
 
      Two surfaces in the same plot, sharing the same domain; in gnuplot
      the two surfaces will use the same palette:
 
           (%i1) plot3d ([2^(-x^2 + y^2), 4*sin(3*(x^2+y^2))/(x^2+y^2),
-                        [x, -3, 3], [y, -2, 2]])$
+                  [x, -3, 3], [y, -2, 2]])$
 
      The same two surfaces, but now with different domains; in xmaxima
      each surface will use a different palette, chosen from the list
      defined by the option palette:
 
           (%i1) plot3d ([[2^(-x^2 + y^2),[x,-2,2],[y,-2,2]],
-                   4*sin(3*(x^2+y^2))/(x^2+y^2),
-                   [x, -3, 3], [y, -2, 2]], [plot_format,xmaxima])$
+             4*sin(3*(x^2+y^2))/(x^2+y^2),
+             [x, -3, 3], [y, -2, 2]], [plot_format,xmaxima])$
 
      Plot of a Klein bottle, defined parametrically:
 
-          (%i1) expr_1:5*cos(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0)-10.0$
-          (%i2) expr_2:-5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0)$
+          (%i1) expr_1: 5*cos(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0) - 10.0$
+          (%i2) expr_2: -5*sin(x)*(cos(x/2)*cos(y) + sin(x/2)*sin(2*y) + 3.0)$
           (%i3) expr_3: 5*(-sin(x/2)*cos(y) + cos(x/2)*sin(2*y))$
           (%i4) plot3d ([expr_1, expr_2, expr_3], [x, -%pi, %pi],
                   [y, -%pi, %pi], [grid, 40, 40])$
@@ -11286,8 +11334,8 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      `spherical_to_xyz'.
 
           (%i1) plot3d (sin(2*theta)*cos(phi), [theta, 0, %pi],
-                        [phi, 0, 2*%pi],
-                        [transform_xy, spherical_to_xyz], [grid,30,60])$
+                  [phi, 0, 2*%pi],
+                  [transform_xy, spherical_to_xyz], [grid,30,60])$
 
      Use of the predefined function `polar_to_xy' to transform from
      cylindrical to rectangular coordinates.  See the documentation for
@@ -11295,9 +11343,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      bounding box and the legend.
 
           (%i1) plot3d (r^.33*cos(th/3), [r, 0, 1], [th, 0, 6*%pi],
-                   [grid, 12, 80],
-                   [transform_xy, polar_to_xy], [box, false],
-                   [legend,false])$
+             [grid, 12, 80],
+             [transform_xy, polar_to_xy], [box, false],
+             [legend,false])$
 
      Plot of a sphere using the transformation from spherical to
      rectangular coordinates.  In xmaxima the three axes are scaled in
@@ -11305,9 +11353,9 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      sphere.  A palette with different shades of a single color is used:
 
           (%i1) plot3d ( 5, [theta, 0, %pi], [phi, 0, 2*%pi],
-                   [plot_format,xmaxima],
-                   [transform_xy, spherical_to_xyz],
-                   [palette,[value,0.65,0.7,0.1,0.9]])$
+             [plot_format,xmaxima],
+             [transform_xy, spherical_to_xyz],
+             [palette,[value,0.65,0.7,0.1,0.9]])$
 
      Definition of a function of two-variables using a matrix.  Notice
      the single quote in the definition of the function, to prevent
@@ -11315,7 +11363,7 @@ File: maxima.info,  Node: Functions and Variables for Plotting,  Next: Plotting 
      integer indices.
 
           (%i1) M: matrix([1, 2, 3, 4], [1, 2, 3, 2], [1, 2, 3, 4],
-                          [1, 2, 3, 3])$
+                    [1, 2, 3, 3])$
           (%i2) f(x, y) := float('M [round(x), round(y)])$
           (%i3) plot3d (f(x,y), [x, 1, 4], [y, 1, 4], [grid, 4, 4])$
           apply: subscript must be an integer; found: round(x)
@@ -11400,7 +11448,7 @@ All options consist of a list starting with one of the keywords in this
 section, followed by one or more values.  Most of the options can be
 used in any of the plotting commands (`plot2d',  `plot3d',
 
-   `contour_plot',  `implicit_plot')  or in the function
+   `contour_plot',  `implicit_plot'  or in the function
 `set_plot_option'.    The exceptions will be specified in the following
 list.
 
@@ -11996,7 +12044,7 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      Reads Maxima expressions from <filename> and evaluates them,
      without displaying the input or output expressions and without
      assigning labels to output expressions.  Printed output (such as
-     produced by `print'  or `describe')  is displayed, however.
+     produced by `print'  or `describe' ) is displayed, however.
 
      The special variable `%'  and the function `%th'  refer to previous
      results from the interactive interpreter, not results within the
@@ -12358,11 +12406,11 @@ File: maxima.info,  Node: Functions and Variables for File Input and Output,  Ne
      labels to the file.
 
      The special form `stringout (<filename>, functions)' writes all
-     user-defined functions (named by the global list `functions')  to
+     user-defined functions (named by the global list `functions' ) to
      the file.
 
      The special form `stringout (<filename>, values)' writes all
-     user-assigned variables (named by the global list `values')  to
+     user-assigned variables (named by the global list `values' ) to
      the file.  Each variable is printed as an assignment statement,
      with the name of the variable, a colon, and its value.  Note that
      the general form of `stringout' does not print variables as
@@ -13710,12 +13758,6 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      See `modulus'.
 
 
- -- Function: powers (<expr>, <x>)
-     Gives the powers of <x> occuring in <expr>.
-
-     `load (powers)' loads this function.
-
-
  -- Function: quotient (<p_1>, <p_2>)
  -- Function: quotient (<p_1>, <p_2>, <x_1>, ..., <x_n>)
      Returns the polynomial <p_1> divided by the polynomial <p_2>.  The
@@ -13748,9 +13790,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      as fully factored as possible without an actual call to the factor
      package.  This should always save space and may save some time in
      some computations.  The numerator and denominator are still made
-     relatively prime (e.g.  `rat ((x^2 - 1)^4/(x + 1)^2)' yields `(x -
-     1)^4 (x + 1)^2)', but the factors within each part may not be
-     relatively prime.
+     relatively prime (e.g.,  `rat((x^2 - 1)^4/(x + 1)^2)' yields `(x -
+     1)^4 (x + 1)^2' when `ratfac' is `true'), but the factors within
+     each part may not be relatively prime.
 
      `ratprint' if `false' suppresses the printout of the message
      informing the user of the conversion of floating point numbers to
@@ -13987,9 +14029,9 @@ File: maxima.info,  Node: Functions and Variables for Polynomials,  Prev: Introd
      During rational operations the expression is maintained as fully
      factored as possible without calling `factor'.  This should always
      save space and may save time in some computations.  The numerator
-     and denominator are made relatively prime, for example `rat ((x^2
-     - 1)^4/(x + 1)^2)' yields `(x - 1)^4 (x + 1)^2)', but the factors
-     within each part may not be relatively prime.
+     and denominator are made relatively prime, for example `factor
+     ((x^2 - 1)^4/(x + 1)^2)' yields `(x - 1)^4 (x + 1)^2', but the
+     factors within each part may not be relatively prime.
 
      In the `ctensr' (Component Tensor Manipulation) package, Ricci,
      Einstein, Riemann, and Weyl tensors and the scalar curvature are
@@ -14911,7 +14953,7 @@ Mathematical Functions, Chapter 6.
 
 
  -- Option variable: gammalim
-     Default value: 1000000
+     Default value: 10000
 
      `gammalim' controls simplification of the gamma function for
      integral and rational number arguments.  If the absolute value of
@@ -15609,7 +15651,7 @@ Stegun, Handbook of Mathematical Functions, Chapter 7
      The simplification fresnel_s(-x) = -fresnel_s(x) is applied when
      flag `trigsign' is true.
 
-     The simplification fresnel_s(%i*x) =  %i*fresnel_s(x) is applied
+     The simplification fresnel_s(%i*x) =  -%i*fresnel_s(x) is applied
      when flag `%iargs' is true.
 
      See flags `erf_representation' and `hypergeometric_representation'.
@@ -16539,14 +16581,41 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
 
 
  -- System variable: dependencies
-     Default value: `[]'
+ -- Function: dependencies (<f_1>, ..., <f_n>)
+     The variable `dependencies' is the list of atoms which have
+     functional dependencies, assigned by `depends', the function
+     `dependencies', or `gradef'.  The `dependencies' list is
+     cumulative: each call to `depends', `dependencies', or `gradef'
+     appends additional items.  The default value of `dependencies' is
+     `[]'.
 
-     `dependencies' is the list of atoms which have functional
-     dependencies, assigned by `depends' or `gradef'.  The
-     `dependencies' list is cumulative: each call to `depends' or
-     `gradef' appends additional items.
+     The function `dependencies(<f_1>, ..., <f_n>)' appends <f_1>, ...,
+     <f_n>, to the `dependencies' list, where <f_1>, ..., <f_n> are
+     expressions of the form `<f>(<x_1>, ..., <x_m>)', and <x_1>, ...,
+     <x_m> are any number of arguments.
 
-     See `depends' and `gradef'.
+     `dependencies(<f>(<x_1>, ..., <x_m>))' is equivalent to
+     `depends(<f>, [<x_1>, ..., <x_m>])'.
+
+     See also `depends' and `gradef'.
+
+          (%i1) dependencies;
+          (%o1)                          []
+          (%i2) depends (foo, [bar, baz]);
+          (%o2)                    [foo(bar, baz)]
+          (%i3) depends ([g, h], [a, b, c]);
+          (%o3)               [g(a, b, c), h(a, b, c)]
+          (%i4) dependencies;
+          (%o4)        [foo(bar, baz), g(a, b, c), h(a, b, c)]
+          (%i5) dependencies (quux (x, y), mumble (u));
+          (%o5)                [quux(x, y), mumble(u)]
+          (%i6) dependencies;
+          (%o6) [foo(bar, baz), g(a, b, c), h(a, b, c), quux(x, y),
+                                                                 mumble(u)]
+          (%i7) remove (quux, dependency);
+          (%o7)                         done
+          (%i8) dependencies;
+          (%o8)  [foo(bar, baz), g(a, b, c), h(a, b, c), mumble(u)]
 
 
  -- Function: depends (<f_1>, <x_1>, ..., <f_n>, <x_n>)
@@ -16578,6 +16647,9 @@ File: maxima.info,  Node: Functions and Variables for Differentiation,  Prev: Di
      represented by their arguments.  For example, `integrate' does not
      recognize the dependence of `f' on `x' unless explicitly
      represented as `integrate (f(x), x)'.
+
+     `depends(<f>, [<x_1>, ..., <x_n>])' is equivalent to
+     `dependencies(<f>(<x_1>, ..., <x_n>))'.
 
           (%i1) depends ([f, g], x);
           (%o1)                     [f(x), g(x)]
@@ -17679,13 +17751,13 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit> is the maximum number
           of subintervals to use.  Default is 200.
 
@@ -17753,13 +17825,13 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit> is the maximum number
           of subintervals to use.  Default is 200.
 
@@ -17837,13 +17909,13 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit> is the maximum number
           of subintervals to use.  Default is 200.
 
@@ -17917,13 +17989,13 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit> is the maximum number
           of subintervals to use.  Default is 200.
 
@@ -18015,18 +18087,18 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 1d-10.
 
-    <limit>
+    `limit'
           Size of internal work array.  (<limit> - <limlst>)/2 is the
           maximum number of subintervals to use.  Default is 200.
 
-    <maxp1>
+    `maxp1'
           Maximum number of Chebyshev moments.  Must be greater than 0.
           Default is 100.
 
-    <limlst>
+    `limlst'
           Upper bound on the number of cycles.  Must be greater than or
           equal to 3.  Default is 10.
 
@@ -18102,21 +18174,21 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit>/2 is the maximum number
           of subintervals to use.  Default is 200.
 
-    <maxp1>
+    `maxp1'
           Maximum number of Chebyshev moments.  Must be greater than 0.
           Default is 100.
 
-    <limlst>
+    `limlst'
           Upper bound on the number of cycles.  Must be greater than or
           equal to 3.  Default is 10.
 
@@ -18200,13 +18272,13 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit>is the maximum number of
           subintervals to use.  Default is 200.
 
@@ -18286,13 +18358,13 @@ File: maxima.info,  Node: Functions and Variables for QUADPACK,  Prev: Introduct
      order.  They all take the form `key=val'.  The keyword arguments
      are:
 
-    <epsrel>
+    `epsrel'
           Desired relative error of approximation.  Default is 1d-8.
 
-    <epsabs>
+    `epsabs'
           Desired absolute error of approximation.  Default is 0.
 
-    <limit>
+    `limit'
           Size of internal work array.  <limit> is the maximum number
           of subintervals to use.  Default is 200.
 
@@ -19875,11 +19947,11 @@ File: maxima.info,  Node: Functions for numerical solution of equations,  Next: 
      keyword arguments take the form `key=val'.  The keyword arguments
      are
 
-    <abserr>
+    `abserr'
           Desired absolute error of function value at root.  Default is
           `find_root_abs'.
 
-    <relerr>
+    `relerr'
           Desired relative error of root.  Default is `find_root_rel'.
 
      `find_root' stops when the function in question evaluates to
@@ -20023,57 +20095,54 @@ File: maxima.info,  Node: Functions for numerical solution of differential equat
      plot, or with the option `trajectory_at'. The direction of the
      integration can be controlled with the `direction' option, which
      can have values of _forward_, _backward_ or _both_. The number of
-     integration steps is given by `nsteps' and the time interval
-     between them is set up with the `tstep' option. The Adams Moulton
-     method is used for the integration; it is also possible to switch
-     to an adaptive Runge-Kutta 4th order method.
+     integration steps is given by `nsteps'; at each integration step
+     the time increment will be adjusted automatically to produce
+     displacements much smaller than the size of the plot window. The
+     numerical method used is 4th order Runge-Kutta with variable time
+     steps.
 
      Plot window menu:
 
-     The menu in the plot window has the following options: _Zoom_, will
-     change the behavior of the mouse so that it will allow you to zoom
-     in on a region of the plot by clicking with the left button. Each
-     click near a point magnifies the plot, keeping the center at the
-     point where you clicked. Holding the <Shift> key while clicking,
-     zooms out to the previous magnification. To resume computing
-     trajectories when you click on a point, select _Integrate_ from
-     the menu.
+     The menu bar of the plot window has the following seven icons:
 
-     The option _Config_ in the menu can be used to change the ODE(s) in
-     use and various other settings. After configuration changes are
-     made, the menu option _Replot_ should be selected, to activate the
-     new settings.  If a pair of coordinates are entered in the field
-     _Trajectory at_ in the _Config_ dialog menu, and the <enter> key
-     is pressed, a new integral curve will be shown, in addition to the
-     ones already shown. When _Replot_ is selected, only the last
-     integral curve entered will be shown.
+     An X. Can be used to close the plot window.
 
-     Holding the right mouse button down while the cursor is moved, can
-     be used to drag the plot sideways or up and down. Additional
-     parameters such as the number of steps, the initial value of <t>
-     and the x and y centers and radii, may be set in the Config menu.
+     A wrench and a screwdriver. Opens the configuration menu with
+     several fields that show the ODE(s) in use and various other
+     settings. If a pair of coordinates are entered in the field
+     _Trajectory at_ and the <enter> key is pressed, a new integral
+     curve will be shown, in addition to the ones already shown.
 
-     A copy of the plot can be saved as a postscript file, using the
-     menu option _Save_.
+     Two arrows following a circle. Replots the direction field with the
+     new settings defined in the configuration menu and replots only
+     the last integral curve that was previously plotted.
+
+     Hard disk drive with an arrow. Used to save a copy of the plot, in
+     Postscript format, in the file specified in a field of the box
+     that appears when that icon is clicked.
+
+     Magnifying glass with a plus sign. Zooms in the plot.
+
+     Magnifying glass with a minus sign. Zooms out the plot. The plot
+     can be displaced by holding down the right mouse button while the
+     mouse is moved.
+
+     Icon of a plot. Opens another window with a plot of the two
+     variables in terms of time, for the last integral curve that was
+     plotted.
 
      Plot options:
 
-     The `plotdf' command may include several options, each one being a
-     list of two or more elements. The first element in each option is
-     the name of the option, and the remainder is the value or values
-     assigned to the option.
+     Options can also be given within the `plotdf' itself, each one
+     being a list of two or more elements. The first element in each
+     option is the name of the option, and the remainder is the value
+     or values assigned to the option.
 
      The options which are recognized by `plotdf' are the following:
 
-        * "tstep" defines the length of the increments on the
-          independent variable <t>, used to compute an integral curve.
-          If only one expression <dydx> is given to `plotdf', the <x>
-          variable will be directly proportional to <t>.  The default
-          value is 0.1.
-
-        * "nsteps" defines the number of steps of length `tstep' that
-          will be used for the independent variable, to compute an
-          integral curve.  The default value is 100.
+        * "nsteps" defines the number of steps that will be used for the
+          independent variable, to compute an integral curve. The
+          default value is 100.
 
         * "direction" defines the direction of the independent variable
           that will be followed to compute an integral curve. Possible
@@ -20603,9 +20672,9 @@ File: maxima.info,  Node: Functions and Variables for Matrices and Linear Algebr
      Default value: `true'
 
      When `domxexpt' is `true', a matrix exponential, `exp (<M>)' where
-     <M> is a matrix, is interpreted as a matrix with element `[i,j'
+     <M> is a matrix, is interpreted as a matrix with element `[i,j]'
      equal to `exp (m[i,j])'.  Otherwise `exp (<M>)' evaluates to `exp
-     (<ev(M)>'.
+     (<ev(M)>)'.
 
      `domxexpt' affects all expressions of the form `<base>^<power>'
      where <base> is an expression assumed scalar or constant, and
@@ -22333,7 +22402,7 @@ File: maxima.info,  Node: Functions and Variables for itensor,  Prev: Introducti
 
  -- Function: remcon (<tensor_1>, ..., <tensor_n>)
  -- Function: remcon (all)
-     removes all the contraction properties from the <tensor_1>, ...,
+     removes all the contraction properties from the (<tensor_1>, ...,
      <tensor_n>). `remcon(all)' removes all contraction properties from
      all indexed objects.
 
@@ -25528,263 +25597,4 @@ File: maxima.info,  Node: Sums Products and Series,  Next: Number Theory,  Prev:
 * Introduction to Fourier series::
 * Functions and Variables for Fourier series::
 * Functions and Variables for Poisson series::
-
-
-File: maxima.info,  Node: Functions and Variables for Sums and Products,  Next: Introduction to Series,  Prev: Sums Products and Series,  Up: Sums Products and Series
-
-28.1 Functions and Variables for Sums and Products
-==================================================
-
- -- Function: bashindices (<expr>)
-     Transforms the expression <expr> by giving each summation and
-     product a unique index.  This gives `changevar' greater precision
-     when it is working with summations or products.  The form of the
-     unique index is `j<number>'. The quantity <number> is determined
-     by referring to `gensumnum', which can be changed by the user.
-     For example, `gensumnum:0$' resets it.
-
-
- -- Function: lsum (<expr>, <x>, <L>)
-     Represents the sum of <expr> for each element <x> in <L>.  A noun
-     form `'lsum' is returned if the argument <L> does not evaluate to
-     a list.
-
-     Examples:
-
-          (%i1) lsum (x^i, i, [1, 2, 7]);
-                                      7    2
-          (%o1)                      x  + x  + x
-          (%i2) lsum (i^2, i, rootsof (x^3 - 1));
-                               ====
-                               \      2
-          (%o2)                 >    i
-                               /
-                               ====
-                                             3
-                               i in rootsof(x  - 1)
-
-
- -- Function: intosum (<expr>)
-     Moves multiplicative factors outside a summation to inside.  If
-     the index is used in the outside expression, then the function
-     tries to find a reasonable index, the same as it does for
-     `sumcontract'.  This is essentially the reverse idea of the
-     `outative' property of summations, but note that it does not
-     remove this property, it only bypasses it.
-
-     In some cases, a `scanmap (multthru, <expr>)' may be necessary
-     before the `intosum'.
-
-
- -- Function: product (<expr>, <i>, <i_0>, <i_1>)
-     Represents a product of the values of <expr> as the index <i>
-     varies from <i_0> to <i_1>.  The noun form `'product' is displayed
-     as an uppercase letter pi.
-
-     `product' evaluates <expr> and lower and upper limits <i_0> and
-     <i_1>, `product' quotes (does not evaluate) the index <i>.
-
-     If the upper and lower limits differ by an integer, <expr> is
-     evaluated for each value of the index <i>, and the result is an
-     explicit product.
-
-     Otherwise, the range of the index is indefinite.  Some rules are
-     applied to simplify the product.  When the global variable
-     `simpproduct' is `true', additional rules are applied.  In some
-     cases, simplification yields a result which is not a product;
-     otherwise, the result is a noun form `'product'.
-
-     See also `nouns' and `evflag'.
-
-     Examples:
-
-          (%i1) product (x + i*(i+1)/2, i, 1, 4);
-          (%o1)           (x + 1) (x + 3) (x + 6) (x + 10)
-          (%i2) product (i^2, i, 1, 7);
-          (%o2)                       25401600
-          (%i3) product (a[i], i, 1, 7);
-          (%o3)                 a  a  a  a  a  a  a
-                                 1  2  3  4  5  6  7
-          (%i4) product (a(i), i, 1, 7);
-          (%o4)          a(1) a(2) a(3) a(4) a(5) a(6) a(7)
-          (%i5) product (a(i), i, 1, n);
-                                       n
-                                     /===\
-                                      ! !
-          (%o5)                       ! !  a(i)
-                                      ! !
-                                     i = 1
-          (%i6) product (k, k, 1, n);
-                                         n
-                                       /===\
-                                        ! !
-          (%o6)                         ! !  k
-                                        ! !
-                                       k = 1
-          (%i7) product (k, k, 1, n), simpproduct;
-          (%o7)                          n!
-          (%i8) product (integrate (x^k, x, 0, 1), k, 1, n);
-                                       n
-                                     /===\
-                                      ! !    1
-          (%o8)                       ! !  -----
-                                      ! !  k + 1
-                                     k = 1
-          (%i9) product (if k <= 5 then a^k else b^k, k, 1, 10);
-                                        15  40
-          (%o9)                        a   b
-
-
- -- Option variable: simpsum
-     Default value: `false'
-
-     When `simpsum' is `true', the result of a `sum' is simplified.
-     This simplification may sometimes be able to produce a closed
-     form.  If `simpsum' is `false' or if the quoted form `'sum' is
-     used, the value is a sum noun form which is a representation of
-     the sigma notation used in mathematics.
-
-
- -- Function: sum (<expr>, <i>, <i_0>, <i_1>)
-     Represents a summation of the values of <expr> as the index <i>
-     varies from <i_0> to <i_1>.  The noun form `'sum' is displayed as
-     an uppercase letter sigma.
-
-     `sum' evaluates its summand <expr> and lower and upper limits <i_0>
-     and <i_1>, `sum' quotes (does not evaluate) the index <i>.
-
-     If the upper and lower limits differ by an integer, the summand
-     <expr> is evaluated for each value of the summation index <i>, and
-     the result is an explicit sum.
-
-     Otherwise, the range of the index is indefinite.  Some rules are
-     applied to simplify the summation.  When the global variable
-     `simpsum' is `true', additional rules are applied.  In some cases,
-     simplification yields a result which is not a summation;
-     otherwise, the result is a noun form `'sum'.
-
-     When the `evflag' (evaluation flag) `cauchysum' is `true', a
-     product of summations is expressed as a Cauchy product, in which
-     the index of the inner summation is a function of the index of the
-     outer one, rather than varying independently.
-
-     The global variable `genindex' is the alphabetic prefix used to
-     generate the next index of summation, when an automatically
-     generated index is needed.
-
-     `gensumnum' is the numeric suffix used to generate the next index
-     of summation, when an automatically generated index is needed.
-     When `gensumnum' is `false', an automatically-generated index is
-     only `genindex' with no numeric suffix.
-
-     See also `sumcontract', `intosum', `bashindices', `niceindices',
-     `nouns', `evflag', and `zeilberger'.
-
-     Examples:
-
-          (%i1) sum (i^2, i, 1, 7);
-          (%o1)                          140
-          (%i2) sum (a[i], i, 1, 7);
-          (%o2)           a  + a  + a  + a  + a  + a  + a
-                           7    6    5    4    3    2    1
-          (%i3) sum (a(i), i, 1, 7);
-          (%o3)    a(7) + a(6) + a(5) + a(4) + a(3) + a(2) + a(1)
-          (%i4) sum (a(i), i, 1, n);
-                                      n
-                                     ====
-                                     \
-          (%o4)                       >    a(i)
-                                     /
-                                     ====
-                                     i = 1
-          (%i5) sum (2^i + i^2, i, 0, n);
-                                    n
-                                   ====
-                                   \       i    2
-          (%o5)                     >    (2  + i )
-                                   /
-                                   ====
-                                   i = 0
-          (%i6) sum (2^i + i^2, i, 0, n), simpsum;
-                                        3      2
-                             n + 1   2 n  + 3 n  + n
-          (%o6)             2      + --------------- - 1
-                                            6
-          (%i7) sum (1/3^i, i, 1, inf);
-                                      inf
-                                      ====
-                                      \     1
-          (%o7)                        >    --
-                                      /      i
-                                      ====  3
-                                      i = 1
-          (%i8) sum (1/3^i, i, 1, inf), simpsum;
-                                          1
-          (%o8)                           -
-                                          2
-          (%i9) sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf);
-                                        inf
-                                        ====
-                                        \     1
-          (%o9)                      30  >    --
-                                        /      2
-                                        ====  i
-                                        i = 1
-          (%i10) sum (i^2, i, 1, 4) * sum (1/i^2, i, 1, inf), simpsum;
-                                            2
-          (%o10)                       5 %pi
-          (%i11) sum (integrate (x^k, x, 0, 1), k, 1, n);
-                                      n
-                                     ====
-                                     \       1
-          (%o11)                      >    -----
-                                     /     k + 1
-                                     ====
-                                     k = 1
-          (%i12) sum (if k <= 5 then a^k else b^k, k, 1, 10);
-                    10    9    8    7    6    5    4    3    2
-          (%o12)   b   + b  + b  + b  + b  + a  + a  + a  + a  + a
-
-
- -- Function: sumcontract (<expr>)
-     Combines all sums of an addition that have upper and lower bounds
-     that differ by constants.  The result is an expression containing
-     one summation for each set of such summations added to all
-     appropriate extra terms that had to be extracted to form this sum.
-     `sumcontract' combines all compatible sums and uses one of the
-     indices from one of the sums if it can, and then try to form a
-     reasonable index if it cannot use any supplied.
-
-     It may be necessary to do an `intosum (<expr>)' before the
-     `sumcontract'.
-
-
- -- Option variable: sumexpand
-     Default value: `false'
-
-     When `sumexpand' is `true', products of sums and exponentiated
-     sums simplify to nested sums.
-
-     See also `cauchysum'.
-
-     Examples:
-
-          (%i1) sumexpand: true$
-          (%i2) sum (f (i), i, 0, m) * sum (g (j), j, 0, n);
-                               m      n
-                              ====   ====
-                              \      \
-          (%o2)                >      >     f(i1) g(i2)
-                              /      /
-                              ====   ====
-                              i1 = 0 i2 = 0
-          (%i3) sum (f (i), i, 0, m)^2;
-                               m      m
-                              ====   ====
-                              \      \
-          (%o3)                >      >     f(i3) f(i4)
-                              /      /
-                              ====   ====
-                              i3 = 0 i4 = 0
-
 

@@ -5367,19 +5367,29 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
           (%i1) map (euler, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
           (%o1)    [1, 0, - 1, 0, 5, 0, - 61, 0, 1385, 0, - 50521]
 
+ -- Optionsvariable: factors_only
+     Standardwert: `false'
+
+     Hat `factors_only' den Standardwert `false', werden von der
+     Funktion `ifactors'  zusammen mit den berechneten Primfaktoren
+     auch deren Multiplizitäten angegeben. Hat `factors_only' den Wert
+     `true', werden nur die Primfaktoren zurück gegeben.
+
+     Beispiel: Siehe `ifactors' .
+
  -- Funktion: fib (<n>)
-     Gibt die <n-te> Fibonacci-Zahl zurück.  Die Fibonacci-Folge ist
+     Gibt die <n>-te Fibonacci-Zahl zurück.  Die Fibonacci-Folge ist
      rekursiv definiert:
 
              fib(0) = 0
              fib(1) = 1
              fib(n) = fib(n-1) + fib(n-2)
 
-     Für negative ganze Zahlen kann die Fibonacci-Folge erweitert wird
-     mit:
+     Für negative ganze Zahlen kann die Fibonacci-Folge wie folgt
+     erweitert werden:
 
                              n + 1
-             fib(- n) = (- 1)      f(n)
+             fib(- n) = (- 1)      fib(n)
 
      Nach einem Aufruf der Funktion `fib(n)', enthält die Systemvariable
      `prevfib' die zur Zahl `n' vorhergehende Fibonacci-Zahl.
@@ -5498,6 +5508,34 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
      Argumente können ganze Zahlen und allgemeine Ausdrücke sein.
 
      Mit dem Kommando `load(functs)' wird die Funktion geladen.
+
+ -- Funktion: lucas (<n>)
+     Gibt die <n>-te Lucas-Zahl zurück.  Die Lucas-Folge ist rekursiv
+     definiert:
+
+             lucas(0) = 0
+             lucas(1) = 1
+             lucas(n) = lucas(n-1) + lucas(n-2)
+
+     Für negative ganze Zahlen kann die Lucas-Folge wie folgt erweitert
+     werden:
+
+                               -n
+             lucas(- n) = (- 1)   lucas(n)
+
+          (%i1) map (lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+          (%o1)             [7, - 4, 3, - 1, 2, 1, 3, 4, 7, 11, 18, 29, 47]
+
+     Nach einem Aufruf von `lucas' enthält die globale Variable
+     `next_lucas' den Nachfolger der zuletzt zurc"k gegebenen
+     Lucas-Zahl.  Das Beispiel zeigt, wie Fibonacci-Zahlen mit Hilfe
+     von `lucas' und `next_lucas' berechnet werden können.
+
+          (%i1) fib_via_lucas(n) :=
+                   block([lucas : lucas(n)],
+                   signum(n) * (2*next_lucas - lucas)/5 )$
+          (%i2) map (fib_via_lucas, [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+          (%o2)             [- 3, 2, - 1, 1, 0, 1, 1, 2, 3, 5, 8, 13, 21]
 
  -- Funktion: mod (<x>, <p>)
      Berechnet den Divisionsrest `x mod y' des Arguments <x> zum Modul
@@ -5707,6 +5745,66 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
           (%i4) zeta (4);
           (%o4)                        zeta(4)
 
+ -- Funktion: zn_add_table (<n>)
+     zeigt eine Additionstabelle von allen Elementen in (Z/<n>Z).
+
+     Siehe auch `zn_mult_table' , `zn_power_table' .
+
+ -- Funktion: zn_determinant (<matrix>, <p>)
+     verwendet die Technik der LR-Dekomposition, um die Determinante der
+     Matrix <matrix> über (Z/<p>Z) zu berechnen, wobei <p> eine
+     Primzahl sein muss.
+
+     Ist die Determinante nicht von Null verschieden, kann es sein,
+     dass die LR-Dekomposition nicht möglich ist. `zn_determinant'
+     berechnet diesem Fall die Determinante nicht-modular und reduziert
+     im Nachhinein.
+
+     Siehe auch `zn_invert_by_lu' .
+
+     Beispiel:
+
+          (%i1) m : matrix([1,3],[2,4]);
+                                          [ 1  3 ]
+          (%o1)                           [      ]
+                                          [ 2  4 ]
+          (%i2) zn_determinant(m, 5);
+          (%o2)                               3
+          (%i3) m : matrix([2,4,1],[3,1,4],[4,3,2]);
+                                         [ 2  4  1 ]
+                                         [         ]
+          (%o3)                          [ 3  1  4 ]
+                                         [         ]
+                                         [ 4  3  2 ]
+          (%i4) zn_determinant(m, 5);
+          (%o4)                               0
+
+ -- Funktion: zn_invert_by_lu (<matrix>, <p>)
+     verwendet die Technik der LR-Dekomposition, um ein modulares
+     Inverses der Matrix <matrix> über (Z/<p>Z) zu berechnen.
+     Voraussetzung ist, dass <matrix> invertierbar und <p> eine
+     Primzahl ist.  Sollte <matrix> nicht invertierbar sein, gibt
+     `zn_invert_by_lu' `false' zurc"k.
+
+     Siehe auch `zn_determinant' .
+
+     Beispiele:
+
+          (%i1) m : matrix([1,3],[2,4]);
+                                          [ 1  3 ]
+          (%o1)                           [      ]
+                                          [ 2  4 ]
+          (%i2) zn_determinant(m, 5);
+          (%o2)                               3
+          (%i3) mi : zn_invert_by_lu(m, 5);
+                                          [ 3  4 ]
+          (%o3)                           [      ]
+                                          [ 1  2 ]
+          (%i4) matrixmap(lambda([a], mod(a, 5)), m . mi);
+                                          [ 1  0 ]
+          (%o4)                           [      ]
+                                          [ 0  1 ]
+
  -- Funktion: zn_log (<a>, <g>, <n>)
  -- Funktion: zn_log (<a>, <g>, <n>, [[<p1>, <e1>], ..., [<pk>, <ek>]])
      Berechnet den diskreten Logarithmus.  Sei (Z/<n>Z)* eine zyklische
@@ -5766,6 +5864,30 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
           (%i8) slength( printf(false, "~b", f_max[1]) );
           (%o8)                              37
 
+ -- Funktion: zn_mult_table (<n>)
+ -- Funktion: zn_mult_table (<n>, all)
+     Ohne das optionale Argument <all> zeigt `zn_mult_table(n)' eine
+     Multiplikationstabelle von allen Elementen in (Z/<n>Z)*, d.h. von
+     allen modulo <n> invertierbaren Elementen.
+
+     Das optionale Argument <all> bewirkt, dass die Tabelle für alle
+     von Null verschiedenen Elemente gezeigt wird.
+
+     Siehe auch `zn_add_table' , `zn_power_table' .
+
+     Beispiele:
+
+          (%i1) zn_mult_table(4);
+                                          [ 1  3 ]
+          (%o1)                           [      ]
+                                          [ 3  1 ]
+          (%i2) zn_mult_table(4, all);
+                                         [ 1  2  3 ]
+                                         [         ]
+          (%o2)                          [ 2  0  2 ]
+                                         [         ]
+                                         [ 3  2  1 ]
+
  -- Funktion: zn_order (<x>, <n>)
  -- Funktion: zn_order (<x>, <n>, [[<p1>, <e1>], ..., [<pk>, <ek>]])
      Ist <x> eine Einheit in der endlichen Gruppe (Z/<n>Z)*, so
@@ -5815,6 +5937,38 @@ File: maxima.info,  Node: Funktionen und Variablen der Zahlentheorie,  Prev: Zah
           (%o4)                             true
           (%i5) map(lambda([x], ord_3/zn_order(x, p, ifs)), makelist(i,i,2,15));
           (%o5)        [22, 1, 44, 10, 5, 2, 22, 2, 8, 2, 1, 1, 20, 1]
+
+ -- Funktion: zn_power_table (<n>)
+ -- Funktion: zn_power_table (<n>, all)
+     Ohne das optionale Argument <all> zeigt `zn_power_table(n)' eine
+     Potenzierungstabelle von allen Elementen in (Z/<n>Z)*, d.h. von
+     allen modulo <n> invertierbaren Elementen.  Der Exponent <n>
+     variiert jeweils zwischen `1' und `totient(n)', so dass die
+     Tabelle rechts mit einer Spalte von Einsen endet.
+
+     Das optionale Argument <all> bewirkt, dass die Tabelle für alle
+     von Null verschiedenen Elemente gezeigt wird. In diesem Fall
+     variiert der Exponent <n> zwischen `1' und `totient(n) + 1'.  Die
+     erste und letzte Spalte stimmen dadurch überein.
+
+     Siehe auch `zn_add_table' , `zn_mult_table' .
+
+     Beispiele:
+
+          (%i1) zn_power_table(6);
+                                          [ 1  1 ]
+          (%o1)                           [      ]
+                                          [ 5  1 ]
+          (%i2) zn_power_table(6, all);
+                                         [ 1  1  1 ]
+                                         [         ]
+                                         [ 2  4  2 ]
+                                         [         ]
+          (%o2)                          [ 3  3  3 ]
+                                         [         ]
+                                         [ 4  4  4 ]
+                                         [         ]
+                                         [ 5  1  5 ]
 
  -- Funktion: zn_primroot (<n>)
  -- Funktion: zn_primroot (<n>, [[<p1>, <e1>], ..., [<pk>, <ek>]])
@@ -6935,918 +7089,6 @@ File: maxima.info,  Node: Struve-Funktionen,  Prev: Airy-Funktionen,  Up: Bessel
                  sqrt(%pi) 2  gamma(v + -)
                                         2
                                                     + struve_l(v - 1, x))/2
-
-
-File: maxima.info,  Node: Gammafunktionen und verwandte Funktionen,  Next: Exponentielle Integrale,  Prev: Bessel-Funktionen und verwandte Funktionen,  Up: Spezielle Funktionen
-
-22.3 Gammafunktionen und verwandte Funktionen
-=============================================
-
-Die Gammafunktion und die verwandten Funktionen wie die Beta-, Psi- und
-die unvollständige Gammafunktion sind definiert in Abramowitz and
-Stegun, Handbook of Mathematical Functions, Kapitel 6.
-
- -- Funktion: bffac (<x>, <fpprec>)
-     Berechnet die Fakultät für große Gleitkommazahlen.  Das Argument
-     <x> muss eine große Gleitkommazahl sein.  Das zweite Argument
-     <fpprec> ist die Anzahl der Stellen, für die die Fakultät
-     berechnet wird.  Das Ergebnis ist eine große Gleitkommazahl.
-
-     Für das symbolische Rechnen mit der Fakultät und der Gammafunktion
-     siehe die entsprechenden Funktionen `factorial'  und `gamma'.
-     Maxima ruft intern die Funktion `bffac' auf, um die Fakultät
-     `factorial' und die Gammafunktion `gamma' für eine große
-     Gleitkommazahl numerisch zu berechnen.
-
-     Siehe auch die Funktion `cbffac'  für die Berechnung der Fakultät
-     für komplexe große Gleitkommazahlen.
-
-     Beispiel:
-
-          (%i1) bffac(10.5b0, 25);
-          (%o1)             1.189942308396224845701304b7
-          (%i2) fpprec:25$
-          (%i3) 10.5b0!;
-          (%o3)             1.189942308396224845701303b7
-
- -- Funktion: bfpsi (<n>, <x>, <fpprec>)
- -- Funktion: bfpsi0 (<x>, <fpprec>)
-     `bfpsi' ist die Polygammafunktion für ein reelles Argument <x> und
-     einer ganzzahligen Ordnung <n>.  `bfpsi0' ist die Digammafunktion.
-     `bfpsi0(<x>, <fpprec>)' ist äquivalent zu `bfpsi(0, <x>,
-     <fpprec>)'.
-
-     Das Argument <x> der Funktionen `bfpsi' und `bfpsi0' muss eine
-     große Gleitkommazahl sein.  Das Argument <fpprec> gibt die Anzahl
-     der Stellen an, für die die Funktion berechnet wird.  Das Ergebnis
-     ist eine große Gleitkommazahl.
-
-     Für das symbolische Rechnen mit der Polygammafunktion siehe die
-     Funktion `psi'.    Maxima ruft intern die Funktion `bfpsi' auf, um
-     die Polygammafunktion für große Gleitkommazahlen numerisch zu
-     berechnen.
-
-     Beispiel:
-
-          (%i1) bfpsi(0, 1, 25);
-          (%o1)            - 5.772156649015328606065121b-1
-          (%i2) fpprec:25$
-
-          (%i3) psi[0](1.0b0);
-          (%o3)            - 5.772156649015328606065121b-1
-
- -- Funktion: cbffac (<z>, <fpprec>)
-     Berechnet die Fakultät für komplexe große Gleitkommazahlen.  Das
-     Argument <z> ist eine komplexe große Gleitkommazahl.  Das zweite
-     Argument <fpprec> ist die Anzahl der Stellen, für die die Fakultät
-     berechnet wird.  Das Ergebnis ist eine komplexe große
-     Gleitkommazahl.
-
-     Für das symbolische Rechnen mit der Fakultät und der Gammafunktion
-     siehe die entsprechenden Funktionen `factorial'  und `gamma'.
-     Maxima ruft intern die Funktion `cbffac' auf, um die Fakultät
-     `factorial' und die Gammafunktion `gamma' für eine komplexe große
-     Gleitkommazahl numerisch zu berechnen.
-
-     Siehe auch die Funktion `bffac'.
-
-
- -- Funktion: gamma (<z>)
-     Die Definition der Gammafunktion ist (A & S 6.1.1)
-
-                                 inf
-                                /
-                                [     z - 1   - t
-                     gamma(z) = I    t      %e    dt
-                                ]
-                                /
-                                 0
-
-     Die Gammafunktion `gamma' ist für das numerische und symbolische
-     Rechnen geeignet.  Für positive ganze Zahlen und rationale Zahlen
-     als Argument <z> wird die Gammafunktion vereinfacht.  Für
-     halbzahlige rationale Zahlen ist das Ergebnis der Vereinfachung
-     eine rationale Zahl multipliziert mit `sqrt(%pi)'.  Die
-     Vereinfachung für ganze Zahlen wird von der Optionsvariablen
-     `factlim'  kontrolliert.  Für ganze Zahlen, die größer als
-     `factlim' sind, kann es zu einem Überlauf bei der Berechnung der
-     Gammafunktion kommen.  Entsprechend wird die Vereinfachung für
-     rationale Zahlen von der Optionsvariablen `gammalim'  kontrolliert.
-
-     Für negative ganze Zahlen ist die Gammafunktion `gamma' nicht
-     definiert.
-
-     Maxima berechnet `gamma' numerisch für reelle und komplexe
-     Argumente <z>.  Das Ergebnis ist eine reelle oder komplexe
-     Gleitkommazahl.
-
-     `gamma' hat Spiegelsymmetrie.
-
-     Hat die Optionsvariable `gamma_expand'  den Wert `true', entwickelt
-     Maxima die Gammafunktion für Argumente der Form `z+n' und `z-n',
-     wobei <n> eine ganze Zahl ist.
-
-     Maxima kennt die Ableitung der Gammafunktion `gamma'.
-
-     Siehe auch die Funktion `makegamma',  um Fakultäten und
-     Betafunktionen in einem Ausdruck durch die Gammafunktion zu
-     ersetzen.
-
-     Die Euler-Mascheroni-Konstante ist `%gamma'.
-
-     Beispiele:
-
-     Vereinfachung für ganze Zahlen und rationale Zahlen.
-
-          (%i1) map('gamma,[1,2,3,4,5,6,7,8,9]);
-          (%o1)        [1, 1, 2, 6, 24, 120, 720, 5040, 40320]
-          (%i2) map('gamma,[1/2,3/2,5/2,7/2]);
-                              sqrt(%pi)  3 sqrt(%pi)  15 sqrt(%pi)
-          (%o2)   [sqrt(%pi), ---------, -----------, ------------]
-                                  2           4            8
-          (%i3) map('gamma,[2/3,5/3,7/3]);
-                                            2           1
-                                    2 gamma(-)  4 gamma(-)
-                                2           3           3
-          (%o3)          [gamma(-), ----------, ----------]
-                                3       3           9
-
-     Numerische Berechnung für reelle und komplexe Argumente.
-
-          (%i4) map('gamma,[2.5,2.5b0]);
-          (%o4)     [1.329340388179137, 1.3293403881791370205b0]
-          (%i5) map('gamma,[1.0+%i,1.0b0+%i]);
-          (%o5) [0.498015668118356 - .1549498283018107 %i,
-                    4.9801566811835604272b-1 - 1.5494982830181068513b-1 %i]
-
-     `gamma' hat Spiegelsymmetrie.
-
-          (%i6) declare(z,complex)$
-          (%i7) conjugate(gamma(z));
-          (%o7)                  gamma(conjugate(z))
-
-     Maxima entwickelt `gamma(z+n)' und `gamma(z-n)', wenn die
-     Optionsvariable `gamma_expand' den Wert `true' hat.
-
-          (%i8) gamma_expand:true$
-
-          (%i9) [gamma(z+1),gamma(z-1),gamma(z+2)/gamma(z+1)];
-                                         gamma(z)
-          (%o9)             [z gamma(z), --------, z + 1]
-                                          z - 1
-
-     Die Ableitung der Gammafunktion `gamma'.
-
-          (%i10) diff(gamma(z),z);
-          (%o10)                  psi (z) gamma(z)
-                                     0
-
- -- Optionsvariable: gamma_expand
-     Standardwert: `false'
-
-     Kontrolliert die Vereinfachung der Gammafunktion `gamma'  und
-     verwandte Funktionen wie `gamma_incomplete'  für den Fall, dass
-     das Argument die Form `z+n' oder `z-n' hat.  Dabei ist `z' ist ein
-     beliebiges Argument und `n' ist eine ganze Zahl.
-
-     Siehe die Funktion `gamma' für ein Beispiel.
-
- -- Funktion: log_gamma (<z>)
-     Der Logarithmus der Gammafunktion.
-
- -- Funktion: gamma_incomplete (<a>, <z>)
-     Die unvollständige Gammafunktion (A & S 6.5.2) die definiert ist
-     als
-
-                            inf
-                           /
-                           [     a - 1   - t
-                           I    t      %e    dt
-                           ]
-                           /
-                            z
-
- -- Funktion: gamma_incomplete_regularized (<a>, <z>)
-     Regularisierte unvollständige Gammafunktion (A & S 6.5.1)
-
-                         gamma_incomplete(a, z)
-                         ----------------------
-                                gamma(a)
-
- -- Funktion: gamma_incomplete_generalized (<a>, <z1>, <z2>)
-     Verallgemeinerte unvollständige Gammafunktion
-
-                            z2
-                           /
-                           [    a - 1   - t
-                           I   t      %e    dt
-                           ]
-                           /
-                            z1
-
- -- Optionsvariable: gammalim
-     Standardwert: 1000000
-
-     Kontrolliert die Vereinfachung der Gammafunktion für rationale
-     Argumente.  Ist der Betrag des Arguments der Gammafunktion größer
-     als `gammalim', wird die Gammafunktion nicht vereinfacht.  Damit
-     wird verhindert, dass die Berechnung der Gammafunktion zu einem
-     Überlauf führt und mit einem Fehler abbricht.
-
-     Siehe auch die Optionsvariable `factlim',  um die Vereinfachung für
-     ganze Zahlen zu kontrollieren.
-
- -- Funktion: makegamma (<expr>)
-     Ersetzt Fakultäten sowie Binomial- und Betafunktionen durch die
-     Gammafunktion `gamma'  im Ausdruck <expr>.
-
-     Siehe auch die Funktion `makefact',  um stattdessen Fakultäten in
-     den Ausdruck einzusetzen.
-
-     Beispiel:
-
-          (%i1) expr: binomial(a,b)*gamma(b+1)/gamma(a+1);
-                             binomial(a, b) gamma(b + 1)
-          (%o1)              ---------------------------
-                                    gamma(a + 1)
-          (%i2) makegamma(expr);
-                                         1
-          (%o2)                  ------------------
-                                 gamma(- b + a + 1)
-
- -- Funktion: beta (<a>, <b>)
-     Die Betafunktion ist definiert als `gamma(a) gamma(b)/gamma(a+b)'
-     (A & S 6.2.1).
-
-     Maxima vereinfacht die Betafunktion für positive ganze Zahlen <a>
-     und <b> sowie rationale Zahlen, deren Summe `<a> + <b>' eine ganze
-     Zahl ist.  Hat die Optionsvariable `beta_args_sum_to_integer'  den
-     Wert `true', vereinfacht Maxima die Betafunktion für allgemeine
-     Ausdrücke <a> und <b>, deren Summe eine ganze Zahl ist.
-
-     Ist eines der Argumente <a> oder <b> Null, ist die Betafunktion
-     nicht definiert.
-
-     Im allgemeinen ist die Betafunktion nicht definiert für negative
-     ganze Zahlen als Argument.  Ausnahme ist der Fall, dass <a = -n>,
-     wobei <n> eine positive ganze Zahl und <b> eine positive ganze
-     Zahl mit <b <= b> ist.  In diesem Fall kann eine analytische
-     Fortsetzung der Betafunktion definiert werden.  Maxima gibt für
-     diesen Fall ein Ergebnis zurück.
-
-     Hat die Optionsvariable `beta_expand' den Wert `true', werden
-     Ausdrücke wie `beta(a+n, b' und `beta(a-n, b)' oder `beta(a, b+n'
-     und `beta(a, b-n)' entwickelt.
-
-     Maxima berechnet die Betafunktion für reelle und komplexe
-     Gleitkommazahlen numerisch.  Für die numerische Berechnung nutzt
-     Maxima die Funktion `log_gamma' :
-
-                     - log_gamma(b + a) + log_gamma(b) + log_gamma(a)
-                   %e
-
-     Maxima kennt Symmetrieeigenschaften der Betafunktion.  Die
-     Betafunktion ist symmetrisch und hat Spiegelsymmetrie.
-
-     Maxima kennt die Ableitung der Betafunktion nach den Argumenten
-     <a> und <b>.
-
-     Mit der Funktion `makegamma'  kann die Betafunktion durch
-     Gammafunktionen ersetzt werden.  Entsprechend ersetzt die Funktion
-     `makefact'
-
-     Betafunktionen in einem Ausdruck durch Fakultäten.
-
-     Beispiele:
-
-     Vereinfachung der Betafunktion, wenn eines der Argumente eine
-     ganze Zahl ist.
-
-          (%i1) [beta(2,3),beta(2,1/3),beta(2,a)];
-                                         1   9      1
-          (%o1)                         [--, -, ---------]
-                                         12  4  a (a + 1)
-
-     Vereinfachung der Betafunktion für zwei rationale Argumente, die
-     sich zu einer ganzen Zahl summieren.
-
-          (%i2) [beta(1/2,5/2),beta(1/3,2/3),beta(1/4,3/4)];
-                                    3 %pi   2 %pi
-          (%o2)                    [-----, -------, sqrt(2) %pi]
-                                      8    sqrt(3)
-
-     Hat die Optionsvariable `beta_args_sum_to_integer' den Wert `true',
-     vereinfacht die Betafunktion für allgemeine Ausdrücke, die sich zu
-     einer ganzen Zahl summieren.
-
-          (%i3) beta_args_sum_to_integer:true$
-          (%i4) beta(a+1,-a+2);
-                                          %pi (a - 1) a
-          (%o4)                         ------------------
-                                        2 sin(%pi (2 - a))
-
-     Die möglichen Ergebnisse, wenn eines der Argumente eine negative
-     ganze Zahl ist.
-
-          (%i5) [beta(-3,1),beta(-3,2),beta(-3,3)];
-                                              1  1    1
-          (%o5)                            [- -, -, - -]
-                                              3  6    3
-
-     Vereinfachungen, wenn die Optionsvariable `beta_expand' den Wert
-     `true' hat.
-
-          (%i6) beta_expand:true$
-          (%i7) [beta(a+1,b),beta(a-1,b),beta(a+1,b)/beta(a,b+1)];
-                              a beta(a, b)  beta(a, b) (b + a - 1)  a
-          (%o7)              [------------, ----------------------, -]
-                                 b + a              a - 1           b
-
-     Die Betafunktion ist nicht definiert, wenn eines der Argumente
-     Null ist.
-
-          (%i7) beta(0,b);
-          beta: expected nonzero arguments; found 0, b
-           -- an error.  To debug this try debugmode(true);
-
-     Numerische Berechnung der Betafunktion für reelle und komplexe
-     Argumente.
-
-          (%i8) beta(2.5,2.3);
-          (%o8) .08694748611299981
-
-          (%i9) beta(2.5,1.4+%i);
-          (%o9) 0.0640144950796695 - .1502078053286415 %i
-
-          (%i10) beta(2.5b0,2.3b0);
-          (%o10) 8.694748611299969b-2
-
-          (%i11) beta(2.5b0,1.4b0+%i);
-          (%o11) 6.401449507966944b-2 - 1.502078053286415b-1 %i
-
-     Die Betafunktion ist symmetrisch und hat Spiegelsymmetrie.
-
-          (%i14) beta(a,b)-beta(b,a);
-          (%o14)                                 0
-          (%i15) declare(a,complex,b,complex)$
-          (%i16) conjugate(beta(a,b));
-          (%o16)                 beta(conjugate(a), conjugate(b))
-
-     Ableitung der Betafunktion.
-
-          (%i17) diff(beta(a,b),a);
-          (%o17)               - beta(a, b) (psi (b + a) - psi (a))
-                                                0             0
-
- -- Funktion: beta_incomplete (<a>, <b>, <z>)
-     Die Definition der unvollständigen Betafunktion ist (A & S 6.6.1)
-
-                                 z
-                                /
-                                [         b - 1  a - 1
-                                I  (1 - t)      t      dt
-                                ]
-                                /
-                                 0
-
-     Diese Definition ist möglich für realpart(a)>0 und realpart(b)>0
-     sowie abs(z)<1.  Für andere Werte kann die unvollständige
-     Betafunktion als eine verallgemeinerte Hypergeometrische Funktion
-     definiert werden:
-
-             gamma(a) hypergeometric_generalized([a, 1 - b], [a + 1], z) z
-
-     (Siehe functions.wolfram.com für eine Definition der
-     unvollständigen Betafunktion.)
-
-     Für negative ganze Zahlen a = -n und positive ganze Zahlen b = m
-     mit m <= n kann die unvollständige Betafunktion definiert werden
-     als
-
-                                      m - 1           k
-                                      ====  (1 - m)  z
-                                n - 1 \            k
-                               z       >    -----------
-                                      /     k! (n - k)
-                                      ====
-                                      k = 0
-
-     Maxima nutzt diese Definition, um die Funktion `beta_incomplete'
-     für negative ganzzahlige Argumente <a> zu vereinfachen.
-
-     Für positive ganzzahlige Argumente <a> vereinfacht
-     `beta_incomplete' für jedes Argument <b> und <z>.  Entsprechend
-     vereinfacht `beta_incomplete' für ein positives ganzzahliges
-     Argument <b> mit der Ausnahme, dass <a> eine negative ganze Zahl
-     ist.
-
-     Für z=0 und realpart(a) > 0 hat `beta_incomplete' den speziellen
-     Wert Null.  Für <z=1> und realpart(b) > 0 vereinfacht
-     `beta_incomplete' zu einem Ausdruck mit der Betafunktion `beta(a,
-     b)'.
-
-     Maxima berechnet `beta_incomplete' numerisch für reelle und
-     komplexe Gleitkommazahlen als Argumente.  Für die numerische
-     Berechnung nutzt Maxima eine Entwicklung der unvollständigen
-     Betafunktion als Kettenbruch.
-
-     Hat die Optionsvariable `beta_expand'  den Wert `true', entwickelt
-     Maxima Ausdrücke der Form `beta_incomplete(a+n, b, z)' und
-     `beta_incomplete(a-n, b, z)', wobei `n' eine ganze Zahl ist.
-
-     Maxima kennt die Ableitungen der unvollständigen Betafunktion nach
-     den Variablen <a>, <b> und <z> und das Integral für die
-     Integrationsvariable <z>.
-
-     Beispiele:
-
-     Vereinfachung für eine positive ganze Zahl als Argument <a>.
-
-          (%i1) beta_incomplete(2,b,z);
-                                                 b
-                                      1 - (1 - z)  (b z + 1)
-          (%o1)                       ----------------------
-                                            b (b + 1)
-
-     Vereinfachung für eine positive ganze Zahl als Argument <b>.
-
-          (%i2) beta_incomplete(a,2,z);
-                                                         a
-                                        (a (1 - z) + 1) z
-          (%o2)                         ------------------
-                                            a (a + 1)
-
-     Vereinfachung für positive ganzzahlige Argumente <a> und <b>.
-
-          (%i3) beta_incomplete(3,2,z);
-                                                         3
-                                        (3 (1 - z) + 1) z
-          (%o3)                         ------------------
-                                                12
-
-     <a> ist eine negative ganze Zahl mit b <= (-a).  Maxima vereinfacht
-     für diesem Fall.
-
-          (%i4) beta_incomplete(-3,1,z);
-                                                 1
-          (%o4)                              - ----
-                                                  3
-                                               3 z
-
-     Für die speziellen Werte z=0 und z=1 vereinfacht Maxima.
-
-          (%i5) assume(a>0,b>0)$
-          (%i6) beta_incomplete(a,b,0);
-          (%o6)                                 0
-          (%i7) beta_incomplete(a,b,1);
-          (%o7)                            beta(a, b)
-
-     Numerische Berechnung für reelle Argumente.
-
-          (%i8) beta_incomplete(0.25,0.50,0.9);
-          (%o8)                          4.594959440269333
-          (%i9)  fpprec:25$
-          (%i10) beta_incomplete(0.25,0.50,0.9b0);
-          (%o10)                    4.594959440269324086971203b0
-
-     Für abs(z) > 1 ist das Ergebnis komplex.
-
-          (%i11) beta_incomplete(0.25,0.50,1.7);
-          (%o11)              5.244115108584249 - 1.45518047787844 %i
-
-     Numerische Ergebnisse für komplexe Argumente.
-
-          (%i14) beta_incomplete(0.25+%i,1.0+%i,1.7+%i);
-          (%o14)             2.726960675662536 - .3831175704269199 %i
-          (%i15) beta_incomplete(1/2,5/4*%i,2.8+%i);
-          (%o15)             13.04649635168716 %i - 5.802067956270001
-          (%i16)
-
-     Entwicklung, wenn `beta_expand' den Wert `true' hat.
-
-          (%i23) beta_incomplete(a+1,b,z),beta_expand:true;
-                                                                 b  a
-                             a beta_incomplete(a, b, z)   (1 - z)  z
-          (%o23)             -------------------------- - -----------
-                                       b + a                 b + a
-
-          (%i24) beta_incomplete(a-1,b,z),beta_expand:true;
-                                                                     b  a - 1
-                     beta_incomplete(a, b, z) (- b - a + 1)   (1 - z)  z
-          (%o24)     -------------------------------------- - ---------------
-                                     1 - a                         1 - a
-
-     Ableitung und Integral der unvollständigen Betafunktion.
-
-          (%i34) diff(beta_incomplete(a, b, z), z);
-                                        b - 1  a - 1
-          (%o34)                 (1 - z)      z
-          (%i35) integrate(beta_incomplete(a, b, z), z);
-                        b  a
-                 (1 - z)  z
-          (%o35) ----------- + beta_incomplete(a, b, z) z
-                    b + a
-                                                 a beta_incomplete(a, b, z)
-                                               - --------------------------
-                                                           b + a
-          (%i36) factor(diff(%, z));
-          (%o36)              beta_incomplete(a, b, z)
-
- -- Funktion: beta_incomplete_regularized (<a>, <b>, <z>)
-     Die regularisierte unvollständige Beta Funktion (A & S 6.6.2), die
-     definiert ist als
-
-                        beta_incomplete(a, b, z)
-                        ------------------------
-                               beta(a, b)
-
-     Wie bei der Funktion `beta_incomplete'  ist diese Definition nicht
-     vollständig.  Siehe `functions.wolfram.com' für eine vollständige
-     Definition der Funktion.
-
-     `beta_incomplete_regularized' vereinfacht, wenn das Argument <a>
-     oder <b> eine positive ganze Zahl ist.  Für Argumente `<z> = 0' und
-     `realpart(<a>) > 0' vereinfacht die Funktion
-     `beta_incomplete_regularized' zu `0'.  Für `<z> = 1' und
-     `realpart(<b>) > 0' vereinfacht die Funktion
-     `beta_incomplete_regularized' zu `1'.
-
-     Maxima berechnet `beta_incomplete_regularized' für reelle und
-     komplexe Gleitkommazahlen als Argumente numerisch.
-
-     When `beta_expand' is `true', Maxima expands
-     `beta_incomplete_regularized' for arguments a+n or a-n, where n is
-     an integer.
-
-     Hat die Optionsvariable `beta_expand'  den Wert `true', expandiert
-     Maxima `beta_incomplete_regularized' für Argumente a+n oder a-n,
-     wobei <n> eine ganze Zahl ist.
-
-     Maxima kennt die Ableitung der Funktion
-     `beta_incomplete_regularized' nach den Argumenten <a>, <b> und <z>
-     sowie das Integral für das Argument <z>.
-
-     Beispiele:
-
-     Vereinfachung, wenn die Argumente <a> oder <b> ganze Zahlen sind.
-
-          (%i1) beta_incomplete_regularized(2,b,z);
-                                          b
-          (%o1)                1 - (1 - z)  (b z + 1)
-          (%i2) beta_incomplete_regularized(a,2,z);
-                                                  a
-          (%o2)                  (a (1 - z) + 1) z
-          (%i3) beta_incomplete_regularized(3,2,z);
-                                                  3
-          (%o3)                  (3 (1 - z) + 1) z
-
-     Für die speziellen Werte z=0 und z=1 vereinfacht Maxima.
-
-          (%i4) assume(a>0,b>0)$
-
-          (%i5) beta_incomplete_regularized(a,b,0);
-          (%o5)                           0
-          (%i6) beta_incomplete_regularized(a,b,1);
-          (%o6)                           1
-
-     Numerische Berechnung für reelle und komplexe Argumente.
-
-          (%i7) beta_incomplete_regularized(0.12,0.43,0.9);
-          (%o7)                   .9114011367359802
-          (%i8) fpprec:32$
-
-          (%i9) beta_incomplete_regularized(0.12,0.43,0.9b0);
-          (%o9)         9.1140113673598075519946998779975b-1
-          (%i10) beta_incomplete_regularized(1+%i,3/3,1.5*%i);
-          (%o10)      .2865367499935405 %i - .1229959633346841
-          (%i11) fpprec:20$
-
-          (%i12) beta_incomplete_regularized(1+%i,3/3,1.5b0*%i);
-          (%o12) 2.8653674999354036142b-1 %i - 1.2299596333468400163b-1
-
-     Expansion, wenn `beta_expand' den Wert `true' hat.
-
-          (%i13) beta_incomplete_regularized(a+1,b,z);
-                                                               b  a
-                                                        (1 - z)  z
-          (%o13) beta_incomplete_regularized(a, b, z) - ------------
-                                                        a beta(a, b)
-          (%i14) beta_incomplete_regularized(a-1,b,z);
-          (%o14) beta_incomplete_regularized(a, b, z)
-                                                               b  a - 1
-                                                        (1 - z)  z
-                                                   - ----------------------
-                                                     beta(a, b) (b + a - 1)
-
-     Die Ableitung und das Integral der Funktion.
-
-          (%i15) diff(beta_incomplete_regularized(a,b,z),z);
-                                        b - 1  a - 1
-                                 (1 - z)      z
-          (%o15)                 -------------------
-                                     beta(a, b)
-          (%i16) integrate(beta_incomplete_regularized(a,b,z),z);
-          (%o16) beta_incomplete_regularized(a, b, z) z
-                                                                     b  a
-                                                              (1 - z)  z
-                    a (beta_incomplete_regularized(a, b, z) - ------------)
-                                                              a beta(a, b)
-                  - -------------------------------------------------------
-                                             b + a
-
- -- Funktion: beta_incomplete_generalized (<a>, <b>, <z1>, <z2>)
-     Die Definition der verallgemeinerten unvollständigen Betafunktion
-     ist
-
-                                z2
-                               /
-                               [          b - 1  a - 1
-                               I   (1 - t)      t      dt
-                               ]
-                               /
-                                z1
-
-     Maxima vereinfacht `beta_incomplete_refularized' für positive
-     ganzzahlige Argumente <a> und <b>.
-
-     Ist realpart(a)>0 und z1=0 oder z2=0, vereinfacht Maxima
-     `beta_incomplete_generalized' zu der Funktion `beta_incomplete'.
-     Ist realpart(b)>0 und z1=1 oder <z2=1>, vereinfacht Maxima zu
-     einem Ausdruck mit der Funktion `beta'  und `beta_incomplete'.
-
-     Maxima berechnet `beta_incomplete_regularized' numerisch für
-     reelle und komplexe Gleitkommazahlen in doppelter und beliebiger
-     Genauigkeit.
-
-     Hat die Optionsvariable `beta_expand'  den Wert `true', dann
-     expandiert Maxima `beta_incomplete_generalized' für Argumente a+n
-     und a-n, wobei <n> eine positive ganze Zahl ist.
-
-     Maxima kennt die Ableitung der Funktion
-     `beta_incomplete_generalized' nach den Variablen <a>, <b>, <z1>
-     und <z2> sowie die Integrale für die Integrationsvariablen  <z1>
-     und <z2>.
-
-     Beispiele:
-
-     Maxima vereinfacht `beta_incomplete_generalized', wenn <a> und <b>
-     positive ganze Zahlen sind.
-
-          (%i1) beta_incomplete_generalized(2,b,z1,z2);
-                             b                      b
-                     (1 - z1)  (b z1 + 1) - (1 - z2)  (b z2 + 1)
-          (%o1)      -------------------------------------------
-                                      b (b + 1)
-          (%i2) beta_incomplete_generalized(a,2,z1,z2);
-                                        a                      a
-                     (a (1 - z2) + 1) z2  - (a (1 - z1) + 1) z1
-          (%o2)      -------------------------------------------
-                                      a (a + 1)
-          (%i3) beta_incomplete_generalized(3,2,z1,z2);
-                        2      2                       2      2
-                (1 - z1)  (3 z1  + 2 z1 + 1) - (1 - z2)  (3 z2  + 2 z2 + 1)
-          (%o3) -----------------------------------------------------------
-                                            12
-
-     Vereinfachung für die speziellen Werte z1=0, z2=0, z1=1 und z2=1.
-
-          (%i4) assume(a > 0, b > 0)$
-          (%i5) beta_incomplete_generalized(a,b,z1,0);
-          (%o5)                    - beta_incomplete(a, b, z1)
-
-          (%i6) beta_incomplete_generalized(a,b,0,z2);
-          (%o6)                    - beta_incomplete(a, b, z2)
-
-          (%i7) beta_incomplete_generalized(a,b,z1,1);
-          (%o7)              beta(a, b) - beta_incomplete(a, b, z1)
-
-          (%i8) beta_incomplete_generalized(a,b,1,z2);
-          (%o8)              beta_incomplete(a, b, z2) - beta(a, b)
-
-     Numerische Berechnung für reelle Argumente in doppelter und
-     beliebiger Gleitkommagenauigkeit.
-
-          (%i9) beta_incomplete_generalized(1/2,3/2,0.25,0.31);
-          (%o9)                        .09638178086368676
-
-          (%i10) fpprec:32$
-          (%i10) beta_incomplete_generalized(1/2,3/2,0.25,0.31b0);
-          (%o10)               9.6381780863686935309170054689964b-2
-
-     Numerische Berechnung für komplexe Argumente in doppelter und
-     beliebiger Gleitkommagenauigkeit.
-
-          (%i11) beta_incomplete_generalized(1/2+%i,3/2+%i,0.25,0.31);
-          (%o11)           - .09625463003205376 %i - .003323847735353769
-          (%i12) fpprec:20$
-          (%i13) beta_incomplete_generalized(1/2+%i,3/2+%i,0.25,0.31b0);
-          (%o13)     - 9.6254630032054178691b-2 %i - 3.3238477353543591914b-3
-
-     Expansion für a+n oder a-n und <n> eine positive ganze Zahl, wenn
-     `beta_expand' den Wert `true' hat.
-
-          (%i14) beta_expand:true$
-
-          (%i15) beta_incomplete_generalized(a+1,b,z1,z2);
-                         b   a           b   a
-                 (1 - z1)  z1  - (1 - z2)  z2
-          (%o15) -----------------------------
-                             b + a
-                                a beta_incomplete_generalized(a, b, z1, z2)
-                              + -------------------------------------------
-                                                   b + a
-          (%i16) beta_incomplete_generalized(a-1,b,z1,z2);
-
-                 beta_incomplete_generalized(a, b, z1, z2) (- b - a + 1)
-          (%o16) -------------------------------------------------------
-                                          1 - a
-                                              b   a - 1           b   a - 1
-                                      (1 - z2)  z2      - (1 - z1)  z1
-                                    - -------------------------------------
-                                                      1 - a
-
-     Ableitung nach der Variablen <z1> und die Integrale für die
-     Integrationsvariablen <z1> und <z2>.
-
-          (%i17) diff(beta_incomplete_generalized(a,b,z1,z2),z1);
-                                         b - 1   a - 1
-          (%o17)               - (1 - z1)      z1
-          (%i18) integrate(beta_incomplete_generalized(a,b,z1,z2),z1);
-          (%o18) beta_incomplete_generalized(a, b, z1, z2) z1
-                                            + beta_incomplete(a + 1, b, z1)
-          (%i19) integrate(beta_incomplete_generalized(a,b,z1,z2),z2);
-          (%o19) beta_incomplete_generalized(a, b, z1, z2) z2
-                                            - beta_incomplete(a + 1, b, z2)
-
- -- Optionsvariable: beta_expand
-     Standardwert: `false'
-
-     Hat die Optionsvariable `beta_expand' den Wert `true', werden
-     `beta(a,b)' und verwandte Funktionen für Argumente a+n oder a-n
-     entwickelt, wobei <n> eine positive ganze Zahl ist.
-
- -- Optionsvariable: beta_args_sum_to_integer
-     Standardwert: `false'
-
-     Hat die Optionsvariable `beta_args_sum_to_integer' den Wert `true',
-     vereinfacht Maxima die Funktion `beta(a,b)', wenn sich die
-     Argumente <a> und <b> zu einer ganzen Zahlen summieren.  Siehe
-     auch `beta'.
-
-
- -- Funktion: psi [<n>](<x>)
-     Ist definiert als die Ableitung der Funktion `log(gamma(<x>))' der
-     Ordnung `<n>+1'.  `psi[0](<x>)' ist die erste Ableitung,
-     `psi[1](<x>)' ist die zweite Ableitung, usw.
-
-     Maxima kann numerische Werte für reelle Gleitkommazahlen
-     berechnen.  Weiterhin kann Maxima die Funktion `psi' für rationale
-     Argumente zu exakten Werten vereinfachen.  Die Optionsvariablen
-     `maxpsiposint',
-
-     `maxpsinegint',  `maxpsifracnum'  und `maxpsifracdenom'
-     kontrollieren, den Wertebereich der Argumente für den die Funktion
-     `psi' vereinfacht.
-
-     Die Funktion `bfpsi'  des `bffac'-Package kann numerische Werte der
-     Funktion `psi' berechnen.
-
- -- Optionsvariable: maxpsiposint
-     Standardwert: `20'
-
-     Die Optionsvariable `maxpsiposint' kontrolliert die Vereinfachung
-     der Funktion `psi'  und enthält eine obere positive Schranke.  Ist
-     das Argument <x> der Funktion `psi' größer als `maxpsiposint',
-     dann versucht Maxima nicht `psi[<n>](<x>)' zu vereinfachen.
-
-     Siehe auch `maxpsifracdenom',  `maxpsifracnum'  und `maxpsinegint'.
-
-     Beispiele:
-
-          (%o1)                          20
-          (%i2) psi[0](20);
-                                 275295799
-          (%o2)                  --------- - %gamma
-                                 77597520
-          (%i3) maxpsiposint:10;
-          (%o3)                          10
-          (%i4) psi[0](20);
-          (%o4)                       psi (20)
-                                         0
-          (%i5) psi[0](10);
-                                    7129
-          (%o5)                     ---- - %gamma
-                                    2520
-
- -- Optionsvariable: maxpsinegint
-     Standardwert: `-10'
-
-     Die Optionsvariable `maxpsinegint' kontrolliert die Vereinfachung
-     der Funktion `psi'  und enthält eine untere negative Schranke.
-     Ist das Argument <x> der Funktion `psi' kleiner als `maxpsinegint',
-     dann versucht Maxima nicht `psi[<n>](<x>)' zu vereinfachen.
-
-     Siehe auch `maxpsifracdenom',  `maxpsifracnum'  und `maxpsiposint'.
-
-     Beispiele:
-
-          (%i1) maxpsinegint:-10;
-          (%o1)                         - 10
-          (%i2) psi[0](-3/2);
-                                                     8
-          (%o2)                - 2 log(2) - %gamma + -
-                                                     3
-          (%i3) maxpsinegint:-1;
-          (%o3)                          - 1
-          (%i4) psi[0](-3/2);
-                                             3
-          (%o4)                       psi (- -)
-                                         0   2
-          (%i5) psi[0](-1/2);
-          (%o5)                - 2 log(2) - %gamma + 2
-
- -- Optionsvariable: maxpsifracnum
-     Standardwert: `6'
-
-     Die Optionsvariable `maxpsifracnum' kontrolliert die Vereinfachung
-     der Funktion `psi'.    Ist das Argument <x> der Funktion `psi' eine
-     rationale Zahl kleiner als eins mit `p/q' und ist der Zähler `p'
-     größer als `maxpsifracnum', dann versucht Maxima nicht
-     `psi[<n>](<x>)' zu vereinfachen.
-
-     Siehe auch `maxpsifracdenom',  `maxpsiposint'  und `maxpsinegint'.
-
-     Beispiele:
-
-          (%i1) maxpsifracnum: 6;
-          (%o1)                           6
-          (%i2) psi[0](5/6);
-                      3 log(3)              sqrt(3) %pi
-          (%o2)     - -------- - 2 log(2) + ----------- - %gamma
-                         2                       2
-          (%i3) maxpsifracnum: 3;
-          (%o3)                           3
-          (%i4) psi[0](5/6);
-                                            5
-          (%o4)                        psi (-)
-                                          0 6
-
- -- Optionsvariable: maxpsifracdenom
-     Standardwert: `6'
-
-     Die Optionsvariable `maxpsifracdenom' kontrolliert die
-     Vereinfachung der Funktion `psi'.    Ist das Argument <x> der
-     Funktion `psi' eine rationale Zahl kleiner als eins mit `p/q' und
-     ist der Nenner `q' größer als `maxpsifracdenom', dann versucht
-     Maxima nicht `psi[<n>](<x>)' zu vereinfachen.
-
-     Siehe auch `maxpsifracnum',  `maxpsiposint'  und `maxpsinegint'.
-
-     Beispiele:
-
-          (%i1) maxpsifracdenom: 6;
-          (%o1)                           6
-          (%i2) psi[0](1/6);
-                      3 log(3)              sqrt(3) %pi
-          (%o2)     - -------- - 2 log(2) - ----------- - %gamma
-                         2                       2
-          (%i3) maxpsifracdenom: 4;
-          (%o3)                           4
-          (%i4) psi[0](1/6);
-                                            1
-          (%o4)                        psi (-)
-                                          0 6
-          (%i5) psi[0](1/5);
-                                            1
-          (%o5)                        psi (-)
-                                          0 5
-          (%i6) psi[0](1/4);
-                                           %pi
-          (%o6)               - 3 log(2) - --- - %gamma
-                                            2
-
- -- Funktion: makefact (<expr>)
-     Ersetzt Binomial-, Gamma- und Beta-Funktionen, die im Ausdruck
-     <expr> auftreten, durch Fakultäten.
-
-     Siehe auch die Funktion `makegamma'.
-
-
- -- Funktion: numfactor (<expr>)
-     Gibt einen numerischen Faktor des Produktes <expr> zurück.  Ist
-     <expr> kein Produkt oder enthält das Produkt keinen numerischen
-     Faktor ist die Rückgabe `1'.
-
-     Beispiel:
-
-          (%i1) gamma (7/2);
-                                    15 sqrt(%pi)
-          (%o1)                     ------------
-                                         8
-          (%i2) numfactor (%);
-                                         15
-          (%o2)                          --
-                                         8
 
 
 
