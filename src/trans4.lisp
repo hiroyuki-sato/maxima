@@ -11,7 +11,7 @@
 ;;;       Maintained by GJC                                              ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (macsyma-module trans4)
 
@@ -80,12 +80,10 @@
 	(t
 	 `($any . (simplify  `((mfactorial) ,,(cdr form)))))))
 
-(def%tr %sum (form)
-  ;; this is WRONG. ---FIX--THIS--YOU--LOSER----*****
-  `($any . (meval ',form)))
+;; Kill off the special code for translating sum and product.
 
-(def%tr %product (form)
-  `($any . (meval ',form)))
+(def%tr %sum $batcon)
+(def%tr %product $batcon)
 
 ;;(DEF%TR %BINOMIAL (FORM)
 ;;	(TR-NARGS-CHECK FORM '(2 .2))
@@ -161,7 +159,11 @@
 	   (setq definition (lisp->lisp-tr-lambda definition))
 	   (if (null definition)
 	       form
-	       `(fset ',ssymbol ,definition))))))
+	       ;; If the definition is a lambda form, just use defun
+	       ;; instead of fset.
+	       (if (eq (car definition) 'lambda)
+		   `(defun ,ssymbol ,@(cdr definition))
+		   `(fset ',ssymbol ,definition)))))))
 
 (defvar lisp->lisp-tr-lambda t)
 

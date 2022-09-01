@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module troper)
 
 
@@ -121,6 +121,11 @@
 				 (t `($float expt$ (sqrt ,(cdr bas)) ,exp))))
 			  ((eq 'rat (caar (caddr exp)))
 			   `($float expt ,(cdr bas) ,($float (caddr exp)))))))
+	      ;; See bug 771218.  This causes maxima to think that
+	      ;; (-1)^(0.5) is a float and uses cl:expt.  But the
+	      ;; result is not a float, and calling cl:expt returns a
+	      ;; Lisp complex number, which confuses maxima.
+	      #+nil
 	      ((and (covers '$number (car bas)) (covers '$number (car exp)))
 	       `(,(*union-mode (car bas) (car exp)) expt ,(cdr bas) ,(cdr exp)))
 	      (t `($any power ,(cdr bas) ,(cdr exp)))))))

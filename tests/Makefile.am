@@ -14,6 +14,13 @@ check-cmucl:
 	$(MAXIMA) --lisp=cmucl --batch-string="run_testsuite();" < /dev/null
 endif
 
+if SCL
+check: check-scl
+check-scl:
+	echo "Running test suite with scl..."; \
+	$(MAXIMA) --lisp=scl --batch-string="run_testsuite();" < /dev/null
+endif
+
 if SBCL
 check: check-sbcl
 check-sbcl:
@@ -73,6 +80,14 @@ rtestmt19937.mac \
 mcond_display_elseif.mac \
 mcond_display_elseif.out \
 rtestmcond_display.mac \
+rtest_allnummod.mac \
+rtestconjugate.mac \
+rtestsum.mac \
+rtest_trig.mac \
+rtest_zeta.mac \
+rtest_diff_invtrig.mac \
+rtest_scalarp.mac \
+rtest_everysome.mac \
 testsuite.lisp
 
 EXTRA_DIST = $(genericdirDATA)

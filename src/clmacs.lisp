@@ -6,7 +6,7 @@
 ;;;     All rights reserved                                            ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 
 (eval-when
     #+gcl (compile load eval)
@@ -118,13 +118,13 @@
 
 (defmacro status (option &optional item)
   (let ((it (intern (string item) (find-package 'keyword))))
-    (cond ((equal (symbol-name option) "FEATURE")
+    (cond ((equal (symbol-name option) (symbol-name '#:feature))
 	   `(member ,it *features*))
 	  ((equal option 'gctime) 0))))
 
 (defmacro sstatus (option item )
   (let ((it (intern (string item) (find-package 'keyword))))
-    (if (equal (symbol-name option) "FEATURE")
+    (if (equal (symbol-name option) (symbol-name '#:feature))
 	`(pushnew ,it *features*)
 	(error "unknown sstatus ~a" option))))
 
@@ -444,8 +444,31 @@
 
 (setq *read-default-float-format* 'double-float)
 
-#+clisp (setq custom:*default-float-format* 'double-float)
-;;don't care about float contagion for now
-#+clisp (setq custom::*warn-on-floating-point-contagion* nil)
+
+#+clisp
+(progn
+  ;; This used to be enabled, but
+  ;; http://clisp.cons.org/impnotes/num-dict.html seems to indicate
+  ;; that the result of float, coerce, sqrt, etc., on a rational will
+  ;; return a float of the specified type.  But ANSI CL says we must
+  ;; return a single-float.  I (rtoy) am commenting this out for now.
+  
+  ;; (setq custom:*default-float-format* 'double-float)
+  
+  ;; We currently don't want any warnings about floating-point
+  ;; contagion happening.
+  (setq custom::*warn-on-floating-point-contagion* nil)
+
+  ;; We definitely want ANSI-style floating-point contagion.
+  (setq custom:*floating-point-contagion-ansi* t)
+
+  ;; Set custom:*floating-point-rational-contagion-ansi* so that
+  ;; contagion is done as per the ANSI CL standard. Has an effect only
+  ;; in those few cases when the mathematical result is exact although
+  ;; one of the arguments is a floating-point number, such as (* 0
+  ;; 1.618), (/ 0 1.618), (atan 0 1.0), (expt 2.0 0)
+  (let ((fprca (find-symbol "*FLOATING-POINT-RATIONAL-CONTAGION-ANSI*" :CUSTOM)))
+    (if fprca (set fprca t)))
+)
 
 (defmacro float (x &optional (y 1.0d0)) `(cl:float ,x ,y))

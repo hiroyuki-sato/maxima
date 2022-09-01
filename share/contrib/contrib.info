@@ -1,0 +1,1645 @@
+This is contrib.info, produced by makeinfo version 4.8 from
+contrib.texi.
+
+
+File: contrib.info,  Node: Top,  Next: Introduction to contributed packages,  Prev: (dir),  Up: (dir)
+
+contrib
+*******
+
+* Menu:
+
+* Introduction to contributed packages::
+* Definitions for makeOrders::
+* Definitions for mnewton::
+* Definitions for lsquares::
+* Definitions for plotdf::
+* Definitions for lindstedt::
+* Definitions for impdiff::
+* Definitions for ifactor::
+* Definitions for ggf::
+* Definitions for f90::
+* Definitions for eval_string::
+* Definitions for diag::
+* Definitions for cholesky::
+* Definitions for bode::
+* Definitions for augmented_lagrangian::
+* Definitions for opsubst::
+* Definitions for stirling::
+* Function and variable index::
+
+
+File: contrib.info,  Node: Introduction to contributed packages,  Next: Definitions for makeOrders,  Prev: Top,  Up: Top
+
+Introduction to contributed packages
+====================================
+
+This is available information about some functions defined in the
+`contrib' section, authored by many different contributors.
+
+
+File: contrib.info,  Node: Definitions for makeOrders,  Next: Definitions for mnewton,  Prev: Introduction to contributed packages,  Up: Top
+
+Definitions for makeOrders
+==========================
+
+ -- Function: makeOrders (<indvarlist>,<orderlist>)
+     Returns a list of all powers for a polynomial up to and including
+     the arguments.
+
+          (%i1) load("makeOrders")$
+
+          (%i2) makeOrders([a,b],[2,3]);
+          (%o2) [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
+                      [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3]]
+          (%i3) expand((1+a+a^2)*(1+b+b^2+b^3));
+                 2  3      3    3    2  2      2    2    2
+          (%o3) a  b  + a b  + b  + a  b  + a b  + b  + a  b + a b
+                                                            2
+                                                     + b + a  + a + 1
+     where `[0, 1]' is associated with the term b and `[2, 3]' with a^2
+     b^3.
+
+     To use this function write first `load("makeOrders")'.
+
+
+File: contrib.info,  Node: Definitions for mnewton,  Next: Definitions for lsquares,  Prev: Definitions for makeOrders,  Up: Top
+
+Definitions for mnewton
+=======================
+
+ -- Option variable: NEWTONEPSILON
+     Default value: `10.0^(-fpprec/2)'
+
+     Precision to determine when the `mnewton' function has converged
+     towards the solution.
+
+     See also `mnewton'.
+
+ -- Option variable: NEWTONMAXITER
+     Default value: `50'
+
+     Maximum number of iterations to stop the `mnewton' function if it
+     does not converge or if it converges too slowly.
+
+     See also `mnewton'.
+
+ -- Function: mnewton (<FuncList>,<VarList>,<GuessList>)
+     Multiple nonlinear functions solution using the Newton method.
+     <FuncList> is the list of functions to solve, <VarList> is the
+     list of variable names, and <GuessList> is the list of initial
+     approximations.
+
+     The solution is returned in the same format that `solve()' returns.
+     If the solution isn't found, `[]' is returned.
+
+     This function is controlled by global variables `NEWTONEPSILON'
+     and `NEWTONMAXITER'.
+
+          (%i1) load("mnewton")$
+
+          (%i2) mnewton([x1+3*log(x1)-x2^2, 2*x1^2-x1*x2-5*x1+1],
+                        [x1, x2], [5, 5]);
+          (%o2) [[x1 = 3.756834008012769, x2 = 2.779849592817897]]
+          (%i3) mnewton([2*a^a-5],[a],[1]);
+          (%o3)             [[a = 1.70927556786144]]
+          (%i4) mnewton([2*3^u-v/u-5, u+2^v-4], [u, v], [2, 2]);
+          (%o4) [[u = 1.066618389595407, v = 1.552564766841786]]
+
+     To use this function write first `load("mnewton")'. See also
+     `NEWTONEPSILON' and `NEWTONMAXITER'.
+
+
+File: contrib.info,  Node: Definitions for lsquares,  Next: Definitions for plotdf,  Prev: Definitions for mnewton,  Up: Top
+
+Definitions for lsquares
+========================
+
+ -- Global variable: DETCOEF
+     This variable is used by functions `lsquares' and `plsquares' to
+     store the Coefficient of Determination which measures the goodness
+     of fit. It ranges from 0 (no correlation) to 1 (exact correlation).
+
+     When `plsquares' is called with a list of dependent variables,
+     <DETCOEF> is set to a list of Coefficients of Determination. See
+     `plsquares' for details.
+
+     See also `lsquares'.
+
+ -- Function: lsquares (<Mat>,<VarList>,<equation>,<ParamList>)
+ -- Function: lsquares
+          (<Mat>,<VarList>,<equation>,<ParamList>,<GuessList>)
+     Multiple nonlinear equation adjustment of a data table by the
+     "least squares" method. <Mat> is a matrix containing the data,
+     <VarList> is a list of variable names (one for each <Mat> column),
+     <equation> is the equation to adjust (it must be in the form:
+     `depvar=f(indepvari,..., paramj,...)', `g(depvar)=f(indepvari,...,
+     paramj,...)' or `g(depvar, paramk,...)=f(indepvari,...,
+     paramj,...)'), <ParamList> is the list of the parameters to
+     obtain, and <GuessList> is an optional list of initial
+     approximations to the parameters; when this last argument is
+     present, `mnewton' is used instead of `solve' in order to get the
+     parameters.
+
+     The equation may be fully nonlinear with respect to the independent
+     variables and to the dependent variable.  In order to use
+     `solve()', the equations must be linear or polynomial with respect
+     to the parameters. Equations like `y=a*b^x+c' may be adjusted for
+     `[a,b,c]' with `solve' if the `x' values are little positive
+     integers and there are few data (see the example in lsquares.dem).
+     `mnewton' allows to adjust a nonlinear equation with respect to the
+     parameters, but a good set of initial approximations must be
+     provided.
+
+     If possible, the adjusted equation is returned. If there exists
+     more than one solution, a list of equations is returned.  The
+     Coefficient of Determination is displayed in order to inform about
+     the goodness of fit, from 0 (no correlation) to 1 (exact
+     correlation).  This value is also stored in the global variable
+     <DETCOEF>.
+
+     Examples using `solve':
+          (%i1) load("lsquares")$
+
+          (%i2) lsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                         [x,y,z], z=a*x*y+b*x+c*y+d, [a,b,c,d]);
+                Determination Coefficient = 1.0
+                              x y + 23 y - 29 x - 19
+          (%o2)           z = ----------------------
+                                        6
+          (%i3) lsquares(matrix([0,0],[1,0],[2,0],[3,8],[4,44]),
+                         [n,p], p=a4*n^4+a3*n^3+a2*n^2+a1*n+a0,
+                   [a0,a1,a2,a3,a4]);
+                Determination Coefficient = 1.0
+                               4       3      2
+                            3 n  - 10 n  + 9 n  - 2 n
+          (%o3)         p = -------------------------
+                                        6
+          (%i4) lsquares(matrix([1,7],[2,13],[3,25]),
+                         [x,y], (y+c)^2=a*x+b, [a,b,c]);
+                Determination Coefficient = 1.0
+          (%o4) [y = 28 - sqrt(657 - 216 x),
+                                          y = sqrt(657 - 216 x) + 28]
+          (%i5) lsquares(matrix([1,7],[2,13],[3,25],[4,49]),
+                         [x,y], y=a*b^x+c, [a,b,c]);
+                Determination Coefficient = 1.0
+                                        x
+          (%o5)                  y = 3 2  + 1
+
+     Examples using `mnewton':
+          (%i6) load("lsquares")$
+
+          (%i7) lsquares(matrix([1.1,7.1],[2.1,13.1],[3.1,25.1],[4.1,49.1]),
+                         [x,y], y=a*b^x+c, [a,b,c], [5,5,5]);
+                                                       x
+          (%o7) y = 2.799098974610482 1.999999999999991
+                                                  + 1.099999999999874
+          (%i8) lsquares(matrix([1.1,4.1],[4.1,7.1],[9.1,10.1],[16.1,13.1]),
+                         [x,y], y=a*x^b+c, [a,b,c], [4,1,2]);
+                                       .4878659755898127
+          (%o8) y = 3.177315891123101 x
+                                                  + .7723843491402264
+          (%i9) lsquares(matrix([0,2,4],[3,3,5],[8,6,6]),
+                        [m,n,y], y=(A*m+B*n)^(1/3)+C, [A,B,C], [3,3,3]);
+                                                               1/3
+          (%o9) y = (3.999999999999862 n + 4.999999999999359 m)
+                                                   + 2.00000000000012
+
+     To use this function write first `load("lsquares")'. See also
+     `DETCOEF' and `mnewton'.
+
+ -- Function: plsquares (<Mat>,<VarList>,<depvars>)
+ -- Function: plsquares (<Mat>,<VarList>,<depvars>,<maxexpon>)
+ -- Function: plsquares
+          (<Mat>,<VarList>,<depvars>,<maxexpon>,<maxdegree>)
+     Multivariable polynomial adjustment of a data table by the "least
+     squares" method. <Mat> is a matrix containing the data, <VarList>
+     is a list of variable names (one for each Mat column, but use "-"
+     instead of varnames to ignore Mat columns), <depvars> is the name
+     of a dependent variable or a list with one or more names of
+     dependent variables (which names should be in <VarList>),
+     <maxexpon> is the optional maximum exponent for each independent
+     variable (1 by default), and <maxdegree> is the optional maximum
+     polynomial degree (<maxexpon> by default); note that the sum of
+     exponents of each term must be equal or smaller than <maxdegree>,
+     and if `maxdgree = 0' then no limit is applied.
+
+     If <depvars> is the name of a dependent variable (not in a list),
+     `plsquares' returns the adjusted polynomial. If <depvars> is a
+     list of one or more dependent variables, `plsquares' returns a
+     list with the adjusted polynomial(s). The Coefficients of
+     Determination  are displayed in order to inform about the goodness
+     of fit, which ranges from 0 (no correlation) to 1 (exact
+     correlation). These values are also stored in the global variable
+     <DETCOEF> (a list if <depvars> is a list).
+
+     A simple example of multivariable linear adjustment:
+          (%i1) load("plsquares")$
+
+          (%i2) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                          [x,y,z],z);
+               Determination Coefficient for z = .9897039897039897
+                                 11 y - 9 x - 14
+          (%o2)              z = ---------------
+                                        3
+
+     The same example without degree restrictions:
+          (%i3) plsquares(matrix([1,2,0],[3,5,4],[4,7,9],[5,8,10]),
+                          [x,y,z],z,1,0);
+               Determination Coefficient for z = 1.0
+                              x y + 23 y - 29 x - 19
+          (%o3)           z = ----------------------
+                                        6
+
+     How many diagonals does a N-sides polygon have? What polynomial
+     degree should be used?
+          (%i4) plsquares(matrix([3,0],[4,2],[5,5],[6,9],[7,14],[8,20]),
+                          [N,diagonals],diagonals,5);
+               Determination Coefficient for diagonals = 1.0
+                                          2
+                                         N  - 3 N
+          (%o4)              diagonals = --------
+                                            2
+          (%i5) ev(%, N=9);   /* Testing for a 9 sides polygon */
+          (%o5)                 diagonals = 27
+
+     How many ways do we have to put two queens without they are
+     threatened into a n x n chessboard?
+          (%i6) plsquares(matrix([0,0],[1,0],[2,0],[3,8],[4,44]),
+                          [n,positions],[positions],4);
+               Determination Coefficient for [positions] = [1.0]
+                                   4       3      2
+                                3 n  - 10 n  + 9 n  - 2 n
+          (%o6)    [positions = -------------------------]
+                                            6
+          (%i7) ev(%[1], n=8); /* Testing for a (8 x 8) chessboard */
+          (%o7)                positions = 1288
+
+     An example with six dependent variables:
+          (%i8) mtrx:matrix([0,0,0,0,0,1,1,1],[0,1,0,1,1,1,0,0],
+                            [1,0,0,1,1,1,0,0],[1,1,1,1,0,0,0,1])$
+          (%i8) plsquares(mtrx,[a,b,_And,_Or,_Xor,_Nand,_Nor,_Nxor],
+                               [_And,_Or,_Xor,_Nand,_Nor,_Nxor],1,0);
+                Determination Coefficient for
+          [_And, _Or, _Xor, _Nand, _Nor, _Nxor] =
+          [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+          (%o2) [_And = a b, _Or = - a b + b + a,
+          _Xor = - 2 a b + b + a, _Nand = 1 - a b,
+          _Nor = a b - b - a + 1, _Nxor = 2 a b - b - a + 1]
+
+     To use this function write first `load("plsquares")'.
+
+
+File: contrib.info,  Node: Definitions for plotdf,  Next: Definitions for lindstedt,  Prev: Definitions for lsquares,  Up: Top
+
+Definitions for plotdf
+======================
+
+ -- Function: plotdf (<expr>,...options...)
+ -- Function: plotdf (`['<expr1>,<expr1>`]',...options...)
+     Plots the direction field of a first-order Ordinary Differential
+     equation (ODE) or a system of two autonomous ODE's.
+
+     For one ODE use `plotdf (expr,...,options,..)', where <expr> is an
+     expression depending on <x> and <y>, which represents the
+     right-hand side of the ODE:
+                 dy
+                 -- = expr
+                 dx
+     <expr> can also depend on a set of parameters that must be given
+     numerical values with the "parameters" option and those parameters
+     can be changed interactively with the "sliders" option (see
+     "PLOTDF OPTIONS" below).
+
+     For numerical values of <x>, <y>, and the parameters,
+     `float(ev(expr, numer))' must return a number.
+
+     For a system of two autonomous, first-order ODE's, use `plotdf
+     ([expr1,expr2],...,options,..)', Where <expr1> and <expr2> are two
+     expressions that depend on <x> and <y> (but not on <t>), and
+     represent the right-hand side of the ODE's:
+                 dx             dy
+                 -- = expr1     -- = expr2
+                 dt             dt
+     as in the first case, options "parameters" and "sliders" can be
+     used.
+
+     Several options can be given to the plotdf command, or entered into
+     the menu that will appear when you click on the upper-left corner
+     of the plot window. Integral curves can be obtained by clicking on
+     the plot, or with the option "trajectory_at". The direction of the
+     integration can be controlled with the "direction" option. The
+     number of integration steps is given by "nsteps" and the time
+     interval between them is "tstep". The Adams Moulton method is used
+     for the integration; it is also possible to switch to an adaptive
+     Runge-Kutta 4th order method.
+
+     Plot window menu:
+
+     The menu in the plot window has the following options: "Zoom", will
+     change the behavior of the mouse so that it will allow you to zoom
+     in on a region of the plot by clicking with the left button. Each
+     click near a point magnifies the plot, keeping the center at the
+     point where you clicked. Holding the SHIFT key while clicking,
+     zooms out to the previous magnification. To resume computing
+     trajectories when you click on a point, select "Integrate" from
+     the menu.
+
+     To change the ODE(s) in use, or change other settings, select
+     "Config" in the menu, enter new values in the dialog window, and
+     then click on "Replot" in the main menu bar. If you enter a pair
+     of coordinates in the field "Trajectory at" in the Config dialog
+     menu, and press the "enter" key, a new integral curve will be
+     shown, in addition to the ones already shown. You can change the
+     color before you enter the point coordinates. When you select
+     "Replot" all integral curves, except the last one, will erased.
+
+     Holding the right mouse button down while you move the cursor
+     allows you to drag (translate) the plot sideways or up and down.
+     Additional parameters such as the number of steps (nsteps), the
+     initial t value (tinitial), and the x and y centers and radii, may
+     be set in the Config menu.
+
+     You may print to a Postscript printer, or save the plot as a
+     postscript file, with the menu option "Save". To switch between
+     printing and saving to a Postscript file, select the "Print
+     Options" in the dialog window of "Config", change the settings, go
+     back to the main menu ("OK" twice) and select "Save".
+
+     Options for `plotdf':
+        * [xradius,12.0]
+
+          Determines the width in x direction of the x values shown by
+          plotdf.
+
+        * [yradius,10.5]
+
+          Defines the height in y direction of the y values shown by
+          plotdf.
+
+        * [xcenter,0.0],[ycenter,0.0]
+
+          (xcenter,ycenter) is the origin of the window shown by plotdf.
+
+        * [width,500]
+
+          Width of plotdf's canvas in pixels.
+
+        * [height,500]
+
+          Height of plotdf's canvas in pixels.
+
+        * [bbox, -2, -1.2, 3.5, 6]
+
+          Bounding box (xmin ymin xmax ymax) of the region shown by
+          plotdf. It will override the values o xcenter, ycenter,
+          xradius, yradius.
+
+        * [tinitial,0.0]
+
+          The intial value of the t variable used by plotdf to compute
+          integral curves.
+
+        * [nsteps,100]
+
+          Number of steps to do in one pass by the integrator of plotdf.
+
+        * [tstep,0.01]
+
+          t step size used by plotdf's integrator.
+
+        * [xfun,"x^2;sin(x);exp(x)"]
+
+          A semicolon separated list of functions that plotdf will plot
+          on top of the direction field.
+
+        * [direction,forward]
+
+          The direction (in time) that the integral curves will follow
+          in a direction field produced by plotdf. It may be "forward",
+          "backward" or "both".
+
+        * [versus_t,1]
+
+          Any value different from zero will make plotdf open a window
+          showing the time dependence of the independent variables in
+          the last integral curve computed.
+
+        * [trajectory_at,0.1,3.2]
+
+          (x,y) coordinates of a point through which an integral curve
+          should be shown by plotdf.
+
+        * [parameters,"k=1.1,m=2.5"]
+
+          List of parameters, and their numerical values, used in the
+          differential equation(s) given to plotdf.
+
+        * [sliders,"k=0:4,m=1:3"]
+
+          Ranges of the parameters that plotdf will use to put sliders
+          to accept interactive change of the equations parameters.
+
+
+     Examples:
+        * To show the direction field of the differential equation y' =
+          exp(-x) + y and the solution that goes through (2, -0.1):
+               (%i1) load("plotdf")$
+
+               (%i2) plotdf(exp(-x)+y,[trajectory_at,2,-0.1])$
+
+        * To obtain the direction field for the equation diff(y,x) = x
+          - y^2 and the solution with initial condition y(-1) = 3, we
+          can use the command:
+               (%i3) plotdf(x-y^2,[xfun,"sqrt(x);-sqrt(x)"],
+                                  [trajectory_at,-1,3],
+                                  [direction,forward],
+                                  [yradius,5],[xcenter,6])$
+          The graph also shows the function y = sqrt(x).
+
+        * The following example shows the direction field of a harmonic
+          oscillator, defined by the two equations dx/dt = y and dy/dt
+          = -k*x/m, and the integral curve through (x,y) = (6,0), with
+          a slider that will allow you to change the value of m
+          interactively (k is fixed at 2):
+               (%i4) plotdf([y,-k*x/m],[parameters,"m=2,k=2"],
+                                       [sliders,"m=1:5"],
+                                       [trajectory_at,6,0])$
+
+        * To plot the direction field of the Duffing equation,
+          m*x"+c*x'+k*x+b*x^3 = 0, we introduce the variable y=x' and
+          use:
+               (%i5) plotdf([y,-(k*x + c*y + b*x^3)/m],
+                                [parameters,"k=-1,m=1.0,c=0,b=1"],
+                                [sliders,"k=-2:2,m=-1:1"],
+                                [bbox,-3,-3,3,3],[tstep,0.1])$
+
+        * The direction field for a damped pendulum, including the
+          solution for the given initial conditions, and with a slider
+          that can be used to change the value of the mass m:
+
+               (%i6) plotdf([y,-g*sin(x)/l - b*y/m/l],
+                        [parameters,"g=9.8,l=0.5,m=0.3,b=0.05"],
+                        [trajectory_at,1.05,-9],[tstep,0.01],
+                        [xradius,6],[yradius,14],
+                        [xcenter,-4],[direction,forward],[nsteps,300],
+                        [sliders,"m=0.1:1"])$
+
+     To use this function write first `load("plotdf")'.
+
+
+File: contrib.info,  Node: Definitions for lindstedt,  Next: Definitions for impdiff,  Prev: Definitions for plotdf,  Up: Top
+
+Definitions for lindstedt
+=========================
+
+ -- Function: Lindstedt (<eq>,<pvar>,<torder>,<ic>)
+     This is a first pass at a Lindstedt code.  It can solve problems
+     with initial conditions entered, which can be arbitrary constants,
+     (just not <%k1> and <%k2>) where the initial conditions on the
+     perturbation equations are z[i]=0, z'[i]=0 for i>0. <ic> is the
+     list of initial conditions.
+
+     Problems occur when initial conditions are not given, as the
+     constants in the perturbation equations are the same as the zero
+     order equation solution.  Also, problems occur when the initial
+     conditions for the perturbation equations are not z[i]=0, z'[i]=0
+     for i>0, such as the Van der Pol equation.
+
+     Example:
+          (%i1) load("makeOrders")$
+
+          (%i2) load("lindstedt")$
+
+          (%i3) Lindstedt('diff(x,t,2)+x-(e*x^3)/6,e,2,[1,0]);
+                    2
+                   e  (cos(5 T) - 24 cos(3 T) + 23 cos(T))
+          (%o3) [[[---------------------------------------
+                                    36864
+             e (cos(3 T) - cos(T))
+           - --------------------- + cos(T)],
+                      192
+                    2
+                 7 e    e
+          T = (- ---- - -- + 1) t]]
+                 3072   16
+
+     To use this function write first `load("makeOrders")' and
+     `load("lindstedt")'.
+
+
+File: contrib.info,  Node: Definitions for impdiff,  Next: Definitions for ifactor,  Prev: Definitions for lindstedt,  Up: Top
+
+Definitions for impdiff
+=======================
+
+ -- Function: implicit_derivative
+          (<f>,<indvarlist>,<orderlist>,<depvar>)
+     This subroutine computes implicit derivatives of multivariable
+     functions.  <f> is an array function, the indexes are the
+     derivative degree in the <indvarlist> order; <indvarlist> is the
+     independent variable list; <orderlist> is the order desired; and
+     <depvar> is the dependent variable.
+
+     To use this function write first `load("impdiff")'.
+
+
+File: contrib.info,  Node: Definitions for ifactor,  Next: Definitions for ggf,  Prev: Definitions for impdiff,  Up: Top
+
+Definitions for ifactor
+=======================
+
+ -- Option variable: save_primes
+     Default value: `nil'
+
+     Saves primes found.
+
+ -- Option variable: primep_number_of_tests
+     Default value: 25
+
+     Number of primep-test runs.
+
+ -- Option variable: pollard_rho_limit
+     Default value: 10000
+
+     Limit for pollard-rho factorization depth.
+
+ -- Option variable: pollard_rho_tests
+     Default value: 5
+
+     Number of pollard-rho rounds between ecm rounds.
+
+ -- Option variable: pollard_rho_limit_step
+     Default value: 1000
+
+     Step for pollard-rho factorization limit.
+
+ -- Option variable: ecm_number_of_curves
+     Default value: 50
+
+     Number of curves tried in one round.
+
+ -- Option variable: ecm_limit
+     Default value: 200
+
+     Starting smootheness limit for ecm method.
+
+ -- Option variable: ecm_max_limit
+     Default value: 51199
+
+     Maximum smootheness for ecm method.
+
+ -- Option variable: ecm_limit_delta
+     Default value: 200
+
+     Increase of smoothness limit for ecm method.
+
+ -- Option variable: ifactor_verbose
+     Default value: nil
+
+     Display factorization steps.
+
+ -- Function: ifactors (<n>)
+     Returns a list of prime power factors of positive integer <n>.
+
+          (%i1) load("ifactor")$
+
+          (%i2) ifactors(23456345);
+          (%o2)               [5, 11, 17, 25087]
+
+     To use this function write first `load("ifactor")'.
+
+ -- Function: ifactor (<n>)
+     Factors positive integer <n>. `ifactor' uses Pollard's rho and
+     elliptic curve factorization methods to factor integers.
+
+          (%i1) load("ifactor")$
+
+          (%i2) ifactor(23456345200);
+                               4  2
+          (%o2)               2  5  43 313 4357
+
+     To use this function write first `load("ifactor")'.
+
+ -- Function: primep_pr (<n>)
+     Probabilistic primality test. `primep_pr' uses
+     `primep_pr_number_of_tests' Miller-Rabin's pseudo-primality tests
+     and one Lucas pseudo-primality test.
+
+          (%i1) load("ifactor")$
+
+          (%i2) primep_pr(23456345);
+          (%o2)                     false
+
+     To use this function write first `load("ifactor")'.
+
+ -- Function: next_prime (<n>)
+     Get smallest prime bigger than <n>.
+
+          (%i1) load("ifactor")$
+
+          (%i2) next_prime(27);
+          (%o2)                       29
+
+     To use this function write first `load("ifactor")'.
+
+ -- Function: prev_prime (<n>)
+     Get greatest prime smaller than <n>.
+
+          (%i1) load("ifactor")$
+
+          (%i2) prev_prime(27);
+          (%o2)                       23
+
+     To use this function write first `load("ifactor")'.
+
+
+File: contrib.info,  Node: Definitions for ggf,  Next: Definitions for f90,  Prev: Definitions for ifactor,  Up: Top
+
+Definitions for ggf
+===================
+
+ -- Option variable: GGFINFINITY
+     Default variable: 3
+
+     This is an option variable for function `ggf'.
+
+     When computing the continued fraction of the generating function,
+     a partial quotient having a degree (strictly) greater than
+     <GGFINFINITY> will be discarded and the current convergent will be
+     considered as the exact value of the generating function; most
+     often the degree of all partial quotients will be 0 or 1; if you
+     use a greater value, then you should give enough terms in order to
+     make the computation accurate enough.
+
+     See also `ggf'.
+
+ -- Option variable: GGFCFMAX
+     Default variable: 3
+
+     This is an option variable for function `ggf'.
+
+     When computing the continued fraction of the generating function,
+     if no good result has been found (see the <GGFINFINITY> flag)
+     after having computed <GGFCFMAX> partial quotients, the generating
+     function will be considered as not being a fraction of two
+     polynomials and the function will exit. Put freely a greater value
+     for more complicated generating functions.
+
+     See also `ggf'.
+
+ -- Function: ggf (<l>)
+     Compute the generating function (if it is a fraction of two
+     polynomials) of a sequence, its first terms being given. <l> is a
+     list of numbers.
+
+     The solution is returned as a fraction of two polynomials.  If no
+     solution has been found, it returns with `done'.
+
+     This function is controlled by global variables <GGFINFINITY> and
+     <GGFCFMAX>. See also <GGFINFINITY> and <GGFCFMAX>.
+
+     To use this function write first `load("ggf")'.
+
+
+File: contrib.info,  Node: Definitions for f90,  Next: Definitions for eval_string,  Prev: Definitions for ggf,  Up: Top
+
+Definitions for f90
+===================
+
+ -- Function: f90 (<expr>)
+     The f90 command is an update to the original maxima fortran
+     command. The primary difference is the way long lines are broken.
+
+     In the next example, notice how the fortran command breaks lines
+     within symbols. The `f90' command never breaks within a symbol.
+
+          (%i1) load("f90")$
+
+          (%i2) expr:expand((xxx+yyy+7)^4);
+                   4            3         3        2    2
+          (%o2) yyy  + 4 xxx yyy  + 28 yyy  + 6 xxx  yyy
+                       2          2        3             2
+           + 84 xxx yyy  + 294 yyy  + 4 xxx  yyy + 84 xxx  yyy
+                                         4         3          2
+           + 588 xxx yyy + 1372 yyy + xxx  + 28 xxx  + 294 xxx
+           + 1372 xxx + 2401
+          (%i3) fortran(expr);
+                yyy**4+4*xxx*yyy**3+28*yyy**3+6*xxx**2*yyy**2+84*xxx*yyy**2+294*yy
+               1   y**2+4*xxx**3*yyy+84*xxx**2*yyy+588*xxx*yyy+1372*yyy+xxx**4+28*
+               2   xxx**3+294*xxx**2+1372*xxx+2401
+          (%o3)                       done
+          (%i4) f90(expr);
+          yyy**4+4*xxx*yyy**3+28*yyy**3+6*xxx**2*yyy**2+84*xxx*yyy**2+294* &
+               yyy**2+4*xxx**3*yyy+84*xxx**2*yyy+588*xxx*yyy+1372*yyy+xxx** &
+               4+28*xxx**3+294*xxx**2+1372*xxx+2401
+          (%o4)                       done
+
+     The `f90' implementation was done as a quick hack. It is not a
+     necessarily a good example upon which to base other language
+     translations.
+
+     To use this function write first `load("f90")'.
+
+
+File: contrib.info,  Node: Definitions for eval_string,  Next: Definitions for diag,  Prev: Definitions for f90,  Up: Top
+
+Definitions for eval_string
+===========================
+
+ -- Function: eval_string (<str>)
+     Parse the Maxima string <str> as a Maxima expression and evaluate
+     it.  <str> is a Maxima string. It may or may not have a terminator
+     (dollar sign `$' or semicolon `;').  Only the first expression is
+     parsed and evaluated, if there is more than one.
+
+     Complain if <str> is not a Maxima string.
+
+     Examples:
+          (%i1) load("eval_string")$
+
+          (%i2) eval_string ("foo: 42; bar: foo^2 + baz");
+          (%o2)                       42
+          (%i3) eval_string ("(foo: 42, bar: foo^2 + baz)");
+          (%o3)                   baz + 1764
+
+     To use this function write first `load("eval_string")'. See also
+     `parse_string'.
+
+ -- Function: parse_string (<str>)
+     Parse the Maxima string <str> as a Maxima expression (do not
+     evaluate it).  <str> is a Maxima string. It may or may not have a
+     terminator (dollar sign `$' or semicolon `;').  Only the first
+     expression is parsed, if there is more than one.
+
+     Complain if <str> is not a Maxima string.
+
+     Examples:
+          (%i1) load("eval_string")$
+
+          (%i2) parse_string ("foo: 42; bar: foo^2 + baz");
+          (%o2)                    foo : 42
+          (%i3) parse_string ("(foo: 42, bar: foo^2 + baz)");
+                                             2
+          (%o3)          (foo : 42, bar : foo  + baz)
+
+     To use this function write first `load("eval_string")'. See also
+     `eval_string'.
+
+
+File: contrib.info,  Node: Definitions for diag,  Next: Definitions for cholesky,  Prev: Definitions for eval_string,  Up: Top
+
+Definitions for diag
+====================
+
+ -- Function: diag (<lm>)
+     Constructs a square matrix with the matrices of <lm> in the
+     diagonal. <lm> is a list of matrices or scalars.
+
+     Example:
+          (%i1) load("diag")$
+
+          (%i2) a1:matrix([1,2,3],[0,4,5],[0,0,6])$
+
+          (%i3) a2:matrix([1,1],[1,0])$
+
+          (%i4) diag([a1,x,a2]);
+                             [ 1  2  3  0  0  0 ]
+                             [                  ]
+                             [ 0  4  5  0  0  0 ]
+                             [                  ]
+                             [ 0  0  6  0  0  0 ]
+          (%o4)              [                  ]
+                             [ 0  0  0  x  0  0 ]
+                             [                  ]
+                             [ 0  0  0  0  1  1 ]
+                             [                  ]
+                             [ 0  0  0  0  1  0 ]
+
+     To use this function write first `load("diag")'.
+
+ -- Function: JF (<lambda>,<n>)
+     Returns the Jordan cell of order <n> with eigenvalue <lambda>.
+
+     Example:
+          (%i1) load("diag")$
+
+          (%i2) JF(2,5);
+                              [ 2  1  0  0  0 ]
+                              [               ]
+                              [ 0  2  1  0  0 ]
+                              [               ]
+          (%o2)               [ 0  0  2  1  0 ]
+                              [               ]
+                              [ 0  0  0  2  1 ]
+                              [               ]
+                              [ 0  0  0  0  2 ]
+          (%i3) JF(3,2);
+                                   [ 3  1 ]
+          (%o3)                    [      ]
+                                   [ 0  3 ]
+
+     To use this function write first `load("diag")'.
+
+ -- Function: jordan (<mat>)
+     Returns the Jordan form of matrix <mat>, but codified in a Maxima
+     list.  To get the corresponding matrix, call function `dispJordan'
+     using as argument the output of `JF'.
+
+     Example:
+          (%i1) load("diag")$
+
+          (%i3) a:matrix([2,0,0,0,0,0,0,0],
+                         [1,2,0,0,0,0,0,0],
+                         [-4,1,2,0,0,0,0,0],
+                         [2,0,0,2,0,0,0,0],
+                         [-7,2,0,0,2,0,0,0],
+                         [9,0,-2,0,1,2,0,0],
+                         [-34,7,1,-2,-1,1,2,0],
+                         [145,-17,-16,3,9,-2,0,3])$
+
+          (%i34) jordan(a);
+          (%o4)             [[2, 3, 3, 1], [3, 1]]
+          (%i5) dispJordan(%);
+                          [ 2  1  0  0  0  0  0  0 ]
+                          [                        ]
+                          [ 0  2  1  0  0  0  0  0 ]
+                          [                        ]
+                          [ 0  0  2  0  0  0  0  0 ]
+                          [                        ]
+                          [ 0  0  0  2  1  0  0  0 ]
+          (%o5)           [                        ]
+                          [ 0  0  0  0  2  1  0  0 ]
+                          [                        ]
+                          [ 0  0  0  0  0  2  0  0 ]
+                          [                        ]
+                          [ 0  0  0  0  0  0  2  0 ]
+                          [                        ]
+                          [ 0  0  0  0  0  0  0  3 ]
+
+     To use this function write first `load("diag")'. See also
+     `dispJordan' and `minimalPoly'.
+
+ -- Function: dispJordan (<l>)
+     Returns the Jordan matrix associated to the codification given by
+     the Maxima list <l>, which is the output given by function
+     `jordan'.
+
+     Example:
+          (%i1) load("diag")$
+
+          (%i2) b1:matrix([0,0,1,1,1],
+                          [0,0,0,1,1],
+                          [0,0,0,0,1],
+                          [0,0,0,0,0],
+                          [0,0,0,0,0])$
+
+          (%i3) jordan(b1);
+          (%o3)                  [[0, 3, 2]]
+          (%i4) dispJordan(%);
+                              [ 0  1  0  0  0 ]
+                              [               ]
+                              [ 0  0  1  0  0 ]
+                              [               ]
+          (%o4)               [ 0  0  0  0  0 ]
+                              [               ]
+                              [ 0  0  0  0  1 ]
+                              [               ]
+                              [ 0  0  0  0  0 ]
+
+     To use this function write first `load("diag")'. See also `jordan'
+     and `minimalPoly'.
+
+ -- Function: minimalPoly (<l>)
+     Returns the minimal polynomial associated to the codification
+     given by the Maxima list <l>, which is the output given by
+     function `jordan'.
+
+     Example:
+          (%i1) load("diag")$
+
+          (%i2) a:matrix([2,1,2,0],
+                         [-2,2,1,2],
+                         [-2,-1,-1,1],
+                         [3,1,2,-1])$
+
+          (%i3) jordan(a);
+          (%o3)               [[- 1, 1], [1, 3]]
+          (%i4) minimalPoly(%);
+                                      3
+          (%o4)                (x - 1)  (x + 1)
+
+     To use this function write first `load("diag")'. See also `jordan'
+     and `dispJordan'.
+
+ -- Function: ModeMatrix (<A>,<l>)
+     Returns the matrix <M> such that (M^^-1).A.M=J, where <J> is the
+     Jordan form of <A>. The Maxima list <l> is the codified form of
+     the Jordan form as returned by function `jordan'.
+
+     Example:
+          (%i1) load("diag")$
+
+          (%i2) a:matrix([2,1,2,0],
+                    [-2,2,1,2],
+                    [-2,-1,-1,1],
+                    [3,1,2,-1])$
+
+          (%i3) jordan(a);
+          (%o3)               [[- 1, 1], [1, 3]]
+          (%i4) M: ModeMatrix(a,%);
+                            [  1    - 1   1   1 ]
+                            [                   ]
+                            [   1               ]
+                            [ - -   - 1   0   0 ]
+                            [   9               ]
+                            [                   ]
+          (%o4)             [   13              ]
+                            [ - --   1   - 1  0 ]
+                            [   9               ]
+                            [                   ]
+                            [  17               ]
+                            [  --   - 1   1   1 ]
+                            [  9                ]
+          (%i5) is(  (M^^-1).a.M = dispJordan(%o3)  );
+          (%o5)                      true
+     Note that `dispJordan(%o3)' is the Jordan form of matrix `a'.
+
+     To use this function write first `load("diag")'. See also `jordan'
+     and `dispJordan'.
+
+ -- Function: mat_function (<f>,<mat>)
+     Returns f(mat), where <f> is an analytic function and <mat> a
+     matrix. This computation is based on Cauchy's integral formula,
+     which states that if `f(x)' is analytic and
+
+          mat=diag([JF(m1,n1),...,JF(mk,nk)]),
+
+     then
+
+          f(mat)=ModeMatrix*diag([f(JF(m1,n1)),...,f(JF(mk,nk))])*ModeMatrix^^(-1)
+
+     Note that there are about 6 or 8 other methods for this
+     calculation.
+
+     Some examples follow.
+
+     Example 1:
+          (%i1) load("diag")$
+
+          (%i2) b2:matrix([0,1,0], [0,0,1], [-1,-3,-3])$
+
+          (%i3) mat_function(exp,t*b2);
+                         2   - t
+                        t  %e          - t     - t
+          (%o3) matrix([-------- + t %e    + %e   ,
+                           2
+                  - t     - t                           - t
+           2    %e      %e        - t           - t   %e
+          t  (- ----- - ----- + %e   ) + t (2 %e    - -----)
+                  t       2                             t
+                         t
+                                   - t          - t     - t
+                 - t       - t   %e        2  %e      %e
+           + 2 %e   , t (%e    - -----) + t  (----- - -----)
+                                   t            2       t
+                         2   - t            - t     - t
+               - t      t  %e        2    %e      %e        - t
+           + %e   ], [- --------, - t  (- ----- - ----- + %e   ),
+                           2                t       2
+                                                   t
+                  - t     - t      2   - t
+             2  %e      %e        t  %e          - t
+          - t  (----- - -----)], [-------- - t %e   ,
+                  2       t          2
+                  - t     - t                           - t
+           2    %e      %e        - t           - t   %e
+          t  (- ----- - ----- + %e   ) - t (2 %e    - -----),
+                  t       2                             t
+                         t
+                - t     - t                 - t
+           2  %e      %e            - t   %e
+          t  (----- - -----) - t (%e    - -----)])
+                2       t                   t
+          (%i4) ratsimp(%);
+                         [   2              - t ]
+                         [ (t  + 2 t + 2) %e    ]
+                         [ -------------------- ]
+                         [          2           ]
+                         [                      ]
+                         [         2   - t      ]
+          (%o4)  Col 1 = [        t  %e         ]
+                         [      - --------      ]
+                         [           2          ]
+                         [                      ]
+                         [     2          - t   ]
+                         [   (t  - 2 t) %e      ]
+                         [   ----------------   ]
+                         [          2           ]
+                   [      2        - t    ]
+                   [    (t  + t) %e       ]
+                   [                      ]
+           Col 2 = [     2            - t ]
+                   [ - (t  - t - 1) %e    ]
+                   [                      ]
+                   [     2          - t   ]
+                   [   (t  - 3 t) %e      ]
+                   [        2   - t       ]
+                   [       t  %e          ]
+                   [       --------       ]
+                   [          2           ]
+                   [                      ]
+                   [      2          - t  ]
+           Col 3 = [    (t  - 2 t) %e     ]
+                   [  - ----------------  ]
+                   [           2          ]
+                   [                      ]
+                   [   2              - t ]
+                   [ (t  - 4 t + 2) %e    ]
+                   [ -------------------- ]
+                   [          2           ]
+
+     Example 2:
+          (%i5) b1:matrix([0,0,1,1,1],
+                          [0,0,0,1,1],
+                          [0,0,0,0,1],
+                          [0,0,0,0,0],
+                          [0,0,0,0,0])$
+
+          (%i6) mat_function(exp,t*b1);
+                            [              2     ]
+                            [             t      ]
+                            [ 1  0  t  t  -- + t ]
+                            [             2      ]
+                            [                    ]
+          (%o6)             [ 0  1  0  t    t    ]
+                            [                    ]
+                            [ 0  0  1  0    t    ]
+                            [                    ]
+                            [ 0  0  0  1    0    ]
+                            [                    ]
+                            [ 0  0  0  0    1    ]
+          (%i7) minimalPoly(jordan(b1));
+                                       3
+          (%o7)                       x
+          (%i8) ident(5)+t*b1+1/2*(t^2)*b1^^2;
+                            [              2     ]
+                            [             t      ]
+                            [ 1  0  t  t  -- + t ]
+                            [             2      ]
+                            [                    ]
+          (%o8)             [ 0  1  0  t    t    ]
+                            [                    ]
+                            [ 0  0  1  0    t    ]
+                            [                    ]
+                            [ 0  0  0  1    0    ]
+                            [                    ]
+                            [ 0  0  0  0    1    ]
+          (%i9) mat_function(exp,%i*t*b1);
+                       [                           2 ]
+                       [                          t  ]
+                       [ 1  0  %i t  %i t  %i t - -- ]
+                       [                          2  ]
+                       [                             ]
+          (%o9)        [ 0  1   0    %i t    %i t    ]
+                       [                             ]
+                       [ 0  0   1     0      %i t    ]
+                       [                             ]
+                       [ 0  0   0     1        0     ]
+                       [                             ]
+                       [ 0  0   0     0        1     ]
+          (%i10) mat_function(cos,t*b1)+%i*mat_function(sin,t*b1);
+                        [                           2 ]
+                        [                          t  ]
+                        [ 1  0  %i t  %i t  %i t - -- ]
+                        [                          2  ]
+                        [                             ]
+          (%o10)        [ 0  1   0    %i t    %i t    ]
+                        [                             ]
+                        [ 0  0   1     0      %i t    ]
+                        [                             ]
+                        [ 0  0   0     1        0     ]
+                        [                             ]
+                        [ 0  0   0     0        1     ]
+
+     Example 3:
+          (%i11) a1:matrix([2,1,0,0,0,0],
+                           [-1,4,0,0,0,0],
+                           [-1,1,2,1,0,0],
+                           [-1,1,-1,4,0,0],
+                           [-1,1,-1,1,3,0],
+                           [-1,1,-1,1,1,2])$
+
+          (%i12) fpow(x):=block([k],declare(k,integer),x^k)$
+
+          (%i13) mat_function(fpow,a1);
+                          [  k      k - 1 ]         [      k - 1    ]
+                          [ 3  - k 3      ]         [   k 3         ]
+                          [               ]         [               ]
+                          [       k - 1   ]         [  k      k - 1 ]
+                          [  - k 3        ]         [ 3  + k 3      ]
+                          [               ]         [               ]
+                          [       k - 1   ]         [      k - 1    ]
+                          [  - k 3        ]         [   k 3         ]
+          (%o13)  Col 1 = [               ] Col 2 = [               ]
+                          [       k - 1   ]         [      k - 1    ]
+                          [  - k 3        ]         [   k 3         ]
+                          [               ]         [               ]
+                          [       k - 1   ]         [      k - 1    ]
+                          [  - k 3        ]         [   k 3         ]
+                          [               ]         [               ]
+                          [       k - 1   ]         [      k - 1    ]
+                          [  - k 3        ]         [   k 3         ]
+                   [       0       ]         [       0       ]
+                   [               ]         [               ]
+                   [       0       ]         [       0       ]
+                   [               ]         [               ]
+                   [  k      k - 1 ]         [      k - 1    ]
+                   [ 3  - k 3      ]         [   k 3         ]
+                   [               ]         [               ]
+           Col 3 = [       k - 1   ] Col 4 = [  k      k - 1 ]
+                   [  - k 3        ]         [ 3  + k 3      ]
+                   [               ]         [               ]
+                   [       k - 1   ]         [      k - 1    ]
+                   [  - k 3        ]         [   k 3         ]
+                   [               ]         [               ]
+                   [       k - 1   ]         [      k - 1    ]
+                   [  - k 3        ]         [   k 3         ]
+                   [    0    ]
+                   [         ]         [ 0  ]
+                   [    0    ]         [    ]
+                   [         ]         [ 0  ]
+                   [    0    ]         [    ]
+                   [         ]         [ 0  ]
+           Col 5 = [    0    ] Col 6 = [    ]
+                   [         ]         [ 0  ]
+                   [    k    ]         [    ]
+                   [   3     ]         [ 0  ]
+                   [         ]         [    ]
+                   [  k    k ]         [  k ]
+                   [ 3  - 2  ]         [ 2  ]
+
+     To use this function write first `load("diag")'.
+
+
+File: contrib.info,  Node: Definitions for cholesky,  Next: Definitions for bode,  Prev: Definitions for diag,  Up: Top
+
+Definitions for cholesky
+========================
+
+ -- Function: cholesky (<A>)
+     Compute Cholesky decomposition of <A>, a lower-triangular matrix
+     <L> such that `L . transpose(L) = A'.
+
+     Some examples follow.
+
+     Example 1:
+          (%i1) load("cholesky")$
+
+          (%i2) A : matrix ([a, b, c], [d, e, f], [g, h, i]);
+                                  [ a  b  c ]
+                                  [         ]
+          (%o2)                   [ d  e  f ]
+                                  [         ]
+                                  [ g  h  i ]
+          (%i3) A2 : transpose (A) . A;
+                [   2    2    2                                     ]
+                [  g  + d  + a     g h + d e + a b  g i + d f + a c ]
+                [                                                   ]
+          (%o3) [                    2    2    2                    ]
+                [ g h + d e + a b   h  + e  + b     h i + e f + b c ]
+                [                                                   ]
+                [                                     2    2    2   ]
+                [ g i + d f + a c  h i + e f + b c   i  + f  + c    ]
+          (%i4) B : cholesky (A2)$
+
+          (%i5) B . transpose (B) - A2;
+                                  [ 0  0  0 ]
+                                  [         ]
+          (%o5)                   [ 0  0  0 ]
+                                  [         ]
+                                  [ 0  0  0 ]
+
+     Example 2:
+          (%i6) A : matrix ([2, 3, 4], [-2, 2,- 3], [11, -2, 3]);
+                              [  2    3    4  ]
+                              [               ]
+          (%o6)               [ - 2   2   - 3 ]
+                              [               ]
+                              [ 11   - 2   3  ]
+          (%i7) A2 : transpose (A) . A;
+                              [ 129   - 20  47 ]
+                              [                ]
+          (%o7)               [ - 20   17   0  ]
+                              [                ]
+                              [  47    0    34 ]
+          (%i8) B : cholesky (A2);
+                 [  sqrt(129)         0             0      ]
+                 [                                         ]
+                 [      20        sqrt(1793)               ]
+                 [ - ---------    ----------        0      ]
+          (%o8)  [   sqrt(129)    sqrt(129)                ]
+                 [                                         ]
+                 [     47       940 sqrt(129)      153     ]
+                 [  ---------   --------------  ---------- ]
+                 [  sqrt(129)   129 sqrt(1793)  sqrt(1793) ]
+          (%i9) B . transpose (B) - A2;
+                                 [ 0  0  0 ]
+                                 [         ]
+          (%o9)                  [ 0  0  0 ]
+                                 [         ]
+                                 [ 0  0  0 ]
+
+     To use this function write first `load("cholesky")'.
+
+
+File: contrib.info,  Node: Definitions for bode,  Next: Definitions for augmented_lagrangian,  Prev: Definitions for cholesky,  Up: Top
+
+Definitions for bode
+====================
+
+ -- Function: bode_gain (<H>, <range>, ...<plot_opts>...)
+     Function to draw Bode gain plots.
+
+     Examples (1 through 7 from
+          http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html,
+     8 from Ron Crummett):
+          (%i1) load("bode")$
+
+          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
+
+          (%i3) bode_gain (H1 (s), [w, 1/1000, 1000])$
+
+          (%i4) H2 (s) := 1 / (1 + s/omega0)$
+
+          (%i5) bode_gain (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
+
+          (%i7) bode_gain (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i8) H4 (s) := 1 + s/omega0$
+
+          (%i9) bode_gain (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i10) H5 (s) := 1/s$
+
+          (%i11) bode_gain (H5 (s), [w, 1/1000, 1000])$
+
+          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
+
+          (%i13) bode_gain (H6 (s), [w, 1/1000, 1000]),
+                            omega0 = 10, zeta = 1/10$
+
+          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
+
+          (%i15) bode_gain (H7 (s), [w, 1/1000, 1000]),
+                            omega0 = 10, zeta = 1/10$
+
+          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
+
+          (%i17) bode_gain (H8 (s), [w, 1/1000, 1000])$
+
+     To use this function write first `load("bode")'. See also
+     `bode_phase'
+
+ -- Function: bode_phase (<H>, <range>, ...<plot_opts>...)
+     Function to draw Bode phase plots.
+
+     Examples (1 through 7 from
+          http://www.swarthmore.edu/NatSci/echeeve1/Ref/Bode/BodeHow.html,
+     8 from Ron Crummett):
+          (%i1) load("bode")$
+
+          (%i2) H1 (s) := 100 * (1 + s) / ((s + 10) * (s + 100))$
+
+          (%i3) bode_phase (H1 (s), [w, 1/1000, 1000])$
+
+          (%i4) H2 (s) := 1 / (1 + s/omega0)$
+
+          (%i5) bode_phase (H2 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i6) H3 (s) := 1 / (1 + s/omega0)^2$
+
+          (%i7) bode_phase (H3 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i8) H4 (s) := 1 + s/omega0$
+
+          (%i9) bode_phase (H4 (s), [w, 1/1000, 1000]), omega0 = 10$
+
+          (%i10) H5 (s) := 1/s$
+
+          (%i11) bode_phase (H5 (s), [w, 1/1000, 1000])$
+
+          (%i12) H6 (s) := 1/((s/omega0)^2 + 2 * zeta * (s/omega0) + 1)$
+
+          (%i13) bode_phase (H6 (s), [w, 1/1000, 1000]),
+                             omega0 = 10, zeta = 1/10$
+
+          (%i14) H7 (s) := (s/omega0)^2 + 2 * zeta * (s/omega0) + 1$
+
+          (%i15) bode_phase (H7 (s), [w, 1/1000, 1000]),
+                             omega0 = 10, zeta = 1/10$
+
+          (%i16) H8 (s) := 0.5 / (0.0001 * s^3 + 0.002 * s^2 + 0.01 * s)$
+
+          (%i17) bode_phase (H8 (s), [w, 1/1000, 1000])$
+
+          (%i18) block ([bode_phase_unwrap : false],
+                        bode_phase (H8 (s), [w, 1/1000, 1000]));
+
+          (%i19) block ([bode_phase_unwrap : true],
+                        bode_phase (H8 (s), [w, 1/1000, 1000]));
+
+     To use this function write first `load("bode")'. See also
+     `bode_gain'
+
+
+File: contrib.info,  Node: Definitions for augmented_lagrangian,  Next: Definitions for opsubst,  Prev: Definitions for bode,  Up: Top
+
+Definitions for augmented_lagrangian
+====================================
+
+ -- Option variable: niter
+     Default value: 10
+
+     Number of iterations for `augmented_lagrangian_method'.
+
+ -- Function: augmented_lagrangian_method (<FOM>, <xx>, <constraints>,
+          <yy>)
+     Augmented Lagrangian method for constrained optimization.  <FOM>
+     is the figure of merit expression, <xx> is a list of variables
+     over which to minimize, <constraints> is a list of expressions to
+     be held equal to zero, and <yy> is a list of initial guesses for
+     <xx>.
+
+     At present this code minimizes the augmented Lagrangian by solving
+     for a stationary point of its gradient.  That's pretty weak, and
+     the code could be improved by plugging in a conjugate gradient or
+     quasi-Newton minimization algorithm.
+
+     For references see
+          http://www-fp.mcs.anl.gov/otc/Guide/OptWeb/continuous/constrained/nonlinearcon/auglag.html
+     and
+          http://www.cs.ubc.ca/spider/ascher/542/chap10.pdf
+
+     Package `mnewton' (to solve grad L = 0) has to be loaded before
+     calling `augmented_lagrangian_method'.
+
+     Example:
+          (%i1) load (mnewton)$
+
+          (%i2) load("augmented_lagrangian")$
+
+          (%i3) FOM: x^2 + 2*y^2;
+                                     2    2
+          (%o3)                   2 y  + x
+          (%i4) xx: [x, y];
+          (%o4)                     [x, y]
+          (%i5) C: [x + y - 1];
+          (%o5)                  [y + x - 1]
+          (%i6) yy: [1, 1];
+          (%o6)                     [1, 1]
+          (%i7) augmented_lagrangian_method (FOM, xx, C, yy);
+          (%o7)          [0.6478349834, 0.3239174917]
+
+     To use this function write first `load("mnewton")' and
+     `load("augmented_lagrangian")'.  See also `niter'.
+
+
+File: contrib.info,  Node: Definitions for opsubst,  Next: Definitions for stirling,  Prev: Definitions for augmented_lagrangian,  Up: Top
+
+Definitions for opsubst
+=======================
+
+ -- Function: opsubst (<f>,<g>,<e>)
+ -- Function: opsubst (<g>=<f>,<e>)
+ -- Function: opsubst ([<g1>=<f1>,<g2>=<f2>,..., <gn>=<fn>],<e>)
+     The function `opsubst' is similar to the function `subst', except
+     that `opsubst' only makes substitutions for the operators in an
+     expression. In general, When <f> is an operator in the expression
+     <e>, substitute <g> for <f> in the expression <e>.
+
+     To determine the operator, `opsubst' sets `inflag' to true. This
+     means `opsubst' substitutes for the internal, not the displayed,
+     operator in the expression.
+
+     Examples:
+          (%i1) load (opsubst)$
+
+          (%i2) opsubst(f,g,g(g(x)));
+          (%o2)                     f(f(x))
+          (%i3) opsubst(f,g,g(g));
+          (%o3)                       f(g)
+          (%i4) opsubst(f,g[x],g[x](z));
+          (%o4)                       f(z)
+          (%i5) opsubst(g[x],f, f(z));
+          (%o5)                      g (z)
+                                      x
+          (%i6) opsubst(tan, sin, sin(sin));
+          (%o6)                     tan(sin)
+          (%i7) opsubst([f=g,g=h],f(x));
+          (%o7)                       h(x)
+
+     Internally, Maxima does not use the unary negation, division, or
+     the subtraction operators; thus:
+          (%i8) opsubst("+","-",a-b);
+          (%o8)                     a - b
+          (%i9) opsubst("f","-",-a);
+          (%o9)                      - a
+          (%i10) opsubst("^^","//",a/b);
+                                       a
+          (%o10)                       -
+                                       b
+
+     The internal representation of -a*b is *(-1,a,b); thus
+          (%i11) opsubst("[","*", -a*b);
+          (%o11)                  [- 1, a, b]
+
+     When either operator isn't a Maxima symbol, generally some other
+     function will signal an error:
+          (%i12) opsubst(a+b,f, f(x));
+
+          Improper name or value in functional position:
+          b + a
+           -- an error.  Quitting.  To debug this try debugmode(true);
+
+     However, subscripted operators are allowed:
+          (%i13) opsubst(g[5],f, f(x));
+          (%o13)                     g (x)
+                                      5
+
+     To use this function write first `load("opsubst")'.
+
+
+File: contrib.info,  Node: Definitions for stirling,  Next: Function and variable index,  Prev: Definitions for opsubst,  Up: Top
+
+Definitions for stirling
+========================
+
+ -- Function: stirling (<z>,<n>)
+     Replace `gamma(x)' with the O(1/x^(2n-1)) Stirling formula. when
+     <n> isn't a nonnegative integer, signal an error.
+
+     Reference: Abramowitz & Stegun, " Handbook of mathematical
+     functions", 6.1.40.
+
+     Examples:
+          (%i1) load (stirling)$
+
+          (%i2) stirling(gamma(%alpha+x)/gamma(x),1);
+                 1/2 - x             x + %alpha - 1/2
+          (%o2) x        (x + %alpha)
+                                             1           1
+                                      --------------- - ---- - %alpha
+                                      12 (x + %alpha)   12 x
+                                    %e
+          (%i3) taylor(%,x,inf,1);
+                              %alpha       2    %alpha
+                    %alpha   x       %alpha  - x       %alpha
+          (%o3)/T/ x       + -------------------------------- + . . .
+                                           2 x
+          (%i4) map('factor,%);
+                                                 %alpha - 1
+                   %alpha   (%alpha - 1) %alpha x
+          (%o4)   x       + -------------------------------
+                                            2
+
+     The function `stirling' knows the difference between the variable
+     'gamma' and the function gamma:
+
+          (%i5) stirling(gamma + gamma(x),0);
+                                              x - 1/2   - x
+          (%o5)    gamma + sqrt(2) sqrt(%pi) x        %e
+          (%i6) stirling(gamma(y) + gamma(x),0);
+                                   y - 1/2   - y
+          (%o6) sqrt(2) sqrt(%pi) y        %e
+                                                        x - 1/2   - x
+                                   + sqrt(2) sqrt(%pi) x        %e
+
+     To use this function write first `load("stirling")'.
+
+
+File: contrib.info,  Node: Function and variable index,  Prev: Definitions for stirling,  Up: Top
+
+Appendix A Function and variable index
+**************************************
+
+ [index ]
+* Menu:
+
+* augmented_lagrangian_method:           Definitions for augmented_lagrangian.
+                                                              (line  13)
+* bode_gain:                             Definitions for bode.
+                                                              (line   7)
+* bode_phase:                            Definitions for bode.
+                                                              (line  52)
+* cholesky:                              Definitions for cholesky.
+                                                              (line   7)
+* diag:                                  Definitions for diag.
+                                                              (line   7)
+* dispJordan:                            Definitions for diag.
+                                                              (line  95)
+* eval_string:                           Definitions for eval_string.
+                                                              (line   7)
+* f90:                                   Definitions for f90. (line   7)
+* ggf:                                   Definitions for ggf. (line  36)
+* ifactor:                               Definitions for ifactor.
+                                                              (line  67)
+* ifactors:                              Definitions for ifactor.
+                                                              (line  57)
+* implicit_derivative:                   Definitions for impdiff.
+                                                              (line   8)
+* JF:                                    Definitions for diag.
+                                                              (line  33)
+* jordan:                                Definitions for diag.
+                                                              (line  56)
+* Lindstedt:                             Definitions for lindstedt.
+                                                              (line   7)
+* lsquares:                              Definitions for lsquares.
+                                                              (line  18)
+* makeOrders:                            Definitions for makeOrders.
+                                                              (line   7)
+* mat_function:                          Definitions for diag.
+                                                              (line 183)
+* minimalPoly:                           Definitions for diag.
+                                                              (line 125)
+* mnewton:                               Definitions for mnewton.
+                                                              (line  23)
+* ModeMatrix:                            Definitions for diag.
+                                                              (line 147)
+* next_prime:                            Definitions for ifactor.
+                                                              (line  91)
+* opsubst:                               Definitions for opsubst.
+                                                              (line   7)
+* parse_string:                          Definitions for eval_string.
+                                                              (line  26)
+* plotdf:                                Definitions for plotdf.
+                                                              (line   7)
+* plsquares:                             Definitions for lsquares.
+                                                              (line 100)
+* prev_prime:                            Definitions for ifactor.
+                                                              (line 101)
+* primep_pr:                             Definitions for ifactor.
+                                                              (line  79)
+* stirling:                              Definitions for stirling.
+                                                              (line   7)
+
+ [index ]
+* Menu:
+
+* DETCOEF:                               Definitions for lsquares.
+                                                               (line  7)
+* ecm_limit:                             Definitions for ifactor.
+                                                               (line 37)
+* ecm_limit_delta:                       Definitions for ifactor.
+                                                               (line 47)
+* ecm_max_limit:                         Definitions for ifactor.
+                                                               (line 42)
+* ecm_number_of_curves:                  Definitions for ifactor.
+                                                               (line 32)
+* GGFCFMAX:                              Definitions for ggf.  (line 22)
+* GGFINFINITY:                           Definitions for ggf.  (line  7)
+* ifactor_verbose:                       Definitions for ifactor.
+                                                               (line 52)
+* NEWTONEPSILON:                         Definitions for mnewton.
+                                                               (line  7)
+* NEWTONMAXITER:                         Definitions for mnewton.
+                                                               (line 15)
+* niter:                                 Definitions for augmented_lagrangian.
+                                                               (line  7)
+* pollard_rho_limit:                     Definitions for ifactor.
+                                                               (line 17)
+* pollard_rho_limit_step:                Definitions for ifactor.
+                                                               (line 27)
+* pollard_rho_tests:                     Definitions for ifactor.
+                                                               (line 22)
+* primep_number_of_tests:                Definitions for ifactor.
+                                                               (line 12)
+* save_primes:                           Definitions for ifactor.
+                                                               (line  7)
+
+
+
+Tag Table:
+Node: Top75
+Node: Introduction to contributed packages738
+Node: Definitions for makeOrders1064
+Node: Definitions for mnewton2071
+Node: Definitions for lsquares3716
+Node: Definitions for plotdf12689
+Node: Definitions for lindstedt20741
+Node: Definitions for impdiff22254
+Node: Definitions for ifactor22888
+Node: Definitions for ggf25624
+Node: Definitions for f9027397
+Node: Definitions for eval_string29110
+Node: Definitions for diag30750
+Node: Definitions for cholesky47629
+Node: Definitions for bode50740
+Node: Definitions for augmented_lagrangian53970
+Node: Definitions for opsubst55907
+Node: Definitions for stirling58367
+Node: Function and variable index60355
+
+End Tag Table

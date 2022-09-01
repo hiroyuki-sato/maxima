@@ -1,5 +1,5 @@
 ;;Copyright William F. Schelter 1990, All Rights Reserved
-(in-package "MAXIMA")
+(in-package :maxima)
 ;; see bottom of file for examples
 
 
@@ -15,7 +15,7 @@
 
 
 (defvar *maxima-plotdir* "")
-(defvar *maxima-tmpdir* "")
+(defvar *maxima-tempdir*)
 
 (defvar *z-range* nil)
 (defvar *original-points* nil)
@@ -69,6 +69,8 @@
 			 "set term dumb 79 22")
 			((mlist) $gnuplot_ps_term_command
 			 "set size 1.5, 1.5;set term postscript eps enhanced color solid 24")
+			((mlist) $logx nil)
+			((mlist) $logy nil)
 			))
 
 (defvar $viewps_command  "(ghostview \"~a\")")
@@ -149,6 +151,8 @@
 	  ($gnuplot_dumb_term_command value)
 	  ($gnuplot_ps_term_command value)
 	  ($adapt_depth (check-list-items name (cddr value) 'fixnum 1))
+	  ($logx value)
+	  ($logy value)
 	  (t
 	   (merror "Unknown plot option specified:  ~M" name))))
   (loop for v on (cdr $plot_options)
@@ -376,7 +380,7 @@ setrgbcolor} def
 		    (opts *original-points*)
 		    (maxz  most-negative-double-float))
   (declare (type (cl:array double-float) pts)
-           #-(or cmu sbcl) (type (cl:array double-float) opts)
+           #-(or cmu scl sbcl) (type (cl:array double-float) opts)
 	   (type (cl:array (mod 64000)) ngons)
 	   (fixnum number_edges i s j number_edges)
 	   (double-float maxz))
@@ -513,19 +517,31 @@ setrgbcolor} def
 		  (or mexpr (merror "Undefined function ~M" expr))
 		  (coerce `(lambda ,(cdr args)
 			    (declare (special ,@(cdr args)))
-			    (let* (($ratprint nil)
+			    (let* (($ratprint nil) ($numer t)
 				   (result ($realpart (meval* ',(nth 2 mexpr)))))
 			      (if ($numberp result)
 				  ($float result)
 				  nil)))
 			  'function)))))
+    ((and (consp expr) (eq (caar expr) 'lambda))
+     ; FOLLOWING CODE IS IDENTICAL TO CODE FOR EXPR = SYMBOL 
+     ; (EXCEPT HERE WE HAVE EXPR INSTEAD OF MEXPR). DOUBTLESS BEST TO MERGE.
+		(let ((args (nth 1 expr)))
+		  (coerce `(lambda ,(cdr args)
+			    (declare (special ,@(cdr args)))
+			    (let* (($ratprint nil) ($numer t)
+				   (result ($realpart (meval* ',(nth 2 expr)))))
+			      (if ($numberp result)
+				  ($float result)
+				  nil)))
+			  'function)))
 	(t
 	 (let ((vars (or lvars ($sort ($listofvars expr))))
 					;(na (gensym "TMPF"))
 	       )
 	   (coerce `(lambda ,(cdr vars)
 		     (declare (special ,@(cdr vars) errorsw))
-		     (let (($ratprint nil)
+		     (let (($ratprint nil) ($numer t)
 			   (errorsw t))
 		       ;; Catch any errors from evaluating the
 		       ;; function.  We're assuming that if an error
@@ -847,14 +863,14 @@ setrgbcolor} def
 	 nil)))
 		    
     
-(defun adaptive-plot (f a b c f-a f-b f-c depth eps)
+(defun adaptive-plot (fcn a b c f-a f-b f-c depth eps)
   ;; Step 1:  Split the interval [a, c] into 5 points
   (let* ((a1 (/ (+ a b) 2))
 	 (b1 (/ (+ b c) 2))
-	 (f-a1 (funcall f a1))
-	 (f-b1 (funcall f b1))
+	 (f-a1 (funcall fcn a1))
+	 (f-b1 (funcall fcn b1))
 	 )
-    (cond ((or (minusp depth)
+    (cond ((or (not (plusp depth))
 	       (and (slow-oscillation-p f-a f-a1 f-b f-b1 f-c)
 		    (smooth-enough-p f-a f-a1 f-b f-b1 f-c eps)))
 	   ;; Everything is nice and smooth so we're done.  Don't
@@ -866,21 +882,21 @@ setrgbcolor} def
 		 c f-c))
 	  (t
 	   ;; Need to refine.  Split the interval in half, and try to plot each half.  
-	   (let ((left (adaptive-plot f a a1 b f-a f-a1 f-b (1- depth) (* 2 eps)))
-		 (right (adaptive-plot f b b1 c f-b f-b1 f-c (1- depth) (* 2 eps))))
+	   (let ((left (adaptive-plot fcn a a1 b f-a f-a1 f-b (1- depth) (* 2 eps)))
+		 (right (adaptive-plot fcn b b1 c f-b f-b1 f-c (1- depth) (* 2 eps))))
 	     (append left (cddr right)))))))
 
-(defun draw2d (f range)
-  (if (and ($listp f) (equal '$parametric (cadr f)))
-      (return-from draw2d (draw2d-parametric f range)))
-  (if (and ($listp f) (equal '$discrete (cadr f)))
-      (return-from draw2d (draw2d-discrete f)))
+(defun draw2d (fcn range &optional (log-x-p nil) (log-y-p nil))
+  (if (and ($listp fcn) (equal '$parametric (cadr fcn)))
+      (return-from draw2d (draw2d-parametric fcn range)))
+  (if (and ($listp fcn) (equal '$discrete (cadr fcn)))
+      (return-from draw2d (draw2d-discrete fcn)))
   (let* ((nticks (nth 2 ($get_plot_option '$nticks)))
 	 (yrange ($get_plot_option '$y))
 	 (depth (nth 2 ($get_plot_option '$adapt_depth)))
 	 ($numer t))
 
-    (setq f (coerce-float-fun f `((mlist), (nth 1 range))))
+    (setq fcn (coerce-float-fun fcn `((mlist), (nth 1 range))))
 
     (let* ((x-start (coerce-float (nth 2 range)))
 	   (xend (coerce-float (nth 3 range)))
@@ -898,53 +914,70 @@ setrgbcolor} def
       ;; NTICKS too big.  Since adaptive plotting splits the sections
       ;; in half, it's also probably not a good idea to have NTICKS be
       ;; a power of two.
-      (dotimes (k (1+ (* 2 nticks)))
-	(let ((x (+ x-start (* k x-step))))
-	  (push x x-samples)
-	  (push (funcall f x) y-samples)))
-      (setf x-samples (nreverse x-samples))
-      (setf y-samples (nreverse y-samples))
+      (when log-x-p
+	(setf x-start (log x-start))
+	(setf xend (log xend))
+	(setf x-step (/ (- xend x-start) (coerce-float nticks) 2)))
 
-      ;; For each region, adaptively plot it.
-      (do ((x-start x-samples (cddr x-start))
-	   (x-mid (cdr x-samples) (cddr x-mid))
-	   (x-end (cddr x-samples) (cddr x-end))
-	   (y-start y-samples (cddr y-start))
-	   (y-mid (cdr y-samples) (cddr y-mid))
-	   (y-end (cddr y-samples) (cddr y-end)))
-	  ((null x-end))
-	;; The region is x-start to x-end, with mid-point x-mid.
-	;;
-	;; The cddr is to remove the one extra sample (x and y value)
-	;; that adaptive plot returns. But on the first iteration,
-	;; result is empty, so we don't want the cddr because we want
-	;; all the samples returned from adaptive-plot.  On subsequent
-	;; iterations, it's a duplicate of the last ponit of the
-	;; previous interval.
-	(setf result
-	      (if result
-		  (append result
-			  (cddr
-			   (adaptive-plot f (car x-start) (car x-mid) (car x-end)
-					  (car y-start) (car y-mid) (car y-end)
-					  depth 1d-5)))
-		  (adaptive-plot f (car x-start) (car x-mid) (car x-end)
-				 (car y-start) (car y-mid) (car y-end)
-				 depth 1d-5))))
+      (flet ((fun (x)
+	       (let ((y (if log-x-p
+			    (funcall fcn (exp x))
+			    (funcall fcn x))))
+		 (if log-y-p
+		     (log y)
+		     y))))
+	
+	(dotimes (k (1+ (* 2 nticks)))
+	  (let ((x (+ x-start (* k x-step))))
+	    (push x x-samples)
+	    (push (fun x) y-samples)))
+	(setf x-samples (nreverse x-samples))
+	(setf y-samples (nreverse y-samples))
+
+	;; For each region, adaptively plot it.
+	(do ((x-start x-samples (cddr x-start))
+	     (x-mid (cdr x-samples) (cddr x-mid))
+	     (x-end (cddr x-samples) (cddr x-end))
+	     (y-start y-samples (cddr y-start))
+	     (y-mid (cdr y-samples) (cddr y-mid))
+	     (y-end (cddr y-samples) (cddr y-end)))
+	    ((null x-end))
+	  ;; The region is x-start to x-end, with mid-point x-mid.
+	  ;;
+	  ;; The cddr is to remove the one extra sample (x and y value)
+	  ;; that adaptive plot returns. But on the first iteration,
+	  ;; result is empty, so we don't want the cddr because we want
+	  ;; all the samples returned from adaptive-plot.  On subsequent
+	  ;; iterations, it's a duplicate of the last ponit of the
+	  ;; previous interval.
+	  (setf result
+		(if result
+		    (append result
+			    (cddr
+			     (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
+					    (car y-start) (car y-mid) (car y-end)
+					    depth 1d-5)))
+		    (adaptive-plot #'fun (car x-start) (car x-mid) (car x-end)
+				   (car y-start) (car y-mid) (car y-end)
+				   depth 1d-5))))
 	  
 
-      ;; jfa: I don't think this is necessary any longer
-      ;;      (format t "Points = ~D~%" (length result))
+	;; jfa: I don't think this is necessary any longer
+	;;      (format t "Points = ~D~%" (length result))
 
-      ;; Fix up out-of-range values
-      (do ((x result (cddr x))
-	   (y (cdr result) (cddr y)))
-	  ((null y))
-	(unless (and (numberp (car y))
-		     (<= ymin (car y) ymax))
-	  (setf (car x) 'moveto)
-	  (setf (car y) 'moveto)))
-      (cons '(mlist) result))))
+	;; Fix up out-of-range values
+	(do ((x result (cddr x))
+	     (y (cdr result) (cddr y)))
+	    ((null y))
+	  (when log-x-p
+	    (setf (car x) (exp (car x))))
+	  (when log-y-p
+	    (setf (car y) (exp (car y))))
+	  (unless (and (numberp (car y))
+		       (<= ymin (car y) ymax))
+	    (setf (car x) 'moveto)
+	    (setf (car y) 'moveto)))
+	(cons '(mlist) result)))))
 
 (defun get-range (lis)
   (let ((ymin most-positive-double-float)
@@ -1038,7 +1071,7 @@ setrgbcolor} def
     (format nil "~a/~a" *maxima-tempdir* file)
     file))
 
-(defun gnuplot-print-header (dest)
+(defun gnuplot-print-header (dest &key log-x log-y)
   (let ((gnuplot-out-file nil))
     (if ($get_plot_option '$gnuplot_pm3d 2)
 	(format dest "set pm3d~%"))
@@ -1058,6 +1091,10 @@ setrgbcolor} def
 	       (get-plot-option-string '$gnuplot_dumb_term_command))
        (if gnuplot-out-file
 	   (format dest "set out '~a'~%" gnuplot-out-file))))
+    (when log-x
+      (format dest "set log x~%"))
+    (when log-y
+      (format dest "set log y~%"))
     (format dest "~a~%" (get-plot-option-string '$gnuplot_preamble))))
 
 
@@ -1089,118 +1126,125 @@ setrgbcolor} def
     (if gnuplot-out-file
 	(format t "Output file \"~a\".~%" gnuplot-out-file-string))))
 
-(defun $plot2d (fun &optional range &rest options &aux ($numer t) $display2d
-		(i 0) plot-format gnuplot-term gnuplot-out-file
-		file plot-name
-		($plot_options $plot_options))
-  (dolist (v options) ($set_plot_option v))
+(defun $plot2d (fun &optional range &rest options)
+  (let (($numer t)
+	($display2d nil)
+	(i 0)
+	($plot_options $plot_options)
+	plot-format gnuplot-term gnuplot-out-file file plot-name)
+    (dolist (v options)
+      ($set_plot_option v))
   
-  (cond ((and (consp fun) (eq (cadr fun) '$parametric))
-	 (or range (setq range (nth 4 fun)))
-	 (setf fun `((mlist) ,fun))))
-  (cond ((and (consp fun) (eq (cadr fun) '$discrete))
-	 (setf fun `((mlist) ,fun))))
-  (cond ((eq ($get_plot_option '$plot_format 2) '$ps)
-         (return-from $plot2d (apply '$plot2d_ps fun range options))))
-  (cond ((eq ($get_plot_option '$plot_format 2) '$openmath)
-         (return-from $plot2d (apply '$plot2dopen fun range options))))
+    (when (and (consp fun) (eq (cadr fun) '$parametric))
+      (or range (setq range (nth 4 fun)))
+      (setf fun `((mlist) ,fun)))
+    (when (and (consp fun) (eq (cadr fun) '$discrete))
+      (setf fun `((mlist) ,fun)))
+    (when (eq ($get_plot_option '$plot_format 2) '$ps)
+      (return-from $plot2d (apply '$plot2d_ps fun range options)))
+    (when (eq ($get_plot_option '$plot_format 2) '$openmath)
+      (return-from $plot2d (apply '$plot2dopen fun range options)))
 
-  ;; this has to come after the checks for ps and openmath 
-  ;; (see bug report #834729)
-  (or ($listp fun ) (setf fun `((mlist) ,fun)))	
-  (let ((no-range-required t))
-    (if (not ($listp fun))
-	(setf no-range-required nil)
-	(dolist (subfun (rest fun))
-	  (if (not ($listp subfun))
-	      (setf no-range-required nil))))
-    (unless no-range-required
-      (setq range (check-range range)))
-    (if (and no-range-required range)
-      ;;; second argument was really a plot option, not a range
-	($set_plot_option range)))
-  (setf plot-format  ($get_plot_option '$plot_format 2))
-  (setf gnuplot-term ($get_plot_option '$gnuplot_term 2))
-  (if ($get_plot_option '$gnuplot_out_file 2)
-      (setf gnuplot-out-file (get-plot-option-string '$gnuplot_out_file)))
-  (if (and (eq plot-format '$gnuplot) 
-	   (eq gnuplot-term '$default) 
-	   gnuplot-out-file)
-      (setf file gnuplot-out-file)
-      (setf file (plot-temp-file (format nil "maxout.~(~a~)" (stripdollar plot-format)))))
+    ;; See if we're doing log plots.
+    (let ((log-x ($get_plot_option '$logx 2))
+	  (log-y ($get_plot_option '$logy 2)))
   
-  (with-open-file (st file :direction :output :if-exists :supersede)
-    (case plot-format
-      ($gnuplot
-       (gnuplot-print-header st)
-       (format st "plot")))
-    (dolist (v (cdr fun))
-      (incf i)
-      (setq plot-name
-	    (let ((string ""))
-	      (cond ((atom v) 
-		     (setf string (coerce (mstring v) 'string)))
-		    ((eq (second v) '$parametric)
-		     (setf string 
-			   (concatenate 
-			    'string (coerce (mstring (third v)) 'string)
-			    ", " (coerce (mstring (fourth v)) 'string))))
-		    ((eq (second v) '$discrete)
-		     (setf string (format nil "discrete~a" i)))
-		    (t (setf string (coerce (mstring v) 'string))))
-	      (cond ((< (length string) 80) string)
-		    (t (format nil "fun~a" i)))))
+      ;; this has to come after the checks for ps and openmath 
+      ;; (see bug report #834729)
+      (or ($listp fun ) (setf fun `((mlist) ,fun)))	
+      (let ((no-range-required t))
+	(if (not ($listp fun))
+	    (setf no-range-required nil)
+	    (dolist (subfun (rest fun))
+	      (if (not ($listp subfun))
+		  (setf no-range-required nil))))
+	(unless no-range-required
+	  (setq range (check-range range)))
+	(if (and no-range-required range)
+      ;;; second argument was really a plot option, not a range
+	    ($set_plot_option range)))
+      (setf plot-format  ($get_plot_option '$plot_format 2))
+      (setf gnuplot-term ($get_plot_option '$gnuplot_term 2))
+      (if ($get_plot_option '$gnuplot_out_file 2)
+	  (setf gnuplot-out-file (get-plot-option-string '$gnuplot_out_file)))
+      (if (and (eq plot-format '$gnuplot) 
+	       (eq gnuplot-term '$default) 
+	       gnuplot-out-file)
+	  (setf file gnuplot-out-file)
+	  (setf file (plot-temp-file (format nil "maxout.~(~a~)" (stripdollar plot-format)))))
+  
+      (with-open-file (st file :direction :output :if-exists :supersede)
+	(case plot-format
+	  ($gnuplot
+	   (gnuplot-print-header st :log-x log-x :log-y log-y)
+	   (format st "plot")))
+	(dolist (v (cdr fun))
+	  (incf i)
+	  (setq plot-name
+		(let ((string ""))
+		  (cond ((atom v) 
+			 (setf string (coerce (mstring v) 'string)))
+			((eq (second v) '$parametric)
+			 (setf string 
+			       (concatenate 
+				'string (coerce (mstring (third v)) 'string)
+				", " (coerce (mstring (fourth v)) 'string))))
+			((eq (second v) '$discrete)
+			 (setf string (format nil "discrete~a" i)))
+			(t (setf string (coerce (mstring v) 'string))))
+		  (cond ((< (length string) 80) string)
+			(t (format nil "fun~a" i)))))
+	  (case plot-format
+	    ($gnuplot
+	     (if (> i 1)
+		 (format st ","))
+	     (let ((title (get-plot-option-string '$gnuplot_curve_titles i)))
+	       (if (equal title "default")
+		   (setf title (format nil "title '~a'" plot-name)))
+	       (format st " '-' ~a ~a" title 
+		       (get-plot-option-string '$gnuplot_curve_styles i))))))
+	(case plot-format
+	  ($gnuplot
+	   (format st "~%")))
+	(setf i 0)
+	(dolist (v (cdr fun))
+	  (incf i)
+	  (setq plot-name
+		(let ((string (coerce (mstring v) 'string)))
+		  (cond ((< (length string) 20) string)
+			(t (format nil "Fun~a" i)))))
+	  (case plot-format
+	    ($xgraph
+	     (format st "~%~% \"~a\"~%" plot-name))
+	    ($gnuplot
+	     (if (> i 1)
+		 (format st "e~%")))
+	    ($mgnuplot
+	     (format st "~%~%# \"~a\"~%" plot-name))
+	    )
+	  (loop for (v w) on (cdr (draw2d v range log-x log-y)) by #'cddr
+	     do
+	     (cond ((eq v 'moveto)
+		    (cond 
+		      ((equal plot-format '$gnuplot)
+		       ;; A blank line means a discontinuity
+		       (format st "~%"))
+		      ((equal plot-format '$mgnuplot)
+		       ;; A blank line means a discontinuity
+		       (format st "~%"))
+		      (t
+		       (format st "move "))))
+		   (t  (format st "~g ~g ~%" v w))))))
       (case plot-format
-	($gnuplot
-	 (if (> i 1)
-	     (format st ","))
-	 (let ((title (get-plot-option-string '$gnuplot_curve_titles i)))
-	   (if (equal title "default")
-	       (setf title (format nil "title '~a'" plot-name)))
-	   (format st " '-' ~a ~a" title 
-		   (get-plot-option-string '$gnuplot_curve_styles i))))))
-    (case plot-format
-      ($gnuplot
-       (format st "~%")))
-    (setf i 0)
-    (dolist (v (cdr fun))
-      (incf i)
-      (setq plot-name
-	    (let ((string (coerce (mstring v) 'string)))
-	      (cond ((< (length string) 20) string)
-		    (t (format nil "Fun~a" i)))))
-      (case plot-format
-	($xgraph
-	 (format st "~%~% \"~a\"~%" plot-name))
-	($gnuplot
-	 (if (> i 1)
-	     (format st "e~%")))
-	($mgnuplot
-	 (format st "~%~%# \"~a\"~%" plot-name))
+	($gnuplot 
+	 (gnuplot-process file))
+        ($mgnuplot 
+         ($system (concatenate 'string *maxima-plotdir* "/" $mgnuplot_command) 
+                  (format nil " -plot2d \"~a\" -title '~a'" file plot-name)))
+        ($xgraph
+         ($system (format nil "xgraph -t 'Maxima Plot' < \"~a\" &" file)))
 	)
-      (loop for (v w) on (cdr (draw2d v range )) by #'cddr
-	    do
-	    (cond ((eq v 'moveto)
-		   (cond 
-		     ((equal plot-format '$gnuplot)
-		      ;; A blank line means a discontinuity
-		      (format st "~%"))
-		     ((equal plot-format '$mgnuplot)
-		      ;; A blank line means a discontinuity
-		      (format st "~%"))
-		     (t
-		      (format st "move "))))
-		  (t  (format st "~g ~g ~%" v w))))))
-  (case plot-format
-    ($gnuplot 
-     (gnuplot-process file))
-    ($mgnuplot 
-     ($system (concatenate 'string *maxima-plotdir* "/" $mgnuplot_command) 
-              (format nil " -plot2d \"~a\" -title '~a'" file plot-name)))
-    ($xgraph
-     ($system (format nil "xgraph -t 'Maxima Plot' < \"~a\" &" file)))
-    )
-  "")
+      "")))
 
 ;;(defun maxima-bin-search (command)
 ;;  (or ($file_search command
@@ -1259,17 +1303,46 @@ setrgbcolor} def
 	 (setf $show_openplot nil)
 	 )))
 
-;;(defun $sprint(&rest args )
-;;  (loop for v in args do
-;;	 (cond ((symbolp v)
-;;		(setq v (string-left-trim '(#\$ #\&) (symbol-name v))))
-;;	       ((numberp v) v)
-;;	       (t (setq v (implode (strgrind v)))))
-;;	 (princ v)
-;;	 (princ " ")
-;;  )
-;;  (car args)
-;;  )
+; Adapted from MSTRINGP (change & to $).
+(defun msymbolp (x)
+    (and (symbolp x) (char= (firstcharn x) #\$)))
+
+;; OK, here are some test cases for $SPRINT.
+;; The only strange one is sprint ([s1, s2, s3]) which is printing an expression containing
+;; Lisp strings via STRGRIND, which introduces the ? and \ , dunno if there's anything we
+;; want to do about that.
+
+;; sprint ("foo bar", "Foo Bar", "FOO BAR");
+;; sprint (["foo bar", "Foo Bar", "FOO BAR"]);
+;; :lisp (setq $s1 "foo bar")
+;; :lisp (setq $s2 "Foo Bar")
+;; :lisp (setq $s3 "FOO BAR")
+;; sprint (s1, s2, s3);
+;; sprint ([s1, s2, s3]);  =>  [?foo\ bar,?Foo\ Bar,?FOO\ BAR]  -- strange ??
+;; sprint (aa, Bb, CC);
+;; sprint ([aa, Bb, CC]);
+;; sprint (aa + Bb + CC);
+;; sprint (1234, 12.34, 12.34e300, 12.34b300);
+;; sprint ([1234, 12.34, 12.34e300, 12.34b300]);
+;; sprint (%i, %pi, %phi, %gamma);
+;; sprint ([%i, %pi, %phi, %gamma]);
+;; sprint (%i + %pi + %phi + %gamma);
+;; sprint (foo(xx,yy) + Bar(Xx,Yy) + BAZ(XX,YY));
+
+(defun $sprint (&rest args)
+  (sloop for v in args do
+         (cond
+           ((stringp v)
+            v)
+           ((or (mstringp v) (msymbolp v))
+            (setq v (maybe-invert-string-case (symbol-name (stripdollar v)))))
+           (t
+             (setq v (maybe-invert-string-case (string (implode (strgrind v)))))))
+         (princ v)
+         (princ " "))
+  (car args))
+
+;; $SHOW_FILE APPEARS TO BE ESSENTIALLY THE SAME AS $PRINTFILE
 
 ;;(defun $show_file(file)
 ;;  (princ (file-to-string ($file_search file)))
@@ -1315,6 +1388,7 @@ setrgbcolor} def
 
 
 (defun $openplot_curves (lis &aux (linel 100000))
+ (let (($display2d nil))
   (declare (special linel))
   (show-open-plot
    (with-output-to-string
@@ -1357,7 +1431,7 @@ setrgbcolor} def
 	    (format st " }")
 	    )
      (format st "}~%")
-     )))
+     ))))
 
 
 

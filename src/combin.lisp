@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module combin)
 
 
@@ -17,7 +17,7 @@
 		      a* $zerobern *a *n $cflength *a* $prevfib hi lo
 		      *infsumsimp *times *plus sum usum makef
 		      varlist genvar $sumsplitfact gensim $ratfac $simpsum
-		      $prederror $listarith $sumhack $prodhack
+		      $prederror $listarith
 		      $ratprint $zeta%pi $bftorat)
 	     ;;	 (*lexpr $ratcoef $divide)
 	     ;;	 (fixnum %n %a* %i %m)
@@ -494,14 +494,15 @@
 ;;(comment zeta and fibonacci stuff)
 
 (defmfun $zeta (s)
-  (cond ((null (fixnump s)) (list '($zeta) s))
+  (cond (($bfloatp s) (mfuncall '$bfzeta s $fpprec))
+	((floatp s) ($float (mfuncall '$bfzeta s 18)))
+	((null (fixnump s)) (list '($zeta) s))
 	((oddp s)
-	 (cond ((greaterp s 0)
+	 (cond ((greaterp s 1)
 		(list '($zeta) s))
-	       ((setq s (*dif 1 s))
-		(timesk -1
-			(timesk ($bern s) (list '(rat)
-						(expt -1 (*quo s 2)) s))))))
+	       ((= 1 s) '$inf)
+	       ((setq s (sub 1 s))
+		(mult -1 (div ($bern s) s)))))
 	((equal s 0) '((rat simp) -1 2))
 	((minusp s) 0)
 	((not $zeta%pi) (list '($zeta) s))
@@ -906,8 +907,7 @@
        (setq $simpsum t lo 0)
        (setq *plus (cons (m* -1 *times (maxima-substitute 0 i exp)) *plus))
        (setq exp (m+ exp (maxima-substitute (m- i) i exp))))
-     (cond ((and (null $sumhack)
-		 (eq ($sign (setq u (m- hi lo))) '$neg))
+     (cond ((eq ($sign (setq u (m- hi lo))) '$neg)
 	    (cond ((equal u -1) (return 0))
 		  (t (merror "Lower bound to sum is > upper bound"))))
 	   ((free exp i)
@@ -946,24 +946,8 @@
 	((and (or (mtimesp e) (mexptp e) (mplusp e))
 	      (fsgeo e y)))
 	(t
-	 nil
-	 ;;	 #-cl
-	 ;;	 (let (*a *n)
-	 ;;	     (cond ((prog2 (m2 e '((mtimes) ((coefftt) (var* (set) *a freevar))
-	 ;;					    ((coefftt) (var* (set) *n true)))
-	 ;;			       nil)
-	 ;;			   (not (equal *a 1)))
-	 ;;		    (sum *n (list '(mtimes) y *a)))
-	 ;;		   ((and (not (atom
-	 ;;			       (setq *n
-	 ;;				     ($ratdisrep
-	 ;;				      (let (genvar (varlist (cons *var* nil)))
-	 ;;					(ratrep* *n))))))
-	 ;;			 (not (equal *n e))
-	 ;;			 (not (eq (caar *n) 'mtimes)))
-	 ;;		    (sum *n (list '(mtimes) y *a)))
-	 ;;		   (t (adusum (list '(mtimes) e y)))))
-	 )))
+     (adusum e)
+	 nil)))
 
 (defun isum (e)
   (cond ((memq (setq e (catch 'isumout (isum1 e))) '($inf $undefined $minf))
@@ -1137,35 +1121,6 @@
   (simpprod1 y (caddr x)
 	     (simplifya (cadddr x) z)
 	     (simplifya (cadr (cdddr x)) z)))
-
-(defun simpprod1 (exp i lo hi)
-  (let (u)
-    (cond ((not (symbolp i)) (merror "Bad index to product:~%~M" i))
-	  ((alike1 lo hi)
-	   (let ((valist (list i)))
-	     (mbinding (valist (list hi))
-		       (meval exp))))
-	  ((and (null $prodhack)
-		(eq ($sign (setq u (m- hi lo))) '$neg))
-	   (cond ((eq ($sign (add2 u 1)) '$zero) 1)
-		 (t (merror "Lower bound to product is > upper bound."))))
-	  ((atom exp)
-	   (cond ((null (eq exp i))
-		  (power* exp (list '(mplus) hi 1 (list '(mtimes) -1 lo))))
-		 ((let ((lot (asksign lo)))
-		    (cond ((equal lot '$zero) 0)
-			  ((eq lot '$positive)
-			   (m// (list '(mfactorial) hi)
-				(list '(mfactorial) (list '(mplus) lo -1))))
-			  ((m* (list '(mfactorial)
-				     (list '(mabs) lo))
-			       (cond ((memq (asksign hi) '($zero $positive))
-				      0)
-				     (t (prog2 0
-					    (m^ -1 (m+ hi lo 1))
-					  (setq hi (list '(mabs) hi)))))
-			       (list '(mfactorial) hi))))))))
-	  ((list '(%product simp) exp i lo hi)))))
 
 ;;(declare-top (splitfile tayrat))
 

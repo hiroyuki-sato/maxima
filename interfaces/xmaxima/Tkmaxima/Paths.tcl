@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Paths.tcl,v 1.15.2.1 2005/09/25 07:43:14 vvzhy Exp $
+#       $Id: Paths.tcl,v 1.20 2006/02/11 15:24:23 vvzhy Exp $
 #
 # Attach this near the bottom of the xmaxima code to find the paths needed
 # to start up the interface.
@@ -168,6 +168,54 @@ proc setMaxDir {} {
     # xmaxima messages
     ::msgcat::mcload [file join $maxima_priv(maxima_xmaximadir) msgs]
 
+    # Define maxima_lang_subdir
+    if { [info exists env(MAXIMA_LANG_SUBDIR)] } {
+	set maxima_priv(maxima_lang_subdir) $env(MAXIMA_LANG_SUBDIR)
+    } else {
+	if { $tcl_platform(platform) == "windows" } {
+    	    set wlocale [ ::msgcat::mclocale ]
+	} else {
+    	    set wlocale ""
+	    if { [info exists env(LC_ALL)] } { 
+		set wlocale $env(LC_ALL) 
+	    } elseif { [info exists env(LC_MESSAGES)] } { 
+		set wlocale $env(LC_MESSAGES) 
+	    } elseif { [info exists env(LANG)] } { 
+		set wlocale $env(LANG) }
+	}	
+	# Only languages known to Maxima
+	switch -glob $wlocale {
+	  "es*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "es.utf8"
+		}
+	  "es*UTF*" {
+		    set maxima_priv(maxima_lang_subdir) "es.utf8"
+		}
+	  "es*" {
+		    set maxima_priv(maxima_lang_subdir) "es"
+		}
+	  "pt*utf*" {
+		    set maxima_priv(maxima_lang_subdir) "pt.utf8"
+		}
+	  "pt*UTF*" {
+		    set maxima_priv(maxima_lang_subdir) "pt.utf8"
+		}
+	  "pt*" {
+		    set maxima_priv(maxima_lang_subdir) "pt"
+		}
+	  default 
+	        {
+		    set maxima_priv(maxima_lang_subdir) ""
+		}
+	}
+	puts $maxima_priv(maxima_lang_subdir)
+    }
+
+    # On Windows ::msgcat::mclocale is a good way to derive locale 
+    if { $tcl_platform(platform) == "windows" } {
+	    set env(LANG) [ ::msgcat::mclocale ]
+    }
+
     # Bring derived quantities up here too so we can see the
     # side effects of setting the above variables
 
@@ -178,8 +226,12 @@ proc setMaxDir {} {
 	    [file join $dir maxima_toc.html]
     } elseif {[file isdir [set dir [file join  $maxima_priv(maxima_verpkgdatadir) doc]]]} {
 	# 5.9 and up
-	set maxima_priv(pReferenceToc) \
-	    [file join $dir html maxima_toc.html]
+	if { $maxima_priv(maxima_lang_subdir) != "" && \
+	     [file exists [file join $dir html $maxima_priv(maxima_lang_subdir) maxima_toc.html] ] } {
+	    set maxima_priv(pReferenceToc) [file join $dir html $maxima_priv(maxima_lang_subdir) maxima_toc.html]
+	} else {
+	    set maxima_priv(pReferenceToc) [file join $dir html maxima_toc.html]
+	}
     } else {
 	tide_notify [M [mc "Documentation not found in '%s'"] \
 			 [file native  $maxima_priv(maxima_verpkgdatadir)]]

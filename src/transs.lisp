@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1980 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module transs)
 
 ;;(defun set-up-translate ()
@@ -236,7 +236,7 @@
 	 (setq result (list '(mlist) input-file)))
 	(t (setq result (translate-file input-file translation-output-file))
 	   (setq input-file (third result))))
-  #+(or cmu sbcl clisp allegro openmcl)
+  #+(or cmu scl sbcl clisp allegro openmcl)
   (multiple-value-bind (output-truename warnings-p failure-p)
       (if bin-file
 	  (compile-file input-file :output-file bin-file)
@@ -246,7 +246,7 @@
     ;; indicate that we found errors. Is this what we want?
     (unless failure-p
       (setq bin-file output-truename)))
-  #-(or cmu sbcl clisp allegro openmcl)
+  #-(or cmu scl sbcl clisp allegro openmcl)
   (setq bin-file (compile-file input-file :output-file bin-file))
   (append result (list bin-file)))
 
@@ -302,16 +302,44 @@
 
 (defvar *pretty-print-translation* t)
 
+;; Define a pprinter for defmtrfun.
+
+#-gcl
+(defun pprint-defmtrfun (stream s)
+  (pprint-logical-block (stream s :prefix "(" :suffix ")")
+    (write (pprint-pop) :stream stream)
+    (write-char #\space stream)
+    (write (pprint-pop) :stream stream)
+    (pprint-indent :block 4 stream)
+    (pprint-newline :mandatory stream)
+    (write (pprint-pop) :stream stream)
+    (pprint-indent :block 2 stream)
+    (pprint-newline :mandatory stream)
+    (loop
+       (pprint-exit-if-list-exhausted)
+       (write (pprint-pop) :stream stream)
+       (write-char #\space stream)
+       (pprint-newline :linear stream))))
+
 (defun call-batch1 (in-stream out-stream &aux expr transl)
   (cleanup)
   ;; we want the thing to start with a newline..
   (newline in-stream #\n)
-  (loop while (and (setq  expr	  (mread in-stream))
-		    (consp expr))
-	 do (setq transl (translate-macexpr-toplevel (third expr)))
-	 (cond (*pretty-print-translation* (pprint transl out-stream))
-	       (t
-		(format out-stream  "~A" transl)))))
+  (let ((*readtable* (copy-readtable nil))
+	#-gcl
+	(*print-pprint-dispatch* (copy-pprint-dispatch)))
+    #-gcl
+    (progn
+      (setf (readtable-case *readtable*) :invert)
+      (set-pprint-dispatch '(cons (member maxima::defmtrfun))
+			   #'pprint-defmtrfun))
+    (loop while (and (setq expr (mread in-stream)) (consp expr))
+          do (setq transl (translate-macexpr-toplevel (third expr)))
+             (cond
+               (*pretty-print-translation*
+                (pprint transl out-stream))
+               (t
+                (format out-stream "~a" transl))))))
 
  
 (defun translate-from-stream (from-stream &key to-stream eval pretty (print-function #'prin1) &aux expr transl )
@@ -400,7 +428,7 @@ translated."
       (format stream "$ */"))
     (fresh-line stream)
     (when (or hint *untranslated-functions-called*)
-      (format t "~&See the `unlisp' file for possible optimizations."))))
+      (format t "~&See the `unlisp' file for possible optimizations.~%"))))
 
 
 (defun translate-file (in-file-name out-file-name
@@ -423,21 +451,39 @@ translated."
 		   (cons *standard-output* *translation-msgs-files*)))
 	 (format out-stream
 		 ";;; -*- Mode: Lisp; package:maxima; syntax:common-lisp ;Base: 10 -*- ;;;~%")
-					;#+lispm
-	 ;;	  (format out-stream ";;;Translated on: ~A"
-	 ;;		  (time:print-current-time nil))
+
+	 (flet ((timezone-iso8601-name (dst tz)
+		  ;; This function was borrowed from CMUCL.
+		  (let ((tz (- tz)))
+		    (if (and (not dst) (= tz 0))
+			"Z"
+			(multiple-value-bind (hours minutes)
+			    (truncate (if dst (1+ tz) tz))
+			  (format nil "~C~2,'0D:~2,'0D"
+				  (if (minusp tz) #\- #\+)
+				  (abs hours)
+				  (abs (truncate (* minutes 60)))))))))
+
+	   (multiple-value-bind (secs mins hours day month year dow dst tz)
+	       (decode-universal-time (get-universal-time))
+	     (declare (ignore dow))
+	     (format out-stream ";;; Translated on: ~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D~A~%"
+		     year month day hours mins secs (timezone-iso8601-name dst tz))))
+	 (format out-stream ";;; Maxima System version: ~A~%" *autoconf-version*)
+	 (format out-stream ";;; Lisp type:    ~A~%" (lisp-implementation-type))
+	 (format out-stream ";;; Lisp version: ~A~%" (lisp-implementation-version))
 	 ;;	  #+lispm
 	 ;;	  (format out-stream
 	 ;;		  ";;Maxima System version ~A"
 	 ;;		  (or (si:get-system-version 'maxima)
 	 ;;		      (si:get-system-version 'cl-maxima)))
-	 (format out-stream "~%(in-package \"MAXIMA\")")
+	 (format out-stream "~%(in-package :maxima)")
 	 (format warn-stream "~%This is the unlisp file for ~A "
 		 (namestring (pathname in-stream)))
 	 (mformat out-stream
 		  "~%;;** Variable settings were **~%~%")
 	 (loop for v in (cdr $tr_state_vars)
-		do (mformat out-stream   ";;~:M:~:M;~%" v (symbol-value v)))
+		do (mformat out-stream   ";; ~:M: ~:M;~%" v (symbol-value v)))
 	 (mformat *terminal-io* "~%Translation begun on ~A.~%"
 		  (pathname in-stream))
 	 (call-batch1 in-stream out-stream)
@@ -610,7 +656,7 @@ translated."
 	   ~%(includef (cond ((status feature ITS) '|DSK:LIBMAX;TPRELU >|)~
 	   ~%                ((status feature Multics) '|translate|)~
 	   ~%                ((status feature Unix) '|libmax//tprelu.l|)~
-	   ~%                (t (MAXIMA-ERROR '|Unknown system, see GJC@MIT-MC|))))~
+	   ~%                (t (maxima-error '|Unknown system, see GJC@MIT-MC|))))~
            ~%~
            ~%(eval-when (compile eval) ~
            ~%  (or (status feature lispm)~

@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1982 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 (macsyma-module mforma macro)
 
 ;;#+ti
@@ -102,7 +102,7 @@
   (let ()
     (if (atom char) (setq char (list char)))
     (push (cons char body) (get type 'mformat-ops))
-    `',(maknam (nconc (exploden "MFORMAT-")
+    `',(maknam (nconc (exploden (symbol-name '#:mformat-))
 		      (mapcar #'ascii char)))))
 
 (defmacro pop-mformat-arg ()
@@ -167,7 +167,7 @@
 ;;  `(zl-MEMBER ,X '(#\LINEFEED #\Return #\SPACE #\TAB #-lispm #\VT #\Page)))
 
 (defmacro white-space-p (x)
-  `(member ,x '(#\linefeed #\return #\space #\tab #\page #-(or clisp gcl) #\vt #+clisp #\code11)
+  `(member ,x '(#\linefeed #\return #\space #\tab #\page #-(or clisp gcl openmcl) #\vt #+clisp #\code11)
     :test #'char=))
 
 
@@ -215,7 +215,7 @@
 (defvar cant-open-compile-mformat nil)
 
 
-(def-mformat |-C|)
+(def-mformat -c)
 
 	 
 (def-mformat-var-c |:-FLAG|     nil t)

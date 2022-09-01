@@ -8,7 +8,7 @@
 ;;;     (c) Copyright 1981 Massachusetts Institute of Technology         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;; Run-time support for translated code.
 ;;; GJC: Experimental macsyma array lisp level support for translated
 ;;; code.
@@ -377,7 +377,7 @@
 	((eq form t) t)
 	('else
 	 ;; We check for T and NIL quickly, otherwise go for the database.
-	 (mevalp_tr form t nil))))
+	 (mevalp_tr form $prederror nil))))
 
 (defmfun maybe-boole-check (form)
   (mevalp_tr form nil nil))

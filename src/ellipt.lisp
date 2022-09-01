@@ -11,7 +11,7 @@
 ;;;     of the first, second and third kinds.                          ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(in-package "MAXIMA")
+(in-package :maxima)
 ;;(macsyma-module ellipt)
 
 (defvar 3//2 '((rat simp) 3 2))
@@ -464,15 +464,20 @@
 ;;
 ;; ((MPLUS SIMP) 1 $%I))
 ;;
-(defun complex-number-p (u)
+;; or
+;;
+;; $%I
+;;
+(defun complex-number-p (u &optional (ntypep 'numberp))
   ;; Return non-NIL if U is a complex number (or number)
-  (or (numberp u)
+  (or (funcall ntypep u)
       (and (consp u)
-	   (numberp (second u))
+	   (funcall ntypep (second u))
 	   (or (and (consp (third u))
-		    (numberp (second (third u)))
+		    (funcall ntypep (second (third u)))
 		    (eq (third (third u)) '$%i))
-	       (and (eq (third u) '$%i))))))
+	       (and (eq (third u) '$%i))))
+      (and (eq u '$%i) (funcall ntypep 1))))
 
 (defun complexify (x)
   ;; Convert a Lisp number to a maxima number
@@ -810,7 +815,7 @@
 	   ;; Numerically evaluate acn
 	   ;;
 	   ;; acn(x,m) = F(acos(x),m)
-	   (elliptic-f (acos (float u)) m))
+	   (elliptic-f (cl:acos (float u)) m))
 	  ((and $numer (complex-number-p u)
 		(complex-number-p m))
 	   (complexify (elliptic-f (cl:acos (complex ($realpart u) ($imagpart u)))
@@ -849,7 +854,7 @@
 		  (m (float m))
 		  (phi (/ (* (sqrt (- 1 u)) (sqrt (+ 1 u)))
 			  (sqrt m))))
-	     (elliptic-f (asin phi) m)))
+	     (elliptic-f (cl:asin phi) m)))
 	  ((and $numer (complex-number-p u)
 		(complex-number-p m))
 	   (let* ((u (complex ($realpart u) ($imagpart u)))
@@ -1063,7 +1068,7 @@ first kind:
 	       (m (float m-arg)))
 	   (cond ((> m 1)
 		  ;; A&S 17.4.15
-		  (/ (elliptic-f (asin (* (sqrt m) (sin phi))) (/ m))))
+		  (/ (elliptic-f (cl:asin (* (sqrt m) (sin phi))) (/ m))))
 		 ((< m 0)
 		  ;; A&S 17.4.17
 		  (let* ((m (- m))
@@ -1117,7 +1122,7 @@ first kind:
   (declare (double-float m))
   (cond ((> m 1)
 	 ;; A&S 17.4.15
-	 (/ (elliptic-f (asin (sqrt m)) (/ m))))
+	 (/ (elliptic-f (cl:asin (sqrt m)) (/ m))))
 	((< m 0)
 	 ;; A&S 17.4.17
 	 (let* ((m (- m))
@@ -3645,12 +3650,12 @@ first kind:
 		       ;; 0 <= u-rem < K so
 		       ;; E(u + K) = E(u) + E - m*sn(u)*cd(u)
 		       (let ((u-k (- u ell-k)))
-			 (- (+ (elliptic-e (asin (sn u-k m)) m)
+			 (- (+ (elliptic-e (cl:asin (sn u-k m)) m)
 			       ell-e)
 			    (/ (* m (sn u-k m) (cn u-k m))
 			       (dn u-k m)))))
 		      (t
-		       (elliptic-e (asin (sn u m)) m)))))))
+		       (elliptic-e (cl:asin (sn u m)) m)))))))
 	((complexp u)
 	 ;; From Lawden:
 	 ;;
@@ -3716,7 +3721,7 @@ first kind:
     (cond ((or (and (floatp u) (floatp m))
 	       (and $numer (numberp u) (numberp m)))
 	   ;; Numerically evaluate am
-	   (asin (sn (float u 1d0) (float m 1d0))))
+	   (cl:asin (sn (float u 1d0) (float m 1d0))))
 	  (t
 	   ;; Nothing to do
 	   (eqtest (list '(%jacobi_am) u m) form)))))
