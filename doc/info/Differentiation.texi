@@ -401,6 +401,31 @@ description of these commands along with examples.
 @end deffn
 
 @c -----------------------------------------------------------------------------
+@anchor{init_cartan}
+@deffn {Function} init_cartan ([@var{x_1}, ..., @var{x_n}])
+
+@code{init_cartan([@var{x_1}, ..., @var{x_n}])} initializes global variables
+for the @code{cartan} package.
+The sole argument is a list of symbols, from which the Cartan basis is constructed.
+
+@code{init_cartan} returns the basis which is constructed.
+
+@code{init_cartan} assigns values to the following global variables:
+@code{cartan_coords}, @code{cartan_dim}, @code{extdim}, and @code{cartan_basis}.
+In addition, the following arrays are assigned:
+@code{extsub} and @code{extsubb}.
+
+Note: Because of the internal implementation of the @code{cartan} package,
+it is necessary for @code{init_cartan} to be called before any expression
+containing the Cartan coordinates @code{@var{x_1}, ..., @var{x_n}} is parsed.
+
+@opencatbox
+@category{Differential geometry}
+@category{Package cartan}
+@closecatbox
+@end deffn
+
+@c -----------------------------------------------------------------------------
 @anchor{del}
 @deffn {Function} del (@var{x})
 
@@ -409,6 +434,8 @@ description of these commands along with examples.
 @code{diff} returns an expression containing @code{del}
 if an independent variable is not specified.
 In this case, the return value is the so-called "total differential".
+
+See also @mrefcomma{diff} @mref{del} and @mrefdot{derivdegree}
 
 Examples:
 
@@ -570,6 +597,9 @@ For example, @mref{integrate} does not recognize the dependence of @code{f} on
 
 @code{depends(@var{f}, [@var{x_1}, @dots{}, @var{x_n}])} is equivalent to @code{dependencies(@var{f}(@var{x_1}, @dots{}, @var{x_n}))}.
 
+See also @mrefcomma{diff} @mrefcomma{del} @mref{derivdegree} and
+@mrefdot{derivabbrev}
+
 @c ===beg===
 @c depends ([f, g], x);
 @c depends ([r, s], [u, v, w]);
@@ -622,7 +652,7 @@ For example, @mref{integrate} does not recognize the dependence of @code{f} on
 @end deffn
 
 @c -----------------------------------------------------------------------------
-@anchor{derivabrev}
+@anchor{derivabbrev}
 @defvr {Option variable} derivabbrev
 Default value: @code{false}
 
@@ -735,6 +765,9 @@ form instead of carrying out the differentiation.
 
 When @code{derivabbrev} is @code{true}, derivatives are displayed as subscripts.
 Otherwise, derivatives are displayed in the Leibniz notation, @code{dy/dx}.
+
+See also @mrefcomma{depends} @mrefcomma{del} @mref{derivdegree} and
+@mrefdot{derivabbrev}
 
 Examples:
 
@@ -1004,7 +1037,17 @@ for which partial derivatives have been defined by @code{gradef}.
 @deffn {Function} laplace (@var{expr}, @var{t}, @var{s})
 
 Attempts to compute the Laplace transform of @var{expr} with respect to the 
-variable @var{t} and transform parameter @var{s}.
+variable @var{t} and transform parameter @var{s}.  The Laplace
+transform of the function @code{f(t)} is the one-sided transform defined by
+@ifnottex
+@example
+F(s) = integrate(f(t) * exp(-s*t), t, 0, inf)
+@end example
+@end ifnottex
+@tex
+$$F(s) = \int_0^{\infty} f(t) e^{-st} dt$$
+@end tex
+where @code{F(s)} is the transform of @code{f(t)}.
 
 @code{laplace} recognizes in @var{expr} the functions @mrefcomma{delta} @mrefcomma{exp}
 @mrefcomma{log} @mrefcomma{sin} @mrefcomma{cos} @mrefcomma{sinh} @mrefcomma{cosh} and @mrefcomma{erf}

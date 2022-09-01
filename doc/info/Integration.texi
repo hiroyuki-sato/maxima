@@ -221,8 +221,12 @@ begin with.
 @deffn {Function} ilt (@var{expr}, @var{s}, @var{t})
 
 Computes the inverse Laplace transform of @var{expr} with
-respect to @var{s} and parameter @var{t}.  @var{expr} must be a ratio of
-polynomials whose denominator has only linear and quadratic factors.
+respect to @var{s} and parameter @var{t}. @var{expr} must be a ratio of
+polynomials whose denominator has only linear and quadratic factors;
+there is an extension of @code{ilt}, called @mref{pwilt} (Piece-Wise
+Inverse Laplace Transform) that handles several other cases where
+@code{ilt} fails.
+
 By using the functions @code{laplace} and @code{ilt} together with the
 @code{solve} or @code{linsolve} functions the user can solve a single
 differential or convolution integral equation or a set of them.
@@ -798,6 +802,40 @@ special cases.
 @c WHAT IS THIS ABOUT EXACTLY ??
 
 @c -----------------------------------------------------------------------------
+@anchor{pwilt}
+@deffn {Function} pwilt (@var{expr}, @var{s}, @var{t})
+
+Computes the inverse Laplace transform of @var{expr} with
+respect to @var{s} and parameter @var{t}. Unlike @mrefcomma{ilt}
+@code{pwilt} is able to return piece-wise and periodic functions
+and can also handle some cases with polynomials of degree greater than 3
+in the denominator.
+
+Two examples where @code{ilt} fails:
+@c ===beg===
+@c pwilt (exp(-s)*s/(s^3-2*s-s+2), s, t);
+@c pwilt ((s^2+2)/(s^2-1), s, t);
+@c ===end===
+@example
+(%i1) pwilt (exp(-s)*s/(s^3-2*s-s+2), s, t);
+                                       t - 1       - 2 (t - 1)
+                             (t - 1) %e        2 %e
+(%o1)         hstep(t - 1) (--------------- - ---------------)
+                                    3                 9
+                                    
+(%i2) pwilt ((s^2+2)/(s^2-1), s, t);
+                                         t       - t
+                                     3 %e    3 %e
+(%o2)                    delta(t) + ----- - -------
+                                       2        2
+@end example
+
+@opencatbox
+@category{Laplace transform}
+@closecatbox
+@end deffn
+
+@c -----------------------------------------------------------------------------
 @anchor{potential}
 @deffn {Function} potential (@var{givengradient})
 
@@ -909,7 +947,7 @@ Equivalent to @code{ldefint} with @code{tlimswitch} set to @code{true}.
 @section Introduction to QUADPACK
 @c -----------------------------------------------------------------------------
 
-@c FOLLOWING TEXT ADAPTED WITH HEAVY MODIFICATION FROM http://www.netlib.org/slatec/src/qpdoc.f
+@c FOLLOWING TEXT ADAPTED WITH HEAVY MODIFICATION FROM https://www.netlib.org/slatec/src/qpdoc.f
 
 QUADPACK is a collection of functions for the numerical
 computation of one-dimensional definite integrals.
@@ -921,10 +959,10 @@ and D. Kahaner @footnote{National Bureau of Standards, Washington, D.C., U.S.A}.
 
 The QUADPACK library included in Maxima is an automatic translation (via the
 program @code{f2cl}) of the Fortran source code of QUADPACK as it appears in
-the SLATEC Common Mathematical Library, Version 4.1 @footnote{@url{http://www.netlib.org/slatec}}.
+the SLATEC Common Mathematical Library, Version 4.1 @footnote{@url{https://www.netlib.org/slatec}}.
 The SLATEC library is dated July 1993, but the QUADPACK functions
 were written some years before.
-There is another version of QUADPACK at Netlib @footnote{@url{http://www.netlib.org/quadpack}};
+There is another version of QUADPACK at Netlib @footnote{@url{https://www.netlib.org/quadpack}};
 it is not clear how that version differs from the SLATEC version.
 
 The QUADPACK functions included in Maxima are all automatic, in the sense that
@@ -1424,10 +1462,8 @@ if the input is invalid.
 Examples:
 
 @c ===beg===
-@c quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5,
-                 'epsrel=1d-7);
-@c integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1),
-      x, 0, 5);
+@c quad_qawc (2^(-5)*((x-1)^2+4^(-5))^(-1), x, 2, 0, 5, 'epsrel=1d-7);
+@c integrate (2^(-alpha)*(((x-1)^2 + 4^(-alpha))*(x-2))^(-1), x, 0, 5);
 @c ev (%, alpha=5, numer);
 @c ===end===
 @example
@@ -1701,8 +1737,7 @@ Examples:
 
 @c ===beg===
 @c quad_qawo (x^(-1/2)*exp(-2^(-2)*x), x, 1d-8, 20*2^2, 1, cos);
-@c rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x),
-      x, 0, inf));
+@c rectform (integrate (x^(-1/2)*exp(-2^(-alpha)*x) * cos(x), x, 0, inf));
 @c input:pos;
 @c ev (%, alpha=2, numer);
 @c ===end===
@@ -1836,8 +1871,7 @@ if the input is invalid.
 Examples:
 
 @c ===beg===
-@c quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1,
-                 'epsabs=1d-9);
+@c quad_qaws (1/(x+1+2^(-4)), x, -1, 1, -0.5, -0.5, 1, 'epsabs=1d-9);
 @c integrate ((1-x*x)^(-1/2)/(x+1+2^(-alpha)), x, -1, 1);
 @c input:pos;
 @c ev (%, alpha=4, numer);
@@ -1902,7 +1936,7 @@ The integrand may be specified as the name of a Maxima or Lisp function or
 operator, a Maxima lambda expression, or a general Maxima expression.
 
 To help the integrator, the user must supply a list of points where
-the integrand is singular or discontinous.
+the integrand is singular or discontinuous.
 
 The keyword arguments are optional and may be specified in any order.
 They all take the form @code{key=val}.  The keyword arguments are:

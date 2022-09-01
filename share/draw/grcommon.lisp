@@ -40,6 +40,13 @@
 ;;      gnuplot
 ;;      vtk or vtk6
 ;;      vtk7
+
+;; gnuplot_pipes does not work with the combination SBCL/Windows.
+;; Therefore set the default value for draw_renderer to gnuplot
+;; in that case, set it to gnuplot_pipes otherwise.
+#+(or (and sbcl win32) (and sbcl win64))
+(defvar $draw_renderer '$gnuplot)
+#-(or (and sbcl win32) (and sbcl win64))
 (defvar $draw_renderer '$gnuplot_pipes)
 
 (defvar $draw_use_pngcairo nil "If true, use pngcairo terminal when png is requested.")
@@ -1550,7 +1557,7 @@
                      (<= val 1 ))
                 (setf (gethash opt *gr-options*) val)
                 (merror "draw: fill_density must be a number in [0, 1]")))
-      (($line_width $head_length $head_angle $xaxis_width $yaxis_width $zaxis_width $font_size)
+      (($line_width $head_length $head_angle $xaxis_width $yaxis_width $zaxis_width)
             (update-positive-float opt val))
       ($xyplane ; defined as real number or false
             (setf val ($float val))
@@ -1573,7 +1580,7 @@
          (update-capping val))
       ($point_type
          (update-pointtype val))
-      (($columns $nticks $adapt_depth $xu_grid $yv_grid $delay $x_voxel $y_voxel $z_voxel)
+      (($columns $nticks $adapt_depth $xu_grid $yv_grid $delay $x_voxel $y_voxel $z_voxel $font_size)
             (update-positive-integer opt val))
       (($contour_levels $isolines_levels)   ; positive integer, increment or set
          (update-contour-isolines opt val))

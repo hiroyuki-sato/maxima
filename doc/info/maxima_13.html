@@ -2,16 +2,16 @@
 <html>
 <!-- Created by GNU Texinfo 5.1, http://www.gnu.org/software/texinfo/ -->
 <head>
-<title>Maxima 5.44.0 Manual: Functions and Variables for Numbers</title>
+<title>Maxima 5.45.1 Manual: Functions and Variables for Numbers</title>
 
-<meta name="description" content="Maxima 5.44.0 Manual: Functions and Variables for Numbers">
-<meta name="keywords" content="Maxima 5.44.0 Manual: Functions and Variables for Numbers">
+<meta name="description" content="Maxima 5.45.1 Manual: Functions and Variables for Numbers">
+<meta name="keywords" content="Maxima 5.45.1 Manual: Functions and Variables for Numbers">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link href="maxima_0.html#Top" rel="start" title="Top">
-<link href="maxima_363.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
+<link href="maxima_368.html#Function-and-Variable-Index" rel="index" title="Function and Variable Index">
 <link href="maxima_toc.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="maxima_11.html#Numbers" rel="up" title="Numbers">
 <link href="maxima_14.html#Strings" rel="next" title="Strings">
@@ -77,7 +77,7 @@ img {max-width:80%; max-height: 80%; display: block; margin-left: auto; margin-r
 <a name="Functions-and-Variables-for-Numbers"></a>
 <div class="header">
 <p>
-Previous: <a href="maxima_12.html#Introduction-to-Numbers" accesskey="p" rel="previous">Introduction to Numbers</a>, Up: <a href="maxima_11.html#Numbers" accesskey="u" rel="up">Numbers</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_363.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="maxima_12.html#Introduction-to-Numbers" accesskey="p" rel="previous">Introduction to Numbers</a>, Up: <a href="maxima_11.html#Numbers" accesskey="u" rel="up">Numbers</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
 <a name="Functions-and-Variables-for-Numbers-1"></a>
 <h4 class="subsection">5.1.2 Functions and Variables for Numbers</h4>
@@ -85,15 +85,56 @@ Previous: <a href="maxima_12.html#Introduction-to-Numbers" accesskey="p" rel="pr
 <a name="bfloat"></a><a name="Item_003a-DataTypes_002fdeffn_002fbfloat"></a><dl>
 <dt><a name="index-bfloat"></a>Function: <strong>bfloat</strong> <em>(<var>expr</var>)</em></dt>
 <dd>
-<p>Converts all numbers and functions of numbers in <var>expr</var> to bigfloat numbers.
-The number of significant digits in the resulting bigfloats is specified by the
+<p><code>bfloat</code> replaces integers, rationals, floating point numbers, and some symbolic constants
+in <var>expr</var> with bigfloat (variable-precision floating point) numbers.
+</p>
+<p>The constants <code>%e</code>, <code>%gamma</code>, <code>%phi</code>, and <code>%pi</code>
+are replaced by a numerical approximation.
+However, <code>%e</code> in <code>%e^x</code> is not replaced by a numeric value
+unless <code>bfloat(x)</code> is a number.
+</p>
+<p><code>bfloat</code> also causes numerical evaluation of some built-in functions,
+namely trigonometric functions, exponential functions, <code>abs</code>, and <code>log</code>.
+</p>
+<p>The number of significant digits in the resulting bigfloats is specified by the
 global variable <code><a href="#fpprec">fpprec</a></code>.
+Bigfloats already present in <var>expr</var> are replaced with values which have
+precision specified by the current value of <code><a href="#fpprec">fpprec</a></code>.
 </p>
-<p>When <code><a href="#float2bf">float2bf</a></code> is <code>false</code> a warning message is printed when
-a floating point number is converted into a bigfloat number (since
-this may lead to loss of precision).
+<p>When <code><a href="#float2bf">float2bf</a></code> is <code>false</code>, a warning message is printed when
+a floating point number is replaced by a bigfloat number with less precision.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<p>Examples:
+</p>
+<p><code>bfloat</code> replaces integers, rationals, floating point numbers, and some symbolic constants
+in <var>expr</var> with bigfloat numbers.
+</p>
+<div class="example">
+<pre class="example">(%i1) bfloat([123, 17/29, 1.75]);
+(%o1)        [1.23b2, 5.862068965517241b-1, 1.75b0]
+(%i2) bfloat([%e, %gamma, %phi, %pi]);
+(%o2) [2.718281828459045b0, 5.772156649015329b-1, 
+                        1.618033988749895b0, 3.141592653589793b0]
+(%i3) bfloat((f(123) + g(h(17/29)))/(x + %gamma));
+         1.0b0 (g(h(5.862068965517241b-1)) + f(1.23b2))
+(%o3)    ----------------------------------------------
+                    x + 5.772156649015329b-1
+</pre></div>
+
+<p><code>bfloat</code> also causes numerical evaluation of some built-in functions.
+</p>
+<div class="example">
+<pre class="example">(%i1) bfloat(sin(17/29));
+(%o1)                 5.532051841609784b-1
+(%i2) bfloat(exp(%pi));
+(%o2)                  2.314069263277927b1
+(%i3) bfloat(abs(-%gamma));
+(%o3)                 5.772156649015329b-1
+(%i4) bfloat(log(%phi));
+(%o4)                 4.812118250596035b-1
+</pre></div>
+
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="bfloatp"></a><a name="Item_003a-DataTypes_002fdeffn_002fbfloatp"></a><dl>
@@ -101,8 +142,8 @@ this may lead to loss of precision).
 <dd>
 <p>Returns <code>true</code> if <var>expr</var> is a bigfloat number, otherwise <code>false</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
-&middot;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+&middot;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 <a name="bftorat"></a><a name="Item_003a-DataTypes_002fdefvr_002fbftorat"></a><dl>
@@ -135,7 +176,7 @@ with the function <code><a href="#rationalize">rationalize</a></code>.
                              111111
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="bftrunc"></a><a name="Item_003a-DataTypes_002fdefvr_002fbftrunc"></a><dl>
@@ -147,7 +188,7 @@ displayed.  Thus, if <code>bftrunc</code> is <code>false</code>, <code>bfloat (1
 displays as <code>1.000000000000000B0</code>.  Otherwise, this is displayed as
 <code>1.0B0</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="evenp"></a><a name="Item_003a-DataTypes_002fdeffn_002fevenp"></a><dl>
@@ -159,7 +200,7 @@ displays as <code>1.000000000000000B0</code>.  Otherwise, this is displayed as
 <p><code>evenp</code> returns <code>false</code> if <var>expr</var> is a symbol, even if <var>expr</var>
 is declared <code>even</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 <a name="float"></a><a name="Item_003a-DataTypes_002fdeffn_002ffloat"></a><dl>
@@ -170,19 +211,18 @@ point numbers.  It is also an <code><a href="maxima_43.html#evflag">evflag</a></
 non-integral rational numbers and bigfloat numbers to be converted to floating
 point.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
-&middot;<a href="maxima_364.html#Category_003a-Evaluation-flags">Evaluation flags</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+&middot;<a href="maxima_369.html#Category_003a-Evaluation-flags">Evaluation flags</a>
 </div></p></dd></dl>
 
 <a name="float2bf"></a><a name="Item_003a-DataTypes_002fdefvr_002ffloat2bf"></a><dl>
 <dt><a name="index-float2bf"></a>Option variable: <strong>float2bf</strong></dt>
 <dd><p>Default value: <code>true</code>
 </p> 
-<p>When <code>float2bf</code> is <code>false</code>, a warning message is printed when
-a floating point number is converted into a bigfloat number (since
-this may lead to loss of precision).
+<p>When <code><a href="#float2bf">float2bf</a></code> is <code>false</code>, a warning message is printed when
+a floating point number is replaced by a bigfloat number with less precision.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="floatnump"></a><a name="Item_003a-DataTypes_002fdeffn_002ffloatnump"></a><dl>
@@ -191,8 +231,8 @@ this may lead to loss of precision).
 <p>Returns <code>true</code> if <var>expr</var> is a floating point number, otherwise
 <code>false</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
-&middot;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+&middot;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 <a name="fpprec"></a><a name="Item_003a-DataTypes_002fdefvr_002ffpprec"></a><dl>
@@ -205,7 +245,7 @@ numbers.
 </p>
 <p>See also <code><a href="#bfloat">bfloat</a></code> and <code><a href="#fpprintprec">fpprintprec</a></code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="fpprintprec"></a><a name="Item_003a-DataTypes_002fdefvr_002ffpprintprec"></a><dl>
@@ -234,8 +274,8 @@ if there are trailing zero digits.
 </p>
 <p><code>fpprintprec</code> cannot be 1.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
-&middot;<a href="maxima_364.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+&middot;<a href="maxima_369.html#Category_003a-Display-flags-and-variables">Display flags and variables</a>
 </div></p></dd></dl>
 
 <a name="integerp"></a><a name="Item_003a-DataTypes_002fdeffn_002fintegerp"></a><dl>
@@ -270,7 +310,7 @@ is declared <code>integer</code>.
 (%o9)                         false
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 <a name="m1pbranch"></a><a name="Item_003a-DataTypes_002fdefvr_002fm1pbranch"></a><dl>
@@ -293,8 +333,8 @@ m1pbranch:false          m1pbranch:true
 (-1)^(1/4)              sqrt(2)/2+%i*sqrt(2)/2
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Expressions">Expressions</a>
-&middot;<a href="maxima_364.html#Category_003a-Global-flags">Global flags</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Expressions">Expressions</a>
+&middot;<a href="maxima_369.html#Category_003a-Global-flags">Global flags</a>
 </div></p></dd></dl>
 
 <a name="nonnegintegerp"></a><a name="Item_003a-DataTypes_002fdeffn_002fnonnegintegerp"></a><dl>
@@ -302,8 +342,7 @@ m1pbranch:false          m1pbranch:true
 <dd>
 <p>Return <code>true</code> if and only if <code><var>n</var> &gt;= 0</code> and <var>n</var> is an integer.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Package-linearalgebra">Package linearalgebra</a>
-&middot;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 <a name="numberp"></a><a name="Item_003a-DataTypes_002fdeffn_002fnumberp"></a><dl>
@@ -337,7 +376,7 @@ is a symbolic number such as <code>%pi</code> or <code>%i</code>, or declared to
 (%o7) [false, false, false, false, false, false, false, false]
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 
@@ -362,8 +401,8 @@ their values.  It also sets the <code><a href="#float">float</a></code> switch o
 (%o2) [1.414213562373095, 0.8414709848078965, 0.3660254037844387]
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
-&middot;<a href="maxima_364.html#Category_003a-Evaluation-flags">Evaluation flags</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+&middot;<a href="maxima_369.html#Category_003a-Evaluation-flags">Evaluation flags</a>
 </div></p></dd></dl>
 
 <a name="numer_005fpbranch"></a><a name="Item_003a-DataTypes_002fdefvr_002fnumer_005fpbranch"></a><dl>
@@ -395,7 +434,7 @@ not an evaluated result is returned.
 (%o5)       1.189207115002721 %i - 1.189207115002721
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 
@@ -411,8 +450,8 @@ in any expressions in which the variable occurs if the <code>numer</code> flag i
 <p>The expressions <code>expr_1</code>, &hellip;, <code>expr_n</code> can be any expressions,
 not necessarily numeric.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
-&middot;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Declarations-and-inferences">Declarations and inferences</a>
+&middot;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="oddp"></a><a name="Item_003a-DataTypes_002fdeffn_002foddp"></a><dl>
@@ -424,7 +463,7 @@ not necessarily numeric.
 <p><code>oddp</code> returns <code>false</code> if <var>expr</var> is a symbol, even if <var>expr</var>
 is declared <code>odd</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
 </div></p></dd></dl>
 
 <a name="ratepsilon"></a><a name="Item_003a-DataTypes_002fdefvr_002fratepsilon"></a><dl>
@@ -435,8 +474,8 @@ is declared <code>odd</code>.
 of floating point numbers to rational numbers, when the option variable
 <code><a href="#bftorat">bftorat</a></code> has the value <code>false</code>.  See <code>bftorat</code> for an example.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
-&middot;<a href="maxima_364.html#Category_003a-Rational-expressions">Rational expressions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+&middot;<a href="maxima_369.html#Category_003a-Rational-expressions">Rational expressions</a>
 </div></p></dd></dl>
 
 <a name="rationalize"></a><a name="Item_003a-DataTypes_002fdeffn_002frationalize"></a><dl>
@@ -474,7 +513,7 @@ representation.
                36028797018963968    562949953421312
 </pre></div>
 
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Numerical-evaluation">Numerical evaluation</a>
 </div></p></dd></dl>
 
 <a name="ratnump"></a><a name="Item_003a-DataTypes_002fdeffn_002fratnump"></a><dl>
@@ -483,15 +522,15 @@ representation.
 <p>Returns <code>true</code> if <var>expr</var> is a literal integer or ratio of literal
 integers, otherwise <code>false</code>.
 </p>
-<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_364.html#Category_003a-Predicate-functions">Predicate functions</a>
-&middot;<a href="maxima_364.html#Category_003a-Rational-expressions">Rational expressions</a>
+<div class=categorybox>&middot;<p>Categories:&nbsp;&nbsp;<a href="maxima_369.html#Category_003a-Predicate-functions">Predicate functions</a>
+&middot;<a href="maxima_369.html#Category_003a-Rational-expressions">Rational expressions</a>
 </div></p></dd></dl>
 
 
 <a name="Item_003a-DataTypes_002fnode_002fStrings"></a><hr>
 <div class="header">
 <p>
-Previous: <a href="maxima_12.html#Introduction-to-Numbers" accesskey="p" rel="previous">Introduction to Numbers</a>, Up: <a href="maxima_11.html#Numbers" accesskey="u" rel="up">Numbers</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_363.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="maxima_12.html#Introduction-to-Numbers" accesskey="p" rel="previous">Introduction to Numbers</a>, Up: <a href="maxima_11.html#Numbers" accesskey="u" rel="up">Numbers</a> &nbsp; [<a href="maxima_toc.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="maxima_368.html#Function-and-Variable-Index" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

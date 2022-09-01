@@ -36,11 +36,6 @@
 (defmvar $tr_state_vars
     '((mlist)
       $translate_fast_arrays
-      $tr_warn_undeclared
-      $tr_warn_meval
-      $tr_warn_fexpr
-      $tr_warn_mode
-      $tr_warn_undefined_variable
       $tr_function_call_default
       $tr_bound_function_applyp
       $tr_array_as_ref
@@ -214,7 +209,31 @@ translated."
     (when (or hint *untranslated-functions-called*)
       (format t (intl:gettext "~&translator: see the 'unlisp' file for possible optimizations.~%")))))
 
-(defun translate-file (in-file-name out-file-name &optional (ttymsgsp $tr_file_tty_messagesp)
+(defun print-transl-herald (stream)
+  (flet ((timezone-iso8601-name (dst tz)
+           ;; This function was borrowed from CMUCL.
+           (let ((tz (- tz)))
+             (if (and (not dst) (= tz 0))
+                 "Z"
+                 (multiple-value-bind (hours minutes)
+                     (truncate (if dst (1+ tz) tz))
+                   (format nil "~C~2,'0D:~2,'0D"
+                           (if (minusp tz) #\- #\+)
+                           (abs hours)
+                           (abs (truncate (* minutes 60)))))))))
+    (multiple-value-bind (secs mins hours day month year dow dst tz)
+        (decode-universal-time (get-universal-time))
+      (declare (ignore dow))
+      (format stream (intl:gettext "; Translated on: ~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D~A~%")
+              year month day hours mins secs (timezone-iso8601-name dst tz))))
+  (format stream (intl:gettext "; Maxima version: ~A~%") *autoconf-version*)
+  (format stream (intl:gettext "; Lisp implementation: ~A~%") (lisp-implementation-type))
+  (format stream (intl:gettext "; Lisp version: ~A~%;~%") (lisp-implementation-version))
+  (format stream (intl:gettext "; Translator state vars:~%;~%"))
+  (loop for v in (cdr $tr_state_vars)
+        do (mformat stream ";   ~:M: ~:M;~%" v (symbol-value v))))
+
+(defun translate-file (in-file-name out-file-name
 		       &aux warn-file translated-file *translation-msgs-files*
 		       *untranslated-functions-called* *declared-translated-functions*)
   (bind-transl-state
@@ -225,35 +244,13 @@ translated."
      (with-open-file (out-stream translated-file :direction :output :if-exists :supersede)
        (with-open-file (warn-stream warn-file :direction :output :if-exists :supersede)
 	 (setq *translation-msgs-files* (list warn-stream))
-	 (if ttymsgsp
+	 (if $tr_file_tty_messagesp
 	     (setq *translation-msgs-files* (cons *standard-output* *translation-msgs-files*)))
-	 (format out-stream ";;; -*- Mode: Lisp; package:maxima; syntax:common-lisp ;Base: 10 -*- ;;;~%")
-	 (flet ((timezone-iso8601-name (dst tz)
-		  ;; This function was borrowed from CMUCL.
-		  (let ((tz (- tz)))
-		    (if (and (not dst) (= tz 0))
-			"Z"
-			(multiple-value-bind (hours minutes)
-			    (truncate (if dst (1+ tz) tz))
-			  (format nil "~C~2,'0D:~2,'0D"
-				  (if (minusp tz) #\- #\+)
-				  (abs hours)
-				  (abs (truncate (* minutes 60)))))))))
-	   (multiple-value-bind (secs mins hours day month year dow dst tz)
-	       (decode-universal-time (get-universal-time))
-	     (declare (ignore dow))
-	     (format out-stream (intl:gettext ";;; Translated on: ~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D~A~%")
-		     year month day hours mins secs (timezone-iso8601-name dst tz))))
-	 (format out-stream (intl:gettext ";;; Maxima version: ~A~%") *autoconf-version*)
-	 (format out-stream (intl:gettext ";;; Lisp implementation: ~A~%") (lisp-implementation-type))
-	 (format out-stream (intl:gettext ";;; Lisp version: ~A~%") (lisp-implementation-version))
-	 (format out-stream "(in-package :maxima)~%")
+	 (format out-stream ";;; -*- Mode: Lisp; package:maxima; syntax:common-lisp ;Base: 10 -*- ;;;~%~%")
+	 (print-transl-herald out-stream)
+	 (format out-stream "~%(in-package :maxima)~%")
 	 (format warn-stream (intl:gettext "This is the unlisp file for ~A~%")
 		 (namestring (pathname in-stream)))
-	 (mformat out-stream
-		  (intl:gettext ";;** Translator flags were: **~%~%"))
-	 (loop for v in (cdr $tr_state_vars)
-		do (mformat out-stream   ";; ~:M: ~:M;~%" v (symbol-value v)))
 	 (mformat *terminal-io* (intl:gettext "translator: begin translating ~A.~%")
 		  (pathname in-stream))
 	 (call-batch1 in-stream out-stream)
@@ -293,5 +290,15 @@ translated."
 
 (defmspec $compile (form)
   (let ((l (meval `(($translate) ,@(cdr form)))))
-    (mapc #'(lambda (x) (if (fboundp x) (compile x))) (cdr l))
-    l))
+    (flet ((safe-compile (f)
+             (when (fboundp f)
+               (compile f))))
+      (dolist (f (cdr l) l)
+        ; First compile the named translated function.
+        (safe-compile f)
+        ; If DEFMFUN was used to define the function, then compile
+        ; the impl function defined by DEFMFUN if it exists.  The
+        ; impl function actually contains the translated user code
+        ; that we want to compile.
+        (let ((impl (get f 'impl-name)))
+          (safe-compile impl))))))

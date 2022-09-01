@@ -2359,14 +2359,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Algorithm 2.1: Laplace transform of c*t^v*%e(-p*t)
+;;; Algorithm 2.1: Laplace transform of c*t^u
 ;;;
 ;;; Table of Integral Transforms
 ;;;
 ;;; p. 137, formula 1:
 ;;;
-;;; t^u*exp(-p*t)
+;;; t^u
 ;;;   -> gamma(u+1)*p^(-u-1)
+;;;
+;;; Re(u) > -1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun lt-arbpow (expr pow)
@@ -2377,7 +2379,7 @@
 
 ;; Check if conditions for f1p137 hold
 (defun f1p137test (pow)
-  (cond ((eq ($asksign (add pow 1)) '$pos)
+  (cond ((eq ($asksign ($realpart (add pow 1))) '$pos)
          (f1p137 pow))
         (t
          (setq *hyp-return-noun-flag* 'fail-in-arbpow))))
@@ -2430,7 +2432,7 @@
             (power a (add pow1 pow2 1))
             (inv (power b (add pow1 1)))
             (take '(%gamma) (add pow1 1))
-            (list '(%hypergeometric_u simp)
+            (take '($hypergeometric_u)
                   (add pow1 1)
                   (add pow1 pow2 2)
                   (mul *par* a (inv b))))))

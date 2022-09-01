@@ -1,4 +1,5 @@
 # CMake file for crosscompiling Maxima/wxMaxima for Windows
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) by Wolfgang Dautermann
 # License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>
 # This is free software: you are free to change and redistribute it.
@@ -9,9 +10,9 @@
 # If no further patches are needed, you should get a
 # updated setup-file automatically.
 
-set(WXMAXIMAVERSION "20.06.6")
+set(WXMAXIMAVERSION "21.05.2")
 
-set(WXMAXIMA_MD5 "488ffee27214784e2b5cbe020148b06e")
+set(WXMAXIMA_MD5 "9904b96fd9acb0950c65d06dec7dd82c")
 
 set(WXMAXIMA_URL "https://github.com/wxmaxima-developers/wxmaxima/archive/Version-${WXMAXIMAVERSION}.tar.gz")
 
@@ -29,6 +30,7 @@ if(USE_WXMAXIMA_GIT)
 
     externalproject_add(wxmaxima-git
         GIT_REPOSITORY ${CMAKE_SOURCE_DIR}/downloads/wxmaxima-git
+        GIT_TAG main
         DEPENDS wxwidgets
         # search wx-config here - do not use the host wx-config
         # had to set CMAKE_LIBRARY_PATH=/usr/${HOST}/lib - libraries for mingw are installed there, but CMake (>3.8)
@@ -55,19 +57,11 @@ else()
     install(DIRECTORY ${CMAKE_BINARY_DIR}/wxmaxima/wxmaxima-prefix/src/wxmaxima-build/${WINDOWS_DRIVELETTER}\:/maxima-${MAXIMAVERSION}/ DESTINATION . COMPONENT wxMaxima)
 endif()
 
-# install wxWidgets locale files
-install(DIRECTORY ${CMAKE_BINARY_DIR}/wxMaxima-translations/wxMaxima/locale DESTINATION share/ COMPONENT wxMaxima)
 
-
-# wxMaxima uses OpenMP, include the required mingw libraries.
-execute_process(COMMAND "${CMAKE_CXX_COMPILER}" -print-file-name=libgomp-1.dll OUTPUT_VARIABLE MINGW_LIBGOMP OUTPUT_STRIP_TRAILING_WHITESPACE)
-
+# wxMaxima uses C++ threads, include the required mingw library.
 execute_process(COMMAND "${CMAKE_CXX_COMPILER}" -print-file-name=libwinpthread-1.dll OUTPUT_VARIABLE MINGW_LIBWINPTHREAD OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-message(STATUS "Found libgomp at ${MINGW_LIBGOMP}")
-
 message(STATUS "Found libwinpthread at ${MINGW_LIBWINPTHREAD}")
 
 # Include DLLs from the current Mingw environment.
-install(FILES "${MINGW_LIBGOMP}" "${MINGW_LIBWINPTHREAD}" DESTINATION bin/ COMPONENT wxMaxima)
+install(FILES "${MINGW_LIBWINPTHREAD}" DESTINATION bin/ COMPONENT wxMaxima)
 

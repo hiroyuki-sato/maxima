@@ -1262,8 +1262,11 @@ wrapper for this."
        (nreverse ans))))
 
 (defun mapatom (x)
-  (or (symbolp x) (mnump x) ($subvarp x) (stringp x)
-      (and (consp x) (eq (caar x) 'mminus) (mnump (cadr x)))))
+  (or ($atom x)
+      (mnump x)
+      (and (eq (caar x) 'mminus) (mnump (cadr x)))
+      ($subvarp x)
+      (op-equalp x '$@ '%@)))
 
 (defmfun $mapatom (x)
   (if (mapatom (specrepcheck x)) t))
@@ -1569,6 +1572,14 @@ wrapper for this."
       (macsyma-untrace fun))
   (when (and (get fun 'translated) (not (eq $savedef '$all)))
     (fmakunbound fun)
+    ; GCL 2.6.12 doesn't know how to set a compiler macro function with setf
+    #+gcl (si:undef-compiler-macro fun)
+    #-gcl (setf (compiler-macro-function fun) nil)
+    (let ((impl (get fun 'impl-name)))
+      (when (fboundp impl)
+        (fmakunbound impl)))
+    (zl-remprop fun 'impl-name)
+    (zl-remprop fun 'arg-list)
     (zl-remprop fun 'translated-mmacro)
     (zl-remprop fun 'function-mode)
     (when (not (getl fun '(a-expr a-subr)))
@@ -1673,6 +1684,7 @@ wrapper for this."
       (declare-index-properties-1 (first l) (second l)))))
 
 (defun declare-index-properties-1 (x l)
+  (declare (special $known_index_properties))
   (if (not (or (symbolp x) (and ($listp x) (every #'symbolp (cdr x)))))
     (merror (intl:gettext "declare_index_properties: first argument must be a symbol or a list of symbols; found: ~M") x))
   (if (not ($listp l))
