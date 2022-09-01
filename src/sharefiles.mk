@@ -89,6 +89,7 @@ calculus/qual.usg \
 calculus/revert.mac \
 calculus/taylor1.mac \
 cobyla/bf-cobyla-interface.lisp \
+cobyla/bf_fmin_cobyla.demo \
 cobyla/bf_fmin_cobyla.mac \
 cobyla/cobyla-interface.lisp \
 cobyla/cobyla-lisp.system \
@@ -170,6 +171,9 @@ contrib/boolsimp/rtest_boolsimp.mac \
 contrib/clebsch_gordan.mac \
 contrib/clebsh-gordan.tex \
 contrib/colorterm.lisp \
+contrib/coma/coma.mac \
+contrib/coma/COMA.txt \
+contrib/coma/Control_Engineering_with_Maxima.pdf \
 contrib/devine.mac \
 contrib/diag.mac \
 contrib/diag_test.mac \
@@ -225,6 +229,7 @@ contrib/diffequations/tests/rtestode_utils.mac \
 contrib/diffequations/tests/rtest_sym2.mac \
 contrib/diffequations/tests/rtest_sym.mac \
 contrib/diffequations/tests/testsuite.lisp \
+contrib/engineering-format.lisp \
 contrib/f90.lisp \
 contrib/floatproperties.lisp \
 contrib/format/autoload-m.macsyma \
@@ -332,9 +337,11 @@ contrib/Grobner/README \
 contrib/impdiff.mac \
 contrib/implicit_plot.lisp \
 contrib/integration/abs_integrate.html \
+contrib/integration/abs_integrate.info \
 contrib/integration/abs_integrate.mac \
 contrib/integration/abs_integrate.texi \
 contrib/integration/hyperint.mac \
+contrib/integration/integration-index.lisp \
 contrib/integration/partition.mac \
 contrib/integration/rtest_abs_integrate.mac \
 contrib/levin/levin.dem \
@@ -477,7 +484,6 @@ contrib/trigtools/trigtools-doc.pdf \
 contrib/trigtools/trigtools.mac \
 contrib/unit/unit-functions.lisp \
 contrib/unit/unit.mac \
-contrib/unit/unit.texi \
 contrib/unwind_protect.lisp \
 contrib/vector3d/vector3d.dem \
 contrib/vector3d/vector3d.mac \
@@ -538,8 +544,10 @@ distrib/distrib.mac \
 distrib/numdistrib.lisp \
 distrib/rtest_distrib.mac \
 draw/draw_gnuplot.dem \
+draw/draw-index.lisp \
 draw/draw.lisp \
 draw/draw.system \
+draw/drawutils.info \
 draw/drawutils.mac \
 draw/drawutils.texi \
 draw/gnuplot.lisp \
@@ -877,6 +885,7 @@ linearalgebra/test-polynomialp.mac \
 logic/COPYING \
 logic/logic.dem \
 logic/logic.html \
+logic/logic-index.lisp \
 logic/logic.info \
 logic/logic.lisp \
 logic/logic.mac \
@@ -1099,6 +1108,7 @@ stringproc/pregexp.lisp \
 stringproc/printf.lisp \
 stringproc/rtestprintf.mac \
 stringproc/rteststringproc.mac \
+stringproc/sha1.lisp \
 stringproc/sregex.lisp \
 stringproc/stringproc.lisp \
 stringproc/stringproc.mac \

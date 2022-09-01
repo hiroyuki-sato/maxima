@@ -39,6 +39,17 @@
 (defprop %realpart $realpart noun)
 (defprop %realpart simp-realpart operators)
 
+(defun risplit-signum (x) ;rectangular form for a signum expression
+  (let*  ((z (risplit (cadr x))) (a (car z)) (b (cdr z)) (r)) ;signum(a+%i b), where a and b are real
+    (cond ((eq t (meqp b 0)) ;signum(a) -> signum(a) + 0 %i
+	   (cons (take '(%signum) a) 0))
+	  ((or (eq t (mnqp a 0)) (eq t (mnqp b 0))) ;signum(a + %i b) --> a/sqrt(a^2+b^2) + %i b/sqrt(a^2+b^2)
+	   (setq r (take '(%sqrt) (add (power a 2) (power b 2))))
+	   (cons (div a r) (div b r)))
+	  (t (cons (take '(%realpart) x) (take '(%imagpart) x)))))) ;nothing known
+
+(setf (get '%signum 'risplit-function) #'risplit-signum)
+
 (defun simp-realpart (expr z simpflag)
   (oneargcheck expr)
   (setq z (simpcheck (cadr expr) simpflag))
@@ -469,12 +480,6 @@
 	  ((eq (caar l) '%plog)
 	   ;;  (princ '|Warning: Principal value not guaranteed for Plog in Rectform/|)
 	   (risplit (cons '(%log) (cdr l))))
-	  ((member (caar l) '(%realpart %imagpart mabs) :test #'eq) (cons l 0))
-	  ((eq (caar l) '%erf)
-	   (let ((ris (risplit (cadr l))) orig cc)
-	     (setq orig (simplify (list '(%erf) (add (car ris) (mul '$%i (cdr ris))))))
-	     (setq cc (simplify (list '(%erf) (sub (car ris) (mul '$%i (cdr ris))))))
-	     (cons (div (add orig cc) 2) (div (sub orig cc) (mul 2 '$%i)))))
 	  ;; Look for a risplit-function on the property list to handle the
 	  ;; realpart and imagpart for this function.
           ((setq op (safe-get (mop l) 'risplit-function))
@@ -484,10 +489,6 @@
 	  ((eq (caar l) 'mlist) (dsrl l))
 	  ((eq (caar l) '$matrix)
 	   (dot--ri (mapcar #'dsrl (cdr l)) '($matrix simp)))
-	  ((member (caar l) '(mlessp mleqp mgreaterp mgeqp) :test #'eq)
-	   (let ((ris1 (risplit (cadr l))) (ris2 (risplit (caddr l))))
-	     (cons (simplify (list (ncons (caar l)) (car ris1) (car ris2)))
-		   (simplify (list (ncons (caar l)) (cdr ris1) (cdr ris2))))))
 ;;;The Coversinemyfoot clause covers functions which can be converted
 ;;; to functions known by risplit, such as the more useless trigonometrics.
 	  ((let ((foot (coversinemyfoot l)))

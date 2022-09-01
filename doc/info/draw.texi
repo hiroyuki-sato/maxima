@@ -1679,6 +1679,47 @@ Example:
 
 
 
+
+@defvr {Graphic option} key_pos
+Default value: @code{""} (empty string)
+
+@code{key_pos} defines at which position the legend will be drawn. If @code{key} is an
+empty string, @code{"top_right"} is used.
+Available position specifiers are: @code{top_left}, @code{top_center}, @code{top_right},
+@code{center_left}, @code{center}, @code{center_right},
+@code{bottom_left}, @code{bottom_center}, and @code{bottom_right}.
+
+Since this is a global graphics option, its position in the scene description
+does not matter.
+
+Example:
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        key_pos = top_left,
+        key   = "x",
+        explicit(x,  x,0,10),
+        color= red,
+        key   = "x squared",
+        explicit(x^2,x,0,10))$
+(%i3) draw3d(
+        key_pos = center,
+        key   = "x",
+        explicit(x+y,x,0,10,y,0,10),
+        color= red,
+        key   = "x squared",
+        explicit(x^2+y^2,x,0,10,y,0,10))$
+@end example
+
+@opencatbox
+@category{Package draw}
+@closecatbox
+
+@end defvr
+
+
+
 @defvr {Graphic option} label_alignment
 Default value: @code{center}
 
@@ -1753,7 +1794,9 @@ See also @code{label_alignment} and @code{color}.
 Default value: @code{solid}
 
 @code{line_type} indicates how lines are displayed; possible values are
-@code{solid} and @code{dots}.
+@code{solid} and @code{dots}, both available in all terminals, and
+@code{dashes}, @code{short_dashes}, @code{short_long_dashes}, @code{short_short_long_dashes}, 
+and @code{dot_dash}, which are not available in @code{png}, @code{jpg}, and @code{gif} terminals. 
 
 This option affects the following graphic objects:
 @itemize @bullet
@@ -1876,7 +1919,45 @@ Example:
              logx = true)$
 @end example
 
-See also @code{logy} and @code{logz}.
+See also @code{logy}, @code{logx_secondary}, @code{logy_secondary}, and @code{logz}.
+
+@opencatbox
+@category{Package draw}
+@closecatbox
+
+@end defvr
+
+
+
+@defvr {Graphic option} logx_secondary
+Default value: @code{false}
+
+If @code{logx_secondary} is @code{true}, the secondary @var{x} axis 
+will be drawn in the logarithmic scale.
+
+This option is relevant only for 2d scenes.
+
+Since this is a global graphics option, its position in the scene description
+does not matter.
+
+Example:
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        grid = true,
+        key="x^2, linear scale",
+        color=red,
+        explicit(x^2,x,1,100),
+        xaxis_secondary = true,
+        xtics_secondary = true,
+        logx_secondary  = true,
+        key = "x^2, logarithmic x scale",
+        color = blue,
+        explicit(x^2,x,1,100) )$
+@end example
+
+See also @code{logx}, @code{logy}, @code{logy_secondary}, and @code{logz}.
 
 @opencatbox
 @category{Package draw}
@@ -1903,7 +1984,45 @@ Example:
              explicit(exp(x),x,0,5))$
 @end example
 
-See also @code{logx} and @code{logz}.
+See also @code{logx}, @code{logx_secondary}, @code{logy_secondary}, and @code{logz}.
+
+@opencatbox
+@category{Package draw}
+@closecatbox
+
+@end defvr
+
+
+
+@defvr {Graphic option} logy_secondary
+Default value: @code{false}
+
+If @code{logy_secondary} is @code{true}, the secondary @var{y} axis 
+will be drawn in the logarithmic scale.
+
+This option is relevant only for 2d scenes.
+
+Since this is a global graphics option, its position in the scene description
+does not matter.
+
+Example:
+
+@example
+(%i1) load(draw)$
+(%i2) draw2d(
+        grid = true,
+        key="x^2, linear scale",
+        color=red,
+        explicit(x^2,x,1,100),
+        yaxis_secondary = true,
+        ytics_secondary = true,
+        logy_secondary  = true,
+        key = "x^2, logarithmic y scale",
+        color = blue,
+        explicit(x^2,x,1,100) )$
+@end example
+
+See also @code{logx}, @code{logy}, @code{logx_secondary}, and @code{logz}.
 
 @opencatbox
 @category{Package draw}
@@ -2545,13 +2664,14 @@ does not matter.
 
 Example:
 
-The @i{dumb} terminal is not supported by package @code{draw},
-but it is possible to set it by making use of option @code{user_preamble},
+Tell Gnuplot to draw axes on top of graphics objects,
 @example
 (%i1) load(draw)$
-(%i2) draw2d(explicit(exp(x)-1,x,-1,1),
-             parametric(cos(u),sin(u),u,0,2*%pi),
-             user_preamble="set terminal dumb")$
+(%i2) draw2d(
+        xaxis =true, xaxis_type=solid,
+        yaxis =true, yaxis_type=solid,
+        user_preamble="set grid front",
+        region(x^2+y^2<1 ,x,-1.5,1.5,y,-1.5,1.5))$
 @end example
 
 @opencatbox
@@ -2863,17 +2983,17 @@ See also @code{xrange}, @code{yrange}, @code{zrange} and @code{yrange_secondary}
 
 
 @defvr {Graphic option} xtics
-Default value: @code{auto}
+Default value: @code{true}
 
 This graphic option controls the way tic marks are drawn on the @var{x} axis.
 
 @itemize @bullet
 @item
-When option @code{xtics} is bounded to symbol @var{auto}, tic marks are
+When option @code{xtics} is bounded to symbol @var{true}, tic marks are
 drawn automatically.
 
 @item
-When option @code{xtics} is bounded to symbol @var{none}, tic marks are
+When option @code{xtics} is bounded to symbol @var{false}, tic marks are
 not drawn.
 
 @item
@@ -2904,7 +3024,7 @@ Examples:
 Disable tics.
 @example
 (%i1) load(draw)$
-(%i2) draw2d(xtics = 'none,
+(%i2) draw2d(xtics = 'false,
              explicit(x^3,x,-1,1)  )$
 @end example
 
@@ -3362,7 +3482,7 @@ See also @code{xrange}, @code{yrange} and @code{zrange}.
 
 
 @defvr {Graphic option} ytics
-Default value: @code{auto}
+Default value: @code{true}
 
 This graphic option controls the way tic marks are drawn on the @var{y} axis.
 
@@ -3685,7 +3805,7 @@ See also @code{xrange} and @code{yrange}.
 
 
 @defvr {Graphic option} ztics
-Default value: @code{auto}
+Default value: @code{true}
 
 This graphic option controls the way tic marks are drawn on the @var{z} axis.
 

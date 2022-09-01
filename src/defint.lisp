@@ -182,6 +182,16 @@ in the interval of integration.")
 (defvar *semirat* nil)
 
 (defun $defint (exp var ll ul)
+
+  ;; Distribute $defint over equations, lists, and matrices.
+  (cond ((mbagp exp)
+         (return-from $defint
+           (simplify
+             (cons (car exp)
+                   (mapcar #'(lambda (e)
+                               (simplify ($defint e var ll ul)))
+                           (cdr exp)))))))
+
   (let ((*global-defint-assumptions* ())
 	(integer-info ()) (integerl integerl) (nonintegerl nonintegerl))
     (with-new-context (context)
@@ -215,14 +225,6 @@ in the interval of integration.")
              (unless (lenient-extended-realp ul)
                (merror (intl:gettext "defint: upper limit of integration must be real; found ~M") ll))
 
-	     ;; Distribute $defint over equations, lists, and matrices.
-	     (cond ((mbagp exp)
-	            (return-from $defint
-	              (simplify
-	                (cons (car exp)
-	                      (mapcar #'(lambda (e)
-	                                  (simplify ($defint e var ll ul)))
-	                              (cdr exp)))))))
 	     (cond ((setq ans (defint exp var ll ul))
 		    (setq ans (subst orig-var var ans))
 		    (cond ((atom ans)  ans)
@@ -888,14 +890,17 @@ in the interval of integration.")
 		 total))))))
 
 ;; look for terms with a negative exponent
+;;
+;; recursively traverses exp in order to find discontinuities such as
+;;  erfc(1/x-x) at x=0
 (defun discontinuities-denom (exp)
   (cond ((atom exp) 1)
-	((eq (caar exp) 'mtimes)
-	 (m*l (mapcar #'discontinuities-denom (cdr exp))))
 	((and (eq (caar exp) 'mexpt)
-	      (eq ($sign (caddr exp)) '$neg))
+	      (not (freeof var (cadr exp)))
+	      (not (member ($sign (caddr exp)) '($pos $pz))))
 	 (m^ (cadr exp) (m- (caddr exp))))
-	(t 1)))
+	(t 
+	 (m*l (mapcar #'discontinuities-denom (cdr exp))))))
 
 ;; returns list of places where exp might be discontinuous in var.
 ;; list begins with ll and ends with ul, and include any values between
@@ -2873,8 +2878,8 @@ in the interval of integration.")
 ;; to get integrate(f(y)/y,y,0,inf)/k.  If the limits are 0 to inf,
 ;; use the substitution s+1=exp(k*x) to get
 ;; integrate(f(s+1)/(s+1),s,0,inf).
-(defun dintexp (exp arg &aux ans)
-  (declare (ignore arg))
+(defun dintexp (exp ignored &aux ans)
+  (declare (ignore ignored))
   (let ((*dintexp-recur* t))		;recursion stopper
     (cond ((and (sinintp exp var)     ;To be moved higher in the code.
 		(setq ans (antideriv exp))
@@ -3332,7 +3337,12 @@ in the interval of integration.")
 	 (roots (real-roots denom var))
 	 (ll-pole (limit-pole exp var ll '$plus))
 	 (ul-pole (limit-pole exp var ul '$minus)))
-    (cond ((or (eq roots '$failure)
+    (cond ((member ($csign denom) '($pos $neg $pz))
+	   ;; this clause handles cases where we can't find the exact roots,
+	   ;; but we know that they occur outside the interval of integration.
+	   ;;  example: integrate ((1+exp(t))/sqrt(t+exp(t)), t, 0, 1);
+	   '$no)
+	  ((or (eq roots '$failure)
 	       (null ll-pole)
 	       (null ul-pole))   '$unknown)
 	  ((and (eq roots '$no)

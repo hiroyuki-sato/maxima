@@ -1,5 +1,5 @@
 This is maxima.info, produced by makeinfo version 4.13 from
-/home/robert/maxima/maxima-code/doc/info/de.utf8//include-maxima.de.texi.
+/home/robert/tmp/maxima-read-only-git/maxima-code/doc/info/de.utf8//include-maxima.de.texi.
 
 Das ist ein Texinfo Maxima Manual
 
@@ -1493,21 +1493,6 @@ File: maxima.info,  Node: Package functs,  Next: Package ineq,  Prev: Package fa
      conjugate of denominator, thus rationalizing the denominator.
      Returns canonical rational expression (CRE) form if given one,
      else returns general form.
-
-     To use this function write first `load(functs)'.
-
- -- Function: logand (`x',`y')
-     Returns logical (bit-wise) "and" of arguments x and y.
-
-     To use this function write first `load(functs)'.
-
- -- Function: logor (`x',`y')
-     Returns logical (bit-wise) "or" of arguments x and y.
-
-     To use this function write first `load(functs)'.
-
- -- Function: logxor (`x',`y')
-     Returns logical (bit-wise) exclusive-or of arguments x and y.
 
      To use this function write first `load(functs)'.
 
@@ -3806,9 +3791,10 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
           (%o2)                   baz + 1764
 
  -- Funktion: md5sum (<string>)
-     Gibt die md5-Prüfsumme von <string> als String zurück.  Um den
-     Rückgabewert in eine natürliche Zahl zu parsen, setzen Sie bitte
-     die Eingabebasis auf 16 und fügen eine Null vor den String.
+     Gibt die md5-Prüfsumme von <string> als String mit 32
+     hexadezimalen Zeichen zurück.  Um den Rückgabewert in eine
+     natürliche Zahl zu parsen, setzen Sie bitte die Eingabebasis auf
+     16 und fügen eine Null vor den String.
 
      Beispiel:
 
@@ -3856,6 +3842,21 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
  -- Function: sexplode (<string>)
      `sexplode' is an alias for function `charlist'.
 
+
+ -- Funktion: sha1sum (<string>)
+     Gibt den SHA1-Fingerprint von <string> als String mit 48
+     hexadezimalen Zeichen zurück.  Um den Rückgabewert in eine
+     natürliche Zahl zu parsen, setzen Sie bitte die Eingabebasis auf
+     16 und fügen eine Null vor den String.
+
+     Beispiel:
+
+          (%i1) string : sha1sum("foo bar baz");
+          (%o1)              c7567e8b39e2428e38bf9c9226ac68de4c67dc39
+          (%i2) ibase : obase : 16.$
+
+          (%i3) integer : parse_string(sconcat(0, string));
+          (%o3)              0c7567e8b39e2428e38bf9c9226ac68de4c67dc39
 
  -- Function: simplode (<list>)
  -- Function: simplode (<list>, <delim>)
@@ -4084,16 +4085,13 @@ File: maxima.info,  Node: Functions and Variables for strings,  Prev: Functions 
 
  -- Function: tokens (<string>)
  -- Function: tokens (<string>, <test>)
-     Returns a list of tokens, which have been extracted from the
-     argument <string>.  The tokens are substrings, whose characters
-     satisfy a certain test function.  If the argument <test> is not
-     given, the test `constituent' is used as the default test.  The
-     set of test functions is `{`constituent',  `alphacharp',
-
-     `digitcharp',  `lowercasep',  `uppercasep',
-
-     `charp',  `alphanumericp' }'.  (The Lisp-version of `tokens' is
-     written by Paul Graham.  ANSI Common Lisp, 1996, page 67.)
+     Returns a list of tokens, which have been extracted from <string>.
+     The tokens are substrings whose characters satisfy a certain test
+     function.  If <test> is not given, <constituent> is used as the
+     default test.  `{constituent, alphacharp, digitcharp, lowercasep,
+     uppercasep, charp, characterp, alphanumericp}' is the set of test
+     functions.  (The Lisp-version of `tokens' is written by Paul
+     Graham. ANSI Common Lisp, 1996, page 67.)
 
      Examples:
 

@@ -30,14 +30,14 @@
 ;; log does not get the commutes-with-conjugate property.  Instead,
 ;; log gets the conjugate-function property.
 
-;; What importation functions have I missed?
+;; What important functions have I missed?
 
 ;; (1) Arithmetic operators
 
 (setf (get 'mplus 'commutes-with-conjugate) t)
 (setf (get 'mtimes 'commutes-with-conjugate) t)
 ;(setf (get 'mnctimes 'commutes-with-conjugate) t) ;; generally I think users will want this
-
+(setf (get '%signum 'commutes-with-conjugate) t) ;; x=/=0, conjugate(signum(x)) = conjugate(x/abs(x)) = signum(conjugate(x))
 ;; Trig-like functions and other such functions
 
 (setf (get '%cosh 'commutes-with-conjugate) t)
@@ -98,6 +98,9 @@
 (setf (get '%bessel_y 'conjugate-function) 'conjugate-bessel-y)
 (setf (get '%bessel_i 'conjugate-function) 'conjugate-bessel-i)
 (setf (get '%bessel_k 'conjugate-function) 'conjugate-bessel-k)
+
+(setf (get '%hankel_1 'conjugate-function) 'conjugate-hankel-1)
+(setf (get '%hankel_2 'conjugate-function) 'conjugate-hankel-2)
 
 ;; Other things:
 
@@ -187,7 +190,7 @@
 
 (defun conjugate-bessel-j (z)
   (let ((n (first z)) (x (second z)))
-    (if (off-negative-real-axisp x)
+    (if (or ($featurep n '$integer) (off-negative-real-axisp x))
         (take '(%bessel_j) (take '($conjugate) n) (take '($conjugate) x))
        `(($conjugate simp) ((%bessel_j simp) ,@z)))))
 
@@ -199,7 +202,7 @@
 
 (defun conjugate-bessel-i (z)
   (let ((n (first z)) (x (second z)))
-    (if (off-negative-real-axisp x)
+    (if (or ($featurep n '$integer) (off-negative-real-axisp x))
         (take '(%bessel_i) (take '($conjugate) n) (take '($conjugate) x))
        `(($conjugate simp) ((%bessel_i simp) ,@z)))))
 
@@ -208,6 +211,18 @@
     (if (off-negative-real-axisp x)
         (take '(%bessel_k) (take '($conjugate) n) (take '($conjugate) x))
        `(($conjugate simp) ((%bessel_k simp) ,@z)))))
+
+(defun conjugate-hankel-1 (z)
+  (let ((n (first z)) (x (second z)))
+    (if (off-negative-real-axisp x)
+        (take '(%hankel_2) (take '($conjugate) n) (take '($conjugate) x))
+       `(($conjugate simp) ((%hankel_1 simp) ,@z)))))
+
+(defun conjugate-hankel-2 (z)
+  (let ((n (first z)) (x (second z)))
+    (if (off-negative-real-axisp x)
+        (take '(%hankel_1) (take '($conjugate) n) (take '($conjugate) x))
+       `(($conjugate simp) ((%hankel_2 simp) ,@z)))))
 
 ;; When a function maps "everything" into the reals, put real-valued on the
 ;; property list of the function name. This duplicates some knowledge that

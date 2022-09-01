@@ -477,6 +477,11 @@
   (tprinc "<mo>&ApplyFunction;</mo>")
   (mPr-listparen (cdr mexpress)))
 
+(defun mPr-gamma (mexpress)
+  (mPr_engine '|$Gamma| 'mparen 'mparen) ;; ensure big gamma instead of little gamma (CHCHR property)
+  (tprinc "<mo>&ApplyFunction;</mo>")
+  (mPr-listparen (cdr mexpress)))
+
 ;;      for infix operator , and also handle when there is a truncation
 ;;in macsyma expression (see mPr-infix1)
 ;;      mPr-infix calling
@@ -543,8 +548,13 @@
      (row-begin "<mrow>")(tprinc "<mo>&Integral;</mo>"))
     ((equal (length mexpress) 5)
      (row-begin "<mrow>")(tprinc "<msubsup><mo>&Integral;</mo>")
-     (mPr_engine (cadddr mexpress) 'mparen 'mparen) (tprinc "  ")
+     (row-begin "<mrow>")
+     (mPr_engine (cadddr mexpress) 'mparen 'mparen)
+     (row-end "</mrow>")
+     (tprinc "  ")
+     (row-begin "<mrow>")
      (mPr_engine (car (cddddr mexpress)) 'mparen 'mparen)
+     (row-end "</mrow>")
      (tprinc "</msubsup>"))
     (t (merror "Wrong NO. of Arguments")))
   (row-begin "<mrow>")
@@ -935,6 +945,10 @@
 (setf (get '$beta 'chchr) '"&beta;")
 (setf (get '$gamma 'chchr) '"&gamma;")
 (setf (get '%gamma 'chchr) '"&gamma;")
+(setf (get '%gamma_incomplete 'chchr) '"&Gamma;")
+(setf (get '%gamma_incomplete_generalized 'chchr) '"&Gamma;")
+(setf (get '%gamma_incomplete_regularized 'chchr) '"Q")
+(setf (get '$gamma_greek 'chchr) '"&gamma;")
 (setf (get '$delta 'chchr) '"&delta;")
 (setf (get '$epsilon 'chchr) '"&epsilon;")
 (setf (get '$varepsilon 'chchr) '"&varepsilon;")
@@ -1055,6 +1069,8 @@
 (setup '($acsch (mPrprocess mPr-function) (mPr-rbp 110) (chchr"acsch")))
 (setup '($ln (mPrprocess mPr-function) (mPr-rbp 110) (chchr"ln")))
 (setup '($log (mPrprocess mPr-function) (mPr-rbp 110) (chchr"log")))
+(setup '(%gamma (mPrprocess mPr-gamma)))
+
 ;;
 ;;
 ;;      set the preference feature

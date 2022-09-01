@@ -392,47 +392,6 @@ sin(y)*(10.0+6*cos(x)),
          (cond ((> z max) (setq max z))))
   (list min max (- max min)))
 
-
-;; figure out the rotation to make pt the direction from which we view,
-;; and to rotate z axis to vertical.
-;; First get v, so p.v=0 then do u= p X v to give image of y axis
-;; ans = transpose(matrix( v,u,p))
-
-(defun length-one (pt)
-  (flet (($norm (pt) (loop for v in (cdr pt) sum (* v v))))
-    (let ((len (sqrt ($norm pt))))
-      (cons '(mlist) (loop for v in (cdr pt) collect (/  (float v) len))))))
-
-(defun cross-product (u v)
-  (flet ((cp (i j)
-           (- (* (nth i u) (nth j v))
-              (* (nth i v) (nth j u)))))
-    `((mlist) ,(cp 2 3) ,(cp 3 1) ,(cp 1 2))))
-        
-(defun get-rotation (pt)
-  (setq pt (length-one pt))
-  (let (v tem u)
-    (cond((setq tem (position 0.0 pt))
-          (setq v (cons '(mlist) (list 0.0 0.0 0.0)))
-          (setf (nth tem v) 1.0))
-         (t (setq v (length-one `((mlist) ,(- (third pt))      , (second pt) 0.0)))))
-    (setq u (cross-product pt v))
-    (let* (($rot   `(($matrix) ,v,u,pt))
-           (th (get-theta-for-vertical-z
-                (fourth (second $rot))
-                (fourth (third $rot)))))
-      (or (zerop th)
-          (setq $rot (ncmul2 ($rotation1 0.0 th)     $rot)))
-      $rot)))
-
-(defun get-theta-for-vertical-z (z1 z2)
-  (cond ((eql z1 0.0)
-         (if (> z2 0.0)
-             0.0
-             (coerce pi 'flonum)))
-        (t
-         (cl:atan  z2 z1 ))))
-
 (defun $polar_to_xy (pts &aux (r 0.0) (th 0.0))
   (declare (type flonum r th))
   (declare (type (cl:array t) pts))
@@ -1247,8 +1206,9 @@ sin(y)*(10.0+6*cos(x)),
                (let ((y (if (getf plot-options :logx)
                             (funcall fcn (exp x))
                             (funcall fcn x))))
-                 (if (getf plot-options :logy)
-                     (log y)
+                 (if (and (getf plot-options :logy)
+                          (numberp y))
+                     (if (> y 0) (log y) 'und)
                      y))))
         
         (dotimes (k (1+ (* 2 nticks)))
@@ -1291,19 +1251,22 @@ sin(y)*(10.0+6*cos(x)),
         (do ((x result (cddr x))
              (y (cdr result) (cddr y)))
             ((null y))
-          (when (getf plot-options :logx)
-            (setf (car x) (exp (car x))))
-          (when (getf plot-options :logy)
-            (setf (car y) (exp (car y))))
           (if (numberp (car y))
-            (unless (<= ymin (car y) ymax)
-              (incf n-clipped)
-              (setf (car x) 'moveto)
-              (setf (car y) 'moveto))
-            (progn
-              (incf n-non-numeric)
-              (setf (car x) 'moveto)
-              (setf (car y) 'moveto))))
+              (unless (<= ymin (car y) ymax)
+                (incf n-clipped)
+                (setf (car x) 'moveto)
+                (setf (car y) 'moveto))
+              (progn
+                (incf n-non-numeric)
+                (setf (car x) 'moveto)
+                (setf (car y) 'moveto)))
+          (when (and (getf plot-options :logx)
+                     (numberp (car x)))
+            (setf (car x) (exp (car x))))
+
+          (when (and (getf plot-options :logy)
+                     (numberp (car y)))
+            (setf (car y) (exp (car y)))))
 
         ;; Filter out any MOVETO's which do not precede a number.
         ;; Code elsewhere in this file expects MOVETO's to
@@ -1429,8 +1392,11 @@ sin(y)*(10.0+6*cos(x)),
                       (check-option (cdr opt) #'realp "a real number" 1)))
       ($box (setf (getf options :box)
                   (check-option-boole (cdr opt))))
-      ($color_bar_tics (setf (getf options :color_bar_tics)
-                    (check-option-b (cdr opt) #'realp "a real number" 3)))
+      ($color_bar_tics
+       (if (cddr opt)
+         (setf (cddr opt) (mapcar #'coerce-float (cddr opt))))
+       (setf (getf options :color_bar_tics)
+             (check-option-b (cdr opt) #'realp "a real number" 3)))
       ($color (setf (getf options :color)
                     (check-option (cdr opt) #'plotcolorp "a color")))
       ($color_bar  (setf (getf options :color_bar)
@@ -1487,36 +1453,53 @@ sin(y)*(10.0+6*cos(x)),
       ($title (setf (getf options :title)
                     (check-option (cdr opt) #'stringp "a string" 1)))
       ($transform_xy (setf (getf options :transform_xy)
-                           (check-option-b (cdr opt) #'symbolp "a symbol" 1)))
+                           (check-option-b (cdr opt) #'functionp "a function make_transform" 1)))
       ($x (setf (getf options :x) (cddr (check-range opt))))
       ($xbounds (setf (getf options :xbounds) (cddr (check-range opt))))
       ($xlabel (setf (getf options :xlabel)
                      (check-option (cdr opt) #'string "a string" 1)))
-      ($xtics (setf (getf options :xtics)
-                    (check-option-b (cdr opt) #'realp "a real number" 3)))
+      ($xtics
+       (if (cddr opt)
+         (setf (cddr opt) (mapcar #'coerce-float (cddr opt))))
+       (setf (getf options :xtics)
+             (check-option-b (cdr opt) #'realp "a real number" 3)))
       ($xvar (setf (getf options :xvar)
                    (check-option (cdr opt) #'string "a string" 1)))
-      ($xy_scale (setf (getf options :xy_scale)
-                      (check-option (cdr opt) #'realpositivep
-                                    "a positive real number" 2)))
+      ($xy_scale
+       (if (cddr opt)
+         (setf (cddr opt) (mapcar #'coerce-float (cddr opt))))
+       (setf (getf options :xy_scale)
+             (check-option (cdr opt) #'realpositivep
+                                     "a positive real number" 2)))
       ($y (setf (getf options :y) (cddr (check-range opt))))
       ($ybounds (setf (getf options :ybounds) (cddr (check-range opt))))
       ($ylabel (setf (getf options :ylabel)
                      (check-option (cdr opt) #'string "a string" 1)))
-      ($ytics (setf (getf options :ytics)
-                    (check-option-b (cdr opt) #'realp "a real number" 3)))
+      ($ytics
+       (if (cddr opt)
+         (setf (cddr opt) (mapcar #'coerce-float (cddr opt))))
+       (setf (getf options :ytics)
+             (check-option-b (cdr opt) #'realp "a real number" 3)))
       ($yvar (setf (getf options :yvar)
                    (check-option (cdr opt) #'string "a string" 1)))
-      ($yx_ratio (setf (getf options :yx_ratio)
-                      (check-option (cdr opt) #'realp
-                                    "a real number" 1)))
+      ($yx_ratio
+       (if (caddr opt)
+         (setf (caddr opt) (coerce-float (caddr opt))))
+       (setf (getf options :yx_ratio)
+             (check-option (cdr opt) #'realp "a real number" 1)))
       ($z (setf (getf options :z) (cddr (check-range opt))))
       ($zlabel (setf (getf options :zlabel)
                      (check-option (cdr opt) #'string "a string" 1)))
-      ($zmin (setf (getf options :zmin)
-                   (check-option-b (cdr opt) #'realp "a real number" 1)))
-      ($ztics (setf (getf options :ztics)
-                    (check-option-b (cdr opt) #'realp "a real number" 3)))
+      ($zmin
+       (if (caddr opt)
+         (setf (caddr opt) (coerce-float (caddr opt))))
+       (setf (getf options :zmin)
+             (check-option-b (cdr opt) #'realp "a real number" 1)))
+      ($ztics
+       (if (cddr opt)
+         (setf (cddr opt) (mapcar #'coerce-float (cddr opt))))
+       (setf (getf options :ztics)
+             (check-option-b (cdr opt) #'realp "a real number" 3)))
       ($gnuplot_4_0 (setf (getf options :gnuplot_4_0)
                           (check-option-boole (cdr opt))))
       ($gnuplot_curve_titles
@@ -1675,7 +1658,8 @@ sin(y)*(10.0+6*cos(x)),
       (setq opt (cdr option)))
   (dolist (item opt)
     (when (not (and ($listp item) (= 4 (length item)) (stringp (second item))
-                    (realp (third item)) (realp (fourth item))))
+                    (realp (setf (third item) (coerce-float (third item))))
+                    (realp (setf (fourth item) (coerce-float (fourth item))))))
       (merror
        (intl:gettext
         "Wrong argument ~M for option ~M. Must be either [label,\"text\",x,y] or [label, [\"text 1\",x1,y1],...,[\"text n\",xn,yn]]")
@@ -1768,7 +1752,7 @@ sin(y)*(10.0+6*cos(x)),
 (defun $plot2d (fun &optional range &rest extra-options)
   (let (($display2d nil) (*plot-realpart* *plot-realpart*)
         (options (copy-tree *plot-options*)) (i 0)
-        (output-file "") gnuplot-term gnuplot-out-file file points-lists)
+        output-file gnuplot-term gnuplot-out-file file points-lists)
 
     ;; 1- Put fun in its most general form: a maxima list with several objects
     ;; that can be expressions (simple functions) and maxima lists (parametric
@@ -1885,9 +1869,8 @@ sin(y)*(10.0+6*cos(x)),
       (return-from $plot2d))
 
     (setq gnuplot-term (getf options :gnuplot_term))
-    (if (getf options :gnuplot_out_file)
-        (setf gnuplot-out-file (getf options :gnuplot_out_file)))
-    (if (and (eq (getf options :plot_format) '$gnuplot)
+    (setf gnuplot-out-file (getf options :gnuplot_out_file))
+    (if (and (find (getf options :plot_format) '($gnuplot_pipes $gnuplot))
              (eq gnuplot-term '$default) gnuplot-out-file)
         (setq file (plot-file-path gnuplot-out-file))
         (setq file
@@ -1898,6 +1881,8 @@ sin(y)*(10.0+6*cos(x)),
     ;; old function $plot2dopen incorporated here
     (case (getf options :plot_format)
       ($xmaxima
+       (when (getf options :ps_file)
+         (setq output-file (list (getf options :ps_file))))
        (show-open-plot
         (with-output-to-string
             (st)
@@ -1968,7 +1953,8 @@ sin(y)*(10.0+6*cos(x)),
                           (setq lis (cddr lis))))
                    (format st "}"))))
           (format st "} "))
-        file))
+        file)
+       (cons '(mlist) (cons file output-file)))
       (t
        (with-open-file (st file :direction :output :if-exists :supersede)
          (case (getf options :plot_format)
@@ -2129,7 +2115,7 @@ sin(y)*(10.0+6*cos(x)),
       ($mgnuplot 
        ($system (concatenate 'string *maxima-plotdir* "/" $mgnuplot_command) 
                 (format nil " -plot2d ~s -title ~s" file "Fun1"))))
-    (format nil "~a~&~a" file output-file)))
+    (cons '(mlist) (cons file output-file))))
 
 
 (defun msymbolp (x)
@@ -2343,7 +2329,7 @@ sin(y)*(10.0+6*cos(x)),
        functions exprn domain tem (options (copy-tree *plot-options*))
        ($in_netmath $in_netmath)
        (*plot-realpart* *plot-realpart*)
-       gnuplot-term gnuplot-out-file file titles (output-file "")
+       gnuplot-term gnuplot-out-file file titles output-file
        (usage (intl:gettext
 "plot3d: Usage.
 To plot a single function f of 2 variables v1 and v2:
@@ -2494,10 +2480,10 @@ Several functions depending on the two variables v1 and v2:
   ;; x and y should not be bound, when an xy transformation function is used
   (when tem (remf options :x) (remf options :y))
   
+  ;; Name of the gnuplot commands file and output file
   (setf gnuplot-term (getf options :gnuplot_term))
-  (if (getf options :gnuplot_out_file)
-      (setf gnuplot-out-file (getf options :gnuplot_out_file)))
-  (if (and (eq (getf options :plot_format) '$gnuplot)
+  (setf gnuplot-out-file (getf options :gnuplot_out_file))
+  (if (and (find (getf options :plot_format) '($gnuplot_pipes $gnuplot))
            (eq gnuplot-term '$default) gnuplot-out-file)
       (setq file (plot-file-path gnuplot-out-file))
       (setq file
@@ -2512,6 +2498,7 @@ Several functions depending on the two variables v1 and v2:
   (let (($pstream
          (cond ($in_netmath *standard-output*)
                (t (open file :direction :output :if-exists :supersede))))
+        (palette (getf options :palette))
         (legend (getf options :legend)) (n (length functions)))
     ;; titles will be a list. The titles given in the legend option
     ;; will have priority over the titles generated by plot3d.
@@ -2524,23 +2511,31 @@ Several functions depending on the two variables v1 and v2:
          (case (getf options :plot_format)
            ($gnuplot
             (setq output-file (gnuplot-print-header $pstream options))
+            (when (and (member :gnuplot_pm3d options)
+                       (not (getf options :gnuplot_pm3d)))
+              (setq palette nil))
             (format
              $pstream "~a"
-             (gnuplot-plot3d-command "-" (getf options :palette)
+             (gnuplot-plot3d-command "-" palette
                                      (getf options :gnuplot_curve_styles)
                                      (getf options :color)
                                      titles n)))
            ($gnuplot_pipes
+            (when (and (member :gnuplot_pm3d options)
+                       (not (getf options :gnuplot_pm3d)))
+              (setq palette nil))
             (check-gnuplot-process)
             ($gnuplot_reset)
             (setq output-file (gnuplot-print-header *gnuplot-stream* options))
             (setq 
              *gnuplot-command*
-             (gnuplot-plot3d-command file (getf options :palette)
+             (gnuplot-plot3d-command file palette
                                      (getf options :gnuplot_curve_styles)
                                      (getf options :color)
                                      titles n)))
            ($xmaxima
+            (when (getf options :ps_file)
+              (setq output-file (list (getf options :ps_file))))
             (xmaxima-print-header $pstream options))
            ($geomview
             (format $pstream "LIST~%")))
@@ -2634,7 +2629,7 @@ Several functions depending on the two variables v1 and v2:
                    (concatenate
                     'string *maxima-plotdir* "/" $mgnuplot_command)
                    (format nil " -parametric3d \"~a\"" file))))))))
-  (format nil "~a~&~a" file output-file))
+    (cons '(mlist) (cons file output-file)))
 
 ;; Given a Maxima list with 3 elements, checks whether it represents a function
 ;; defined in a 2-dimensional domain or a parametric representation of a

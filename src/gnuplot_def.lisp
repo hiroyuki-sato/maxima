@@ -232,6 +232,9 @@
         (meshcolor (if (member :mesh_lines_color plot-options)
                        (getf plot-options :mesh_lines_color)
                        '$black)))
+    (when (and (member :gnuplot_pm3d plot-options)
+               (not (getf plot-options :gnuplot_pm3d)))
+      (setq palette nil))
     (when (find 'mlist palette :key #'car) (setq palette (list palette)))
     ;; user's preamble
     (when (and (getf plot-options :gnuplot_preamble)
@@ -406,8 +409,8 @@
                (> (length  (getf plot-options :gnuplot_postamble)) 0))
       (format dest "~a~%" (getf plot-options :gnuplot_postamble)))
 
-    ;;returns the name of the file created
-    (or (second terminal-file) "")))
+    ;;returns a list with the name of the file created, or nil
+    (if (null (second terminal-file)) nil (list (second terminal-file)))))
 
 (defun gnuplot-plot3d-command (file palette gstyles colors titles n) 
 (let (title (style "with pm3d"))
@@ -432,31 +435,31 @@
      (if (getf plot-options :gnuplot_svg_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_svg_term_command))
-         (setq terminal-command "set term svg font \",14\""))
+         (setq terminal-command "set term svg dashed font \",14\""))
      (setq out-file (getf plot-options :svg_file)))
     ((getf plot-options :png_file)
      (if (getf plot-options :gnuplot_png_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_png_term_command))
-         (setq terminal-command "set term pngcairo font \",12\""))
+         (setq terminal-command "set term pngcairo dashed font \",12\""))
      (setq out-file (getf plot-options :png_file)))
     ((getf plot-options :pdf_file)
      (if (getf plot-options :gnuplot_pdf_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_pdf_term_command))
-         (setq terminal-command "set term pdfcairo color solid lw 3 size 17.2 cm, 12.9 cm font \",18\""))
+         (setq terminal-command "set term pdfcairo dashed color solid lw 3 size 17.2 cm, 12.9 cm font \",18\""))
      (setq out-file (getf plot-options :pdf_file)))
     ((getf plot-options :ps_file)
      (if (getf plot-options :gnuplot_ps_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_ps_term_command))
-         (setq terminal-command "set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\""))
+         (setq terminal-command "set term postscript dashed eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\""))
      (setq out-file (getf plot-options :ps_file)))
     ((eq (getf plot-options :gnuplot_term) '$ps)
      (if (getf plot-options :gnuplot_ps_term_command)
          (setq terminal-command
                (getf plot-options :gnuplot_ps_term_command))
-         (setq terminal-command "set term postscript eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\""))
+         (setq terminal-command "set term postscript dashed eps color solid lw 2 size 16.4 cm, 12.3 cm font \",24\""))
      (if (getf plot-options :gnuplot_out_file)
          (setq out-file (getf plot-options :gnuplot_out_file))
          (setq out-file "maxplot.ps")))
@@ -473,7 +476,7 @@
          (setq terminal-command
                (getf plot-options :gnuplot_default_term_command))
          (setq terminal-command
-               "set term wxt size 640,480 font \",12\"; set term pop")))
+               "set term pop")))
     ((getf plot-options :gnuplot_term)
      (setq
       terminal-command
