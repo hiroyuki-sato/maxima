@@ -312,7 +312,8 @@
 		(progn
 		  (setq test-start-run-time (get-internal-run-time))
 		  (setq test-start-real-time (get-internal-real-time))
-		  (setq result (meval* `(($errcatch) ,(third expr))))
+		  (let (($errormsg t))
+		    (setq result (meval* `(($errcatch) ,(third expr)))))
 		  (setq result (if ($emptyp result) 'error-catch (second result)))
 		  (setq test-end-run-time (get-internal-run-time))
 		  (setq test-end-real-time (get-internal-real-time))
@@ -342,13 +343,13 @@
 			  (float (/ (- test-end-real-time test-start-real-time)
 				    internal-time-units-per-second)))))
 	      (cond ((and correct expected-error)
-		     (format t (intl:gettext "~%... Which was correct, but was expected to be wrong due to a known bug in~% Maxima.~%")))
+		     (format t (intl:gettext "~%... Which was correct, but was expected to be wrong due to a known bug in~% Maxima or in the Lisp it was compiled with.~%")))
 		    (correct
 		     (if show-all (format t (intl:gettext "~%... Which was correct.~%"))))
 		    ((and (not correct) expected-error)
 		     (if (or show-all show-expected)
 			 (progn
-			   (format t (intl:gettext "~%This is a known error in Maxima. The correct result is:~%"))
+			   (format t (intl:gettext "~%This is a known error in Maxima or in the Lisp it was compiled with. The correct result is:~%"))
 			   (displa next-result))))
 		    (t (format t (intl:gettext "~%This differed from the expected result:~%"))
 		       (push i all-differences)
@@ -371,11 +372,12 @@
     (cond (error-log
 	   (or (streamp *collect-errors*)
 	       (close error-log))))
-    (let
-      ((expected-errors-trailer
-	(if (or (null expected-errors) (= (length expected-errors) 0))
+    (let*
+      ((n-expected-errors (length expected-errors))
+       (expected-errors-trailer
+	 (if (= n-expected-errors 0)
 	    ""
-	    (format nil (intl:gettext " (not counting ~a expected errors)") (length expected-errors))))
+	    (format nil (intl:gettext " (not counting ~a expected errors)") n-expected-errors)))
        (time (if showtime
 		 (format nil (intl:gettext "   using ~,3F seconds (~,3F elapsed).~%")
 			 (float (/ (- end-run-time start-run-time) internal-time-units-per-second))
@@ -383,13 +385,13 @@
 		 "")))
       (cond ((null all-differences)
 	     (format t (intl:gettext "~a/~a tests passed~a~%~A")
-		     num-problems num-problems
+		     (- num-problems n-expected-errors) (- num-problems n-expected-errors)
 		     expected-errors-trailer
 		     time)
 	     (values '((mlist)) num-problems))
 	    (t
 	     (format t (intl:gettext "~%~a/~a tests passed~a~%~A")
-		     (- num-problems (length all-differences)) num-problems expected-errors-trailer
+		     (- num-problems n-expected-errors (length all-differences)) (- num-problems n-expected-errors) expected-errors-trailer
 		     time)
 	     (let ((s (if (> (length all-differences) 1) "s" "")))
 	       (format t (intl:gettext "~%The following ~A problem~A failed: ~A~%")
@@ -543,6 +545,8 @@
   (let ((test-file)
 	(expected-failures)
 	(test-file-path))
+    (format t "Testsuite run for ~a ~a:~%"
+	    (lisp-implementation-type) (lisp-implementation-version))
     ;; Allow only T and NIL for display_known_bugs and display_all
     (unless (member display_known_bugs '(t nil))
       (merror (intl:gettext "run_testsuite: display_known_bugs must be true or false; found: ~M") display_known_bugs))
@@ -716,6 +720,9 @@
 ;;  share_tests          Whether to include the share testsuite or not
 ;;  debug                Set to enable some debugging prints.
 (defun $run_testsuite (&rest options)
-  (apply #'run-testsuite
-	 (lispify-maxima-keyword-options options '($display_all $display_known_bugs $tests $time
-						   $share_tests $debug))))
+  (enable-some-lisp-warnings)
+  (prog1
+    (apply #'run-testsuite
+           (lispify-maxima-keyword-options options '($display_all $display_known_bugs $tests $time
+                                                                  $share_tests $debug)))
+    (disable-some-lisp-warnings)))

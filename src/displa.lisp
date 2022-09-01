@@ -75,7 +75,9 @@
 	     (cond (*alt-display2d* (apply *alt-display2d* form ()))
 		   (t
 		    (let ((displayp t)
-			  (linearray (if displayp (make-array 80.) linearray))
+			  (linearray (if displayp
+					 (make-array 80. :initial-element nil)
+					 linearray))
 			  (mratp (checkrat form))
 			  (maxht     1) (maxdp   0) (width   0)
 			  (height    0) (depth   0) (level   0) (size   2)
@@ -1287,7 +1289,7 @@
 	   n (car line))
      (setf (aref linearray i) nil)
      (tyotbsp n)
-     (loop for v in (cdr line) do (write-char v))
+     (loop for v in (cdr line) do (write-char v #+(or sbcl cmu) *standard-output*))
      (mterpri)))
 
 ;; Move the cursor over N spaces to the left by outputting spaces.
@@ -1298,7 +1300,7 @@
 (defun tyotbsp (n)
   (do ()
       ((< n 1))
-    (write-char #\space)
+    (write-char #\space #+(or sbcl cmu) *standard-output*)
     (decf n)))
 
 (defun draw-linear (dmstr oldrow oldcol)
