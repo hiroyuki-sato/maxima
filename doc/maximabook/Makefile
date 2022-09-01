@@ -35,39 +35,48 @@ index:
 	makeindex -o maxima.ind maxima.idx
 
 dvi:
-		latex maxima
-		makeindex -o maxima.ind maxima.idx
-		bibtex maxima
-		latex maxima
+		TEXINPUTS="`pwd`/../../interfaces/emacs/emaxima:$$TEXINPUTS";\
+		export TEXINPUTS;\
+		latex maxima && \
+		makeindex -o maxima.ind maxima.idx && \
+		bibtex maxima && \
+		latex maxima && \
 		latex maxima
 
 ps:	
-		latex maxima
-		makeindex -o maxima.ind maxima.idx
-		bibtex maxima
-		latex maxima
-		latex maxima
+		TEXINPUTS="`pwd`/../../interfaces/emacs/emaxima:$$TEXINPUTS";\
+		export TEXINPUTS;\
+		latex maxima && \
+		makeindex -o maxima.ind maxima.idx  && \
+		bibtex maxima && \
+		latex maxima && \
+		latex maxima && \
 		dvips -o maxima.ps maxima.dvi
 
 ps4page:
-		latex maxima
-		makeindex -o maxima.ind maxima.idx
-		bibtex maxima
-		latex maxima
-		latex maxima
+		TEXINPUTS="`pwd`/../../interfaces/emacs/emaxima:$$TEXINPUTS";\
+		export TEXINPUTS;\
+		latex maxima && \
+		makeindex -o maxima.ind maxima.idx && \
+		bibtex maxima && \
+		latex maxima && \
+		latex maxima && \
 		a2ps -4 -o maxima4pagesperpage.ps maxima.dvi
-			
 pdf:
-		pdflatex maxima
-		makeindex -o maxima.ind maxima.idx
-		bibtex maxima
-		pdflatex maxima
+		TEXINPUTS="`pwd`/../../interfaces/emacs/emaxima:$$TEXINPUTS";\
+		export TEXINPUTS;\
+		pdflatex maxima && \
+		makeindex -o maxima.ind maxima.idx && \
+		bibtex maxima && \
+		pdflatex maxima && \
 		pdflatex maxima
 
 pdf-final:
-		pdflatex maxima
-		makeindex -o maxima.ind maxima.idx
-		bibtex maxima
-		thumbpdf maxima
-		pdflatex maxima
+		TEXINPUTS="`pwd`/../../interfaces/emacs/emaxima:$$TEXINPUTS";\
+		export TEXINPUTS;\
+		pdflatex maxima && \
+		makeindex -o maxima.ind maxima.idx && \
+		bibtex maxima && \
+		thumbpdf maxima && \
+		pdflatex maxima && \
 		pdflatex maxima

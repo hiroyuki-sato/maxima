@@ -85,6 +85,7 @@
 #-gcl
 (progn 'compile
 ;; return path as a string  or nil if none.
+#+nil
 (defun stream-name (path)
   (let ((tem (errset (namestring (pathname path)))))
     (car tem)))
@@ -269,80 +270,84 @@
 
 (eval-when (compile) (proclaim '(special *mread-prompt*)))
 
+;; RLT: What is the repeat-if-newline option for?  A grep of the code
+;; indicates that dbm-read is never called with more than 3 args.  Can
+;; we just flush it?  Can probably get rid of the &aux stuff too.
+
 (defun dbm-read (&optional (stream *standard-input*) (eof-error-p t)
 			   (eof-value nil) repeat-if-newline  &aux tem  ch
 			   (mprompt *mread-prompt*) (*mread-prompt* "")
-			   next
-			    )
+			   )
 
   (when (> (length mprompt) 0)
-	(fresh-line *standard-output*)
-	(princ mprompt *standard-output*)
-        (force-output *standard-output*)
-	;(format t "~&~a" mprompt)
-	)
+    (fresh-line *standard-output*)
+    (princ mprompt *standard-output*)
+    (force-output *standard-output*)
+    ;;(format t "~&~a" mprompt)
+    )
+
+  ;; Read a character to see what we should do.
   (tagbody
    top
    (setq ch (read-char stream eof-error-p eof-value))
    (cond ((or (eql ch #\newline) (eql ch #\return))
 	  (if (and repeat-if-newline *last-dbm-command*)
 	      (return-from dbm-read *last-dbm-command*)) 
-	  (go top)
-	  )
-	 ((eq ch eof-value) (return-from dbm-read eof-value)))
-   ;; ANSI CL portability bug here.  It's undefined if you do a stream
-   ;; operation and then unread-char.
-   (and (eql ch #\?) (setq next (peek-char nil  stream  nil)))
-   (unread-char ch stream)
-  )
+	  (go top))
+	 ((eq ch eof-value)
+	  (return-from dbm-read eof-value)))
+     ;; Put that character back, so we can reread the line correctly.
+   (unread-char ch stream))
+
+  ;; Figure out what to do
   (cond ((eql #\: ch)
+	 ;; This is a Maxima debugger command (I think)
 	 (let* ((line (read-line stream eof-error-p eof-value))
 		fun)
 	   (multiple-value-bind
-	    (keyword n)
-	    (read-from-string line)
-	    (setq fun (complete-prop keyword 'keyword 'break-command))
-	    (and (consp fun) (setq fun (car fun)))
-	    ;(print (list 'line line))
-	    (setq *last-dbm-command*
-		  (cond ((null fun) '(:_none))
-			((get fun 'maxima-read)
-			 (cons keyword (mapcar 'macsyma-read-string
-					       (split-string line " " n ))))
-			(t (setq tem
-			    ($sconcat "(" (string-right-trim  ";" line) ")"))
-			   ;(print (list 'tem tem))
-			   (read  (make-string-input-stream tem)
-				  eof-error-p eof-value)))))))
-	((and (eql #\? ch) (member next '(#\space #\tab)))
-	 (let* ((line (string-trim '(#\space #\tab #\; #\$)
-				   (subseq (read-line stream eof-error-p eof-value) 1))))
-	   `((displayinput) nil (($describe) ,line))))
+		 (keyword n)
+	       (read-from-string line)
+	     (setq fun (complete-prop keyword 'keyword 'break-command))
+	     (and (consp fun) (setq fun (car fun)))
+	     ;;(print (list 'line line))
+	     (setq *last-dbm-command*
+		   (cond ((null fun) '(:_none))
+			 ((get fun 'maxima-read)
+			  (cons keyword (mapcar 'macsyma-read-string
+						(split-string line " " n ))))
+			 (t (setq tem
+				  ($sconcat "(" (string-right-trim  ";" line) ")"))
+			    ;;(print (list 'tem tem))
+			    (read  (make-string-input-stream tem)
+				   eof-error-p eof-value)))))))
+	((eql #\? ch)
+	 ;; Process "?" lines.  This is either a call to describe or a
+	 ;; quick temporary escape to Lisp to call some Lisp function.
+	 
+	 ;; First, read and discard the #\? since we don't need it anymore.
+	 (read-char stream)
+	 (let ((next (peek-char nil stream nil)))
+	   (cond ((member next '(#\Space #\Tab))
+		  ;; Got "? <stuff>".  This means describe.
+		  (let* ((line (string-trim '(#\space #\tab #\; #\$)
+					    (subseq (read-line stream eof-error-p eof-value) 1))))
+		    `((displayinput) nil (($describe) ,line))))
+		 (t
+		  ;; Got "?<stuff>" This means a call to a Lisp
+		  ;; function.  Pass this on to mread which can handle
+		  ;; this.
+		  ;;
+		  ;; Note: There appears to be a bug in Allegro 6.2
+		  ;; where concatenated streams don't wait for input
+		  ;; on *standard-input*.
+		  (mread (make-concatenated-stream (make-string-input-stream "?") stream)
+			 eof-value)))))
 	(t
 	 (setq *last-dbm-command* nil)
-	 #-cmu
-	 (mread stream eof-value)
-
-	   ;; At this point, we have peeked at the next character, but
-	   ;; CMUCL has also deleted that character.  This is a hack.
-	   ;;
-	   ;; Read the char that we unread back to the stream.
-	   ;; Make a new stream consisting of the next char and the
-	   ;; rest of the actual input.
-	 #+cmu
-	 (if (eql #\? ch)
-	     (let* ((first-char (read-char stream))
-		    (new-stream (make-concatenated-stream
-				 (make-string-input-stream
-				  (concatenate 'string (string first-char)
-					       (string next)))
-				 stream)))
-	       (mread new-stream eof-value))
-	     (mread stream eof-value)))))
-
+	 (mread stream eof-value))))
 
 (defun grab-line-number (li stream)
-  (declare (type (vector ( #. (array-element-type "ab"))) li))
+  (declare (type (vector #.(array-element-type "ab")) li))
   (cond ((and (> (length li) 3)
 	      (digit-char-p (aref li 1)))
 	 (let ((in (get-instream stream)))
@@ -405,8 +410,10 @@
 	(unwind-protect
 	    (do () (())
 		(format *debug-io*
-		    "~&~@[(~a:~a) ~]"  (unless (stringp at) "dbm")
-		    (length *quit-tags*))
+		    "~a~&~@[(~a:~a) ~]~a"  *prompt-prefix* 
+		    (unless (stringp at) "dbm")
+		    (length *quit-tags*) *prompt-suffix*)
+	        (finish-output *debug-io*)
 		(setq val
 		      (catch 'macsyma-quit
 			(let ((res (dbm-read *debug-io*  nil *top-eof* t)))
@@ -486,8 +493,8 @@
 (eval-when (eval load  compile)
 
 ;; gcl imports from 'si package
-#-gcl  
-(defstruct instream stream (line 0 :type fixnum) stream-name)
+;;#-gcl  
+;;(defstruct instream stream (line 0 :type fixnum) stream-name)
 
 (defstruct (bkpt (:type list)) form file file-line function)
   )
@@ -561,14 +568,6 @@
 
   ;; note  need to make the redefine function, fixup the break point
   ;; list.. 
-
-(defun first-form-line (form line &aux tem)
-  (cond ((atom form) nil)
-	((and (setq tem (get-lineinfo form)) (eql (car tem) line))
-	 form)
-	(t (sloop for v in (cdr form)
-		  when (setq tem (first-form-line v line))
-		  do (return-from first-form-line tem)))))
 
 (defun make-break-point (fun ar i)
   (declare (fixnum i) (type (vector t) ar))
@@ -667,7 +666,7 @@
 	 (case type
 	   (:bkpt  (iterate-over-bkpts nil :show)(values))
 	   (otherwise
-	    (format t "usage: :info :bkpt -- show breakpoints")
+	    (format *debug-io* "usage: :info :bkpt -- show breakpoints")
 	    ))) "Print information about item")
 
 

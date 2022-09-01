@@ -17,6 +17,7 @@
 ;; Couldn't this copy to some static area?
 (DEFMACRO PURCOPY (X) X)
 
+#-nocp
 (DEFMACRO CHARPOS (IGNOR)ignor  '(CDR (CURSORPOS)))
 (DEFMACRO MAXIMA-SLEEP (SECONDS) `(PROCESS-SLEEP (FIX (f* ,SECONDS 60.))))
 
@@ -156,13 +157,13 @@
 
 
 
-(DEFMACRO STORE (ARRAY-REF NEW-VALUE &aux expand-1 )
+(DEFMACRO STORE (ARRAY-REF NEW-VALUE &aux expand-1 &environment env)
   (cond ((not (memq (car array-ref ) '(aref arraycall)))
-	 (setq expand-1 (macroexpand-1 array-ref))
+	 (setq expand-1 (macroexpand-1 array-ref env))
 	 (setq array-ref
 	       (cond ((memq (car expand-1 ) '(aref arraycall))
 		      expand-1)
-		     (t  (macroexpand array-ref))))))
+		     (t  (macroexpand array-ref env))))))
   
   (CASE (FIRST ARRAY-REF)
     (FUNCALL (STORE-MACRO-HELPER (CDR ARRAY-REF) NEW-VALUE))

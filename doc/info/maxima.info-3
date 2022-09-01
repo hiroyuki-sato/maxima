@@ -1,4 +1,4 @@
-This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
+This is maxima.info, produced by makeinfo version 4.5 from maxima.texi.
 
    This is a Texinfo Maxima Manual
 
@@ -7,6 +7,586 @@ This is maxima.info, produced by makeinfo version 4.1 from maxima.texi.
 START-INFO-DIR-ENTRY
 * Maxima: (maxima).     A computer algebra system.
 END-INFO-DIR-ENTRY
+
+
+File: maxima.info,  Node: Definitions for Expressions,  Prev: SYNTAX,  Up: Expressions
+
+Definitions for Expressions
+===========================
+
+ - Function: AT (exp, list)
+     will evaluate exp (which may be any expression) with the variables
+     assuming the values as specified for them in the list of equations
+     or the single equation similar to that given to the ATVALUE
+     function.  If a subexpression depends on any of the variables in
+     list but it hasn't had an atvalue specified and it can't be
+     evaluated then a noun form of the AT will be returned which will
+     display in a two-dimensional form.  Do EXAMPLE(AT); for an example.
+
+
+ - Function: BOX (expr)
+     returns expr enclosed in a box.  The box is actually part of the
+     expression.
+          BOX(expr,label)
+     encloses expr in a labelled box.  label is a name which will be
+     truncated in display if it is too long.      BOXCHAR["] - is the
+     character used to draw the box in this and in the DPART and LPART
+     functions.
+
+
+ - Variable: BOXCHAR
+     default: ["] is the character used to draw the box in the BOX and
+     in the DPART and LPART functions.
+
+
+ - special operator: CONSTANT
+     - makes ai a constant as is %PI.
+
+
+ - Function: CONSTANTP (exp)
+     is TRUE if exp is a constant (i.e.  composed of numbers and %PI,
+     %E, %I or any variables bound to a constant or DECLAREd constant)
+     else FALSE.  Any function whose arguments are constant is also
+     considered to be a constant.
+
+
+ - Function: CONTRACT (exp)
+     carries out all possible contractions in exp, which may be any
+     well-formed combination of sums and products.  This function uses
+     the information given to the DEFCON function.  Since all tensors
+     are considered to be symmetric in all indices, the indices are
+     sorted into alphabetical order.  Also all dummy indices are
+     renamed using the symbols !1,!2,... to permit the expression to be
+     simplified as much as possible by reducing equivalent terms to a
+     canonical form.  For best results exp should be fully expanded.
+     RATEXPAND is the fastest way to expand products and powers of sums
+     if there are no variables in the denominators of the terms.  The
+     GCD switch should be FALSE if gcd cancellations are unnecessary.
+
+
+ - Function: DECLARE (a1, f1, a2, f2, ...)
+     gives the atom ai the flag fi.  The ai's and fi's may also be
+     lists of atoms and flags respectively in which case each of the
+     atoms gets all of the properties.  The possible flags and their
+     meanings are:
+
+     CONSTANT - makes ai a constant as is %PI.
+
+     MAINVAR - makes ai a MAINVAR.  The ordering scale for atoms:
+     numbers < constants (e.g. %E,%PI) < scalars < other variables <
+     mainvars.
+
+     SCALAR - makes ai a scalar.
+
+     NONSCALAR - makes ai behave as does a list or matrix with respect
+     to the dot operator.
+
+     NOUN - makes the function ai a noun so that it won't be evaluated
+     automatically.
+
+     EVFUN - makes ai known to the EV function so that it will get
+     applied if its name is mentioned.  Initial evfuns are
+          FACTOR, TRIGEXPAND,
+          TRIGREDUCE, BFLOAT, RATSIMP, RATEXPAND, and RADCAN
+
+     EVFLAG - makes ai known to the EV function so that it will be
+     bound to TRUE during the execution of EV if it is mentioned.
+     Initial evflags are
+          FLOAT, PRED, SIMP, NUMER, DETOUT, EXPONENTIALIZE, DEMOIVRE,
+          KEEPFLOAT, LISTARITH, TRIGEXPAND, SIMPSUM, ALGEBRAIC,
+          RATALGDENOM, FACTORFLAG, %EMODE, LOGARC, LOGNUMER,
+          RADEXPAND, RATSIMPEXPONS, RATMX, RATFAC, INFEVAL, %ENUMER,
+          PROGRAMMODE, LOGNEGINT, LOGABS, LETRAT, HALFANGLES,
+          EXPTISOLATE, ISOLATE_WRT_TIMES, SUMEXPAND, CAUCHYSUM,
+          NUMER_PBRANCH, M1PBRANCH, DOTSCRULES, and LOGEXPAND
+
+     BINDTEST - causes ai to signal an error if it ever is used in a
+     computation unbound.  DECLARE([var1, var2, ...], BINDTEST) causes
+     MACSYMA to give an error message whenever any of the vari occur
+     unbound in a computation.  MACSYMA currently recognizes and uses
+     the following features of objects:
+          EVEN, ODD, INTEGER, RATIONAL, IRRATIONAL, REAL, IMAGINARY,
+          and COMPLEX
+     he useful features of functions include:
+           INCREASING,
+          DECREASING, ODDFUN (odd function), EVENFUN (even function),
+          COMMUTATIVE (or SYMMETRIC), ANTISYMMETRIC, LASSOCIATIVE and
+          RASSOCIATIVE
+     DECLARE(F,INCREASING) is in all respects equivalent to
+
+          ASSUME(KIND(F,INCREASING))
+     The ai and fi may also be lists of objects or features.  The
+     command
+          FEATUREP(object,feature)
+     may be used to determine if an object has been DECLAREd to have
+     "feature".  See DESCRIBE(FEATURES); .
+
+
+ - Function: DISOLATE (exp, var1, var2, ..., varN)
+     is similar to ISOLATE(exp, var) (Do DESCRIBE(ISOLATE);) except
+     that it enables the user to isolate more than one variable
+     simultaneously.  This might be useful, for example, if one were
+     attempting to change variables in a multiple integration, and that
+     variable change involved two or more of the integration variables.
+     This function is autoloaded from `simplification/disol.mac'.  A
+     demo is available by `demo("disol")$'.
+
+
+ - Function: DISPFORM (exp)
+     returns the external representation of exp (wrt its main
+     operator).  This should be useful in conjunction with PART which
+     also deals with the external representation.  Suppose EXP is -A .
+     Then the internal representation of EXP is "*"(-1,A), while the
+     external representation is "-"(A). DISPFORM(exp,ALL) converts the
+     entire expression (not just the top-level) to external format.  For
+     example, if EXP:SIN(SQRT(X)), then FREEOF(SQRT,EXP) and
+     FREEOF(SQRT,DISPFORM(EXP)) give TRUE, while
+     FREEOF(SQRT,DISPFORM(EXP,ALL)) gives FALSE.
+
+
+ - Function: DISTRIB (exp)
+     distributes sums over products.  It differs from EXPAND in that it
+     works at only the top level of an expression, i.e. it doesn't
+     recurse and it is faster than EXPAND.  It differs from MULTTHRU in
+     that it expands all sums at that level. For example,
+     DISTRIB((A+B)*(C+D)) -> A C + A D + B C + B D MULTTHRU
+     ((A+B)*(C+D)) -> (A + B) C + (A + B) D DISTRIB (1/((A+B)*(C+D)))
+     ->  1/ ((A+B) *(C+D)) EXPAND(1/((A+B)*(C+D)),1,0) -> 1/(A C + A D
+     + B C + B D)
+
+
+ - Function: DPART (exp, n1, ..., nk)
+     selects the same subexpression as PART, but instead of just
+     returning that subexpression as its value, it returns the whole
+     expression with the selected subexpression displayed inside a box.
+     The box is actually part of the expression.
+          (%i1) DPART(X+Y/Z**2,1,2,1);
+                                 Y
+          (%o1)                  ---- + X
+                                   2
+                               *****
+                               * Z *
+                               *****
+
+ - Function: EXP (X)
+     the exponential function.  It is represented internally as %E^X.
+     DEMOIVRE[FALSE] - if TRUE will cause %E^(A+B*%I) to become
+     %E^A*(COS(B)+%I*SIN(B)) if B is free of %I.  A and B are not
+     expanded.    %EMODE[TRUE] - when TRUE %E^(%PI*%I*X) will be
+     simplified as follows: it will become COS(%PI*X)+%I*SIN(%PI*X) if
+     X is an integer or a multiple of 1/2, 1/3, 1/4, or 1/6 and thus
+     will simplify further.  For other numerical X it will become
+     %E^(%PI*%I*Y) where Y is X-2*k for some integer k such that
+     ABS(Y)<1.  If %EMODE is FALSE no simplification of %E^(%PI*%I*X)
+     will take place.    %ENUMER[FALSE] - when TRUE will cause %E to be
+     converted into 2.718...  whenever NUMER is TRUE.  The default is
+     that this conversion will take place only if the exponent in %E^X
+     evaluates to a number.
+
+
+ - Variable: EXPTISOLATE
+     default: [FALSE] if TRUE will cause ISOLATE(expr,var); to examine
+     exponents of atoms (like %E) which contain var.
+
+
+ - Variable: EXPTSUBST
+     default: [FALSE] if TRUE permits substitutions such as Y for %E**X
+     in %E**(A*X) to take place.
+
+
+ - Function: FREEOF (x1, x2, ..., exp)
+     yields TRUE if the xi do not occur in exp and FALSE otherwise.
+     The xi are atoms or they may be subscripted names, functions (e.g.
+     SIN(X) ), or operators enclosed in "s.  If 'var' is a "dummy
+     variable" of 'exp', then FREEOF(var,exp); will return TRUE.
+     "Dummy variables" are mathematical things like the index of a sum
+     or product, the limit variable, and the definite integration
+     variable.  Example: FREEOF(I,'SUM(F(I),I,0,N)); returns TRUE.  Do
+     EXAMPLE(FREEOF); for more examples.
+
+
+ - Function: GENFACT (X, Y, Z)
+     is the generalized factorial of X which is:
+     X*(X-Z)*(X-2*Z)*...*(X-(Y-1)*Z).  Thus, for integral X,
+     GENFACT(X,X,1)=X!  and GENFACT(X,X/2,2)=X!!
+
+
+ - Function: IMAGPART (exp)
+     returns the imaginary part of the expression exp.
+
+
+ - Function: INDICES (exp)
+     returns a list of two elements.  The first is a list of the free
+     indices in exp (those that occur only once); the second is the
+     list of dummy indices in exp (those that occur exactly twice).
+
+
+ - Function: INFIX (op)
+     - INFIX operators are used to denote functions of two arguments,
+     one given before the operator and one after, e.g. A^2 .  The
+     INFIX("x") function is a syntax extention function to declare x to
+     be an INFIX operator.  Do DESCRIBE(SYNTAX); for more details.
+
+
+ - Variable: INFLAG
+     default: [FALSE] if set to TRUE, the functions for part extraction
+     will look at the internal form of exp.  Note that the simplifier
+     re-orders expressions.  Thus FIRST(X+Y) will be X if INFLAG is
+     TRUE and Y if INFLAG is FALSE.  (FIRST(Y+X) gives the same
+     results).  Also, setting INFLAG to TRUE and calling PART/SUBSTPART
+     is the same as calling INPART/SUBSTINPART.  Functions affected by
+     the setting of INFLAG are: PART, SUBSTPART, FIRST, REST, LAST,
+     LENGTH, the FOR ... IN construct, MAP, FULLMAP, MAPLIST, REVEAL
+     and PICKAPART.
+
+
+ - Function: INPART (exp, n1, ..., nk)
+     is similar to PART but works on the internal representation of the
+     expression rather than the displayed form and thus may be faster
+     since no formatting is done.  Care should be taken with respect to
+     the order of subexpressions in sums and products (since the order
+     of variables in the internal form is often different from that in
+     the displayed form) and in dealing with unary minus, subtraction,
+     and division (since these operators are removed from the
+     expression). PART(X+Y,0) or INPART(X+Y,0) yield +, though in order
+     to refer to the operator it must be enclosed in "s.  For example
+     ...IF INPART(%o9,0)="+" THEN ...
+          (%i1)  X+Y+W*Z;
+          (%o1)                  W Z + Y + X
+          (%i2)  INPART(%o1,3,2);
+          (%o2)                  Z
+          (%i3)  PART(%o1,1,2);
+          (%o3)                  Z
+          (%i4) 'LIMIT(F(X)**G(X+1),X,0,MINUS);
+                                                G(X + 1)
+          (%o4)                      LIMIT   F(X)
+                                    X ->0-
+          (%i5) INPART(%,1,2);
+          (%o5)                            G(X + 1)
+
+ - Function: ISOLATE (exp, var)
+     returns exp with subexpressions which are sums and which do not
+     contain var replaced by intermediate expression labels (these
+     being atomic symbols like %t1, %t2, ...).  This is often useful to
+     avoid unnecessary expansion of subexpressions which don't contain
+     the variable of interest.  Since the intermediate labels are bound
+     to the subexpressions they can all be substituted back by
+     evaluating the expression in which they occur.  EXPTISOLATE[FALSE]
+     if TRUE will cause ISOLATE to examine exponents of atoms (like %E)
+     which contain var.  ISOLATE_WRT_TIMES[FALSE] if TRUE, then ISOLATE
+     will also isolate wrt products.  E.g. compare both settings of the
+     switch on ISOLATE(EXPAND((A+B+C)^2),C); .  Do EXAMPLE(ISOLATE);
+     for examples.
+
+
+ - Variable: ISOLATE_WRT_TIMES
+     default: [FALSE] - if set to TRUE, then ISOLATE will also isolate
+     wrt products.  E.g. compare both settings of the switch on
+     ISOLATE(EXPAND((A+B+C)^2),C); .
+
+
+ - Variable: LISTCONSTVARS
+     default: [FALSE] - if TRUE will cause LISTOFVARS to include %E,
+     %PI, %I, and any variables declared constant in the list it
+     returns if they appear in the expression LISTOFVARS is called on.
+     The default is to omit these.
+
+
+ - Variable: LISTDUMMYVARS
+     default: [TRUE] - if FALSE, "dummy variables" in the expression
+     will not be included in the list returned by LISTOFVARS.  (The
+     meaning of "dummy variables" is as given in DESCRIBE(FREEOF):
+     "Dummy variables" are mathematical things like the index of a sum
+     or product, the limit variable, and the definite integration
+     variable.)  Example: LISTOFVARS('SUM(F(I),I,0,N)); gives [I,N] if
+     LISTDUMMYVARS is TRUE, and [N] if LISTDUMMYVARS is FALSE.
+
+
+ - Function: LISTOFVARS (exp)
+     yields a list of the variables in exp.  LISTCONSTVARS[FALSE] if
+     TRUE will cause LISTOFVARS to include %E, %PI, %I, and any
+     variables declared constant in the list it returns if they appear
+     in exp.  The default is to omit these.
+          (%i1) LISTOFVARS(F(X[1]+Y)/G**(2+A));
+          (%o1)                            [X[1], Y, A, G]
+
+ - Function: LFREEOF (list, exp)
+     For each member m of list, calls FREEOF(m,exp).  It returns false
+     if any call to FREEOF does and true otherwise.
+
+ - Function: LOPOW (exp, v)
+     the lowest exponent of v which explicitly appears in exp.  Thus
+
+          LOPOW((X+Y)**2+(X+Y)**A,X+Y) ==> MIN(A,2)
+     .
+
+
+ - Function: LPART (label, expr, n1, ..., nk)
+     is similar to DPART but uses a labelled box. A labelled box is
+     similar to the one produced by DPART but it has a name in the top
+     line.
+
+
+ - Function: MULTTHRU (exp)
+     multiplies a factor (which should be a sum) of exp by the other
+     factors of exp.  That is exp is f1*f2*...*fn where at least one
+     factor, say fi, is a sum of terms.  Each term in that sum is
+     multiplied by the other factors in the product.  (Namely all the
+     factors except fi).  MULTTHRU does not expand exponentiated sums.
+     This function is the fastest way to distribute products
+     (commutative or noncommutative) over sums.  Since quotients are
+     represented as products MULTTHRU can be used to divide sums by
+     products as well.  MULTTHRU(exp1, exp2) multiplies each term in
+     exp2 (which should be a sum or an equation) by exp1.  If exp1 is
+     not itself a sum then this form is equivalent to
+     MULTTHRU(exp1*exp2).
+          (%i1) X/(X-Y)**2-1/(X-Y)-F(X)/(X-Y)**3;
+                         1        X         F(X)
+          (%o1)       - ----- + -------- - --------
+                       X - Y          2          3
+                               (X - Y)    (X - Y)
+          (%i2) MULTTHRU((X-Y)**3,%);
+                              2
+          (%o2)       - (X - Y)  + X (X - Y) - F(X)
+          (%i3) RATEXPAND(%o2);
+                                     2
+          (%o3)                    - Y  + X Y - F(X)
+          (%i4) ((A+B)**10*S**2+2*A*B*S+(A*B)**2)/(A*B*S**2);
+                                   10  2              2  2
+                          (B  + A )   S  + 2 A B S + A  B
+          (%o4)            --------------------------------
+                                             2
+                                        A B S
+          (%i5) MULTTHRU(%);
+                                                    10
+                                  2   A B   (B  + A)
+          (%o5)                    - + --- + -------
+                                  S    2      A B
+                                      S
+          (notice that (B+A)**10 is not expanded)
+          (%i6) MULTTHRU(A.(B+C.(D+E)+F));
+          (%o6)                A . F + A . (C . (E + D)) + A . B
+          (compare with similar example under EXPAND)
+
+ - Function: NOUNIFY (f)
+     returns the noun form of the function name f.  This is needed if
+     one wishes to refer to the name of a verb function as if it were a
+     noun.  Note that some verb functions will return their noun forms
+     if they can't be evaluated for certain arguments.  This is also
+     the form returned if a function call is preceded by a quote.
+
+
+ - Function: NTERMS (exp)
+     gives the number of terms that exp would have if it were fully
+     expanded out and no cancellations or combination of terms
+     occurred. Note that expressions like SIN(E), SQRT(E), EXP(E), etc.
+     count as just one term regardless of how many terms E has (if it
+     is a sum).
+
+
+ - Function: OP (exp)
+     Returns the operator of the expression, and functions the same way
+     as PART(exp,0).  It observes the setting of the INPART flag.  It
+     may not return the same value as the commercial Macsyma.
+
+
+ - Function: OPERATORP (exp, ool)
+     Uses OP to get the operator of the expression and either compares
+     it to ool, if it is a operator, or checks if it is a member of ool
+     if it is a list.
+
+
+ - Function: OPTIMIZE (exp)
+     returns an expression that produces the same value and side
+     effects as exp but does so more efficiently by avoiding the
+     recomputation of common subexpressions.  OPTIMIZE also has the side
+     effect of "collapsing" its argument so that all common
+     subexpressions are shared.  Do EXAMPLE(OPTIMIZE); for examples.
+
+
+ - Variable: OPTIMPREFIX
+     default: [%] - The prefix used for generated symbols by the
+     OPTIMIZE command.
+
+
+ - Function: ORDERGREAT (V1, ..., Vn)
+     sets up aliases for the variables V1, ..., Vn such that V1 > V2 >
+     ...  > Vn > any other variable not mentioned as an argument.  See
+     also ORDERLESS.  Caveat:  do EXAMPLE(ORDERGREAT); for some
+     specifics.
+
+
+ - Function: ORDERGREATP (exp1,exp2)
+     returns TRUE if exp2 precedes exp1 in the ordering set up with the
+     ORDERGREAT function (see DESCRIBE(ORDERGREAT);).
+
+
+ - Function: ORDERLESS (V1, ..., Vn)
+     sets up aliases for the variables V1, ..., Vn such that V1 < V2 <
+     ...  < Vn < any other variable not mentioned as an argument.  Thus
+     the complete ordering scale is: numerical constants < declared
+     constants < declared scalars < first argument to ORDERLESS < ...
+     < last argument to ORDERLESS < variables which begin with A < ...
+     < variables which begin with Z < last argument to ORDERGREAT <
+     ... < first argument to ORDERGREAT < declared MAINVARs.  Caveat: do
+     EXAMPLE(ORDERLESS); for some specifics.  For another ordering
+     scheme, see DESCRIBE(MAINVAR);.
+
+
+ - Function: ORDERLESSP (exp1,exp2)
+     returns TRUE if exp1 precedes exp2 in the ordering set up by the
+     ORDERLESS command (see DESCRIBE(ORDERLESS);).
+
+
+ - Function: PART (exp, n1, ..., nk)
+     deals with the displayed form of exp. It obtains the part of exp
+     as specified by the indices n1,...,nk.  First part n1 of exp is
+     obtained, then part n2 of that, etc.  The result is part nk of ...
+     part n2 of part n1 of exp.  Thus PART(Z+2*Y,2,1) yields 2.  PART
+     can be used to obtain an element of a list, a row of a matrix, etc.
+     If the last argument to a Part function is a list of indices then
+     several subexpressions are picked out, each one corresponding to an
+     index of the list.  Thus PART(X+Y+Z,[1,3]) is Z+X.  PIECE holds
+     the last expression selected when using the Part functions.  It is
+     set during the execution of the function and thus may be referred
+     to in the function itself as shown below.  If PARTSWITCH[FALSE] is
+     set to TRUE then END is returned when a selected part of an
+     expression doesn't exist, otherwise an error message is given.
+     For examples, do EXAMPLE(PART);
+
+
+ - Function: PARTITION (exp, var)
+     returns a list of two expressions.  They are (1) the factors of
+     exp (if it is a product), the terms of exp (if it is a sum), or
+     the list (if it is a list) which don't contain var and, (2) the
+     factors, terms, or list which do.
+          (%i1) PARTITION(2*A*X*F(X),X);
+          (%o1)                 [ 2 A , X F(X) ]
+          (%i2) PARTITION(A+B,X);
+          (%o2)                 [ A + B , 0 ]
+          (%i3) PARTITION([A,B,F(A),C],A);
+          (%o3)                [[B,C],[A,F(A)]]
+
+ - Variable: PARTSWITCH
+     default: [FALSE] - if set to TRUE then END is returned when a
+     selected part of an expression doesn't exist, otherwise an error
+     message is given.
+
+
+ - Function: PICKAPART (exp,depth)
+     will assign E labels to all subexpressions of exp down to the
+     specified integer depth.  This is useful for dealing with large
+     expressions and for automatically assigning parts of an expression
+     to a variable without having to use the part functions.
+          (%i1) EXP:(A+B)/2+SIN(X^2)/3-LOG(1+SQRT(X+1));
+                                                           2
+                                                      SIN(X )   B + A
+          (%o1)               - LOG(SQRT(X + 1) + 1) + ------- + -----
+                                                         3        2
+          (%i2) PICKAPART(%,1);
+          (%t2)                    - LOG(SQRT(X + 1) + 1)
+                                              2
+                                         SIN(X )
+          (%t3)                           -------
+                                            3
+                                          B + A
+          (%t4)                            -----
+                                            2
+          (%o4)                         %t4 + %t3 + %t2
+
+ - Variable: PIECE
+     - holds the last expression selected when using the Part
+     functions.  It is set during the execution of the function and thus
+     may be referred to in the function itself.
+
+
+ - Function: POWERS (expr, var)
+     gives the powers of var occuring in expr.  To use it, do
+     LOAD(POWERS);.  For details on usage, do PRINTFILE("powers.usg");.
+
+
+ - Function: PRODUCT (exp, ind, lo, hi)
+     gives the product of the values of exp as the index ind varies
+     from lo to hi.  The evaluation is similar to that of SUM.  No
+     simplification of products is available at this time.  If hi is
+     one less than lo, we have an "empty product" and PRODUCT returns 1
+     rather than erring out.  Also see DESCRIBE(PRODHACK).
+          (%i1)  PRODUCT(X+I*(I+1)/2,I,1,4);
+          (%o1)             (X + 1) (X + 3) (X + 6) (X + 10)
+
+ - Function: REALPART (exp)
+     gives the real part of exp. REALPART and IMAGPART will work on
+     expressions involving trigonometic and hyperbolic functions, as
+     well as SQRT, LOG, and exponentiation.
+
+
+ - Function: RECTFORM (exp)
+     returns an expression of the form A + B*%I, where A and B are
+     purely real.
+
+
+ - Function: REMBOX (expr, arg)
+     removes boxes from expr according to arg.  If arg is UNLABELED
+     then all unlabelled boxes are removed.  If arg is the name of some
+     label then only boxes with that label are removed.  If arg is
+     omitted then all boxes labelled and unlabelled are removed.
+
+
+ - Function: SUM (exp, ind, lo, hi)
+     performs a summation of the values of exp as the index ind varies
+     from lo to hi.  If the upper and lower limits differ by an integer
+     then each term in the sum is evaluated and added together.
+     Otherwise, if the SIMPSUM [FALSE] is TRUE the result is
+     simplified.  This simplification may sometimes be able to produce a
+     closed form.  If SIMPSUM is FALSE or if 'SUM is used, the value is
+     a sum noun form which is a representation of the sigma notation
+     used in mathematics.  If hi is one less than lo, we have an "empty
+     sum" and SUM returns 0 rather than erring out.  Sums may be
+     differentiated, added, subtracted, or multiplied with some
+     automatic simplification being performed.  Also see
+     DESCRIBE(SUMHACK).  CAUCHYSUM[FALSE] when TRUE causes the Cauchy
+     product to be used when multiplying sums together rather than the
+     usual product.  In the Cauchy product the index of the inner
+     summation is a function of the index of the outer one rather than
+     varying independently.  GENINDEX[I] is the alphabetic prefix used
+     to generate the next variable of summation.  GENSUMNUM[0] is the
+     numeric suffix used to generate the next variable of summation.
+     If it is set to FALSE then the index will consist only of GENINDEX
+     with no numeric suffix.  Do EXAMPLE(SUM); for examples.  See also
+     SUMCONTRACT, INTOSUM, BASHINDICES, and NICEINDICES.
+
+
+ - Function: LSUM (exp, ind, list)
+     performs the sum of EXP for each element IND of the LIST.
+          (%i10) lsum(x^i,i,[1,2,7]);
+          
+                                      7    2
+          (%o10)                      x  + x  + x
+     If the last element LIST argument does not evaluate, or does not
+     evaluate to a Maxima list then the answer is left in noun form
+          (%i13) lsum(i^2,i,rootsof(x^3-1));
+          
+                               ====
+                               \      2
+          (%o13)                 >    i
+                               /
+                               ====
+                                             3
+                               i in ROOTSOF(x  - 1)
+
+
+ - special symbol: VERB
+     - the opposite of "noun", i.e. a function form which "does
+     something" ("action" - for most functions the usual case).  E.g.
+     INTEGRATE integrates a function, unless it is DECLAREd to be a
+     "noun", in which case it represents the INTEGRAL of the function.
+     See NOUN, NOUNIFY, and VERBIFY.
+
+
+ - Function: VERBIFY (f)
+     returns the function name f in its verb form (See also VERB, NOUN,
+     and NOUNIFY).
+
 
 
 File: maxima.info,  Node: Simplification,  Next: Plotting,  Prev: Expressions,  Up: Top
@@ -447,316 +1027,4 @@ Plotting
 * Menu:
 
 * Definitions for Plotting::
-
-
-File: maxima.info,  Node: Definitions for Plotting,  Prev: Plotting,  Up: Plotting
-
-Definitions for Plotting
-========================
-
- - Variable: IN_NETMATH [FALSE]
-     If not nil, then plot2d will output a representation of the plot
-     which is suitable for openplot functions.
-
- - Function: OPENPLOT_CURVES list rest-options
-     Takes a list of curves such as
-          [[x1,y1,x2,y2,...],[u1,v1,u2,v2,...],..]
-          or
-           [[[x1,y1],[x2,y2],...],.. ]
-     and plots them.  This is similar to xgraph_curves, but uses the
-     open plot routines.  Addtional symbol arguments may be given such
-     as ` "{xrange -3 4}" ' The following plots two curves, using big
-     points, labeling the first one `jim' and the second one `jane'.
-          openplot_curves([["{plotpoints 1} {pointsize 6} {label jim}
-                {text {xaxislabel {joe is nice}}}"] ,
-                [1,2,3,4,5,6,7,8],
-                ["{label jane} {color pink } "], [3,1,4,2,5,7]]);
-
-     Some other special keywords are xfun, color, plotpoints,
-     linecolors, pointsize, nolines, bargraph, labelposition,
-     xaxislabel, and yaxislabel.
-
-
- - Function: PLOT2D (expr,range,...,options,..)
- - Function: PLOT2D ([expr1,expr2,..,exprn],xrange,...,options,..)
- - Function: PLOT2D (parametric_expr)
- - Function: PLOT2D ([..,expr,..,parametric_expr,..],xrange,...,options)
-     EXPR is an expression to be plotted on y axis as a function of 1
-     variable.  RANGE is of the form [var,min,max] and expr is assumed
-     to be an expression to be plotted against VAR.  In the second form
-     of the function a list of expressions may be given to plot against
-     VAR.   Truncation in the y direction will be performed, for the
-     default y range.   It may be specified as an option or using
-     SET_PLOT_OPTION.
-
-          (C1) plot2d(sin(x),[x,-5,5]);
-          (C2) plot2d(sec(x),[x,-2,2],[y,-20,20],[nticks,200]);
-
-     Anywhere there may be an EXPR you may also use a parametric
-     expression: PARAMETRIC_EXPR is a Maxima list of the form
-     `[parametric, xexpr, yexpr, trange, ..options]' Here XEXPR and
-     YEXPR are functions of 1 variable VAR which is the first element
-     of the range TRANGE.  The plot is of the path traced out by the
-     pair `[XEXPR, YEXPR]' as VAR varies in TRANGE.  In the following
-     example, we plot a circle, then we do the plot with only a few
-     points used, so that we get a star, and finally we plot this
-     together with an ordinary function of X.
-
-          (C1) plot2d([parametric,cos(t),sin(t),[t,-%pi*2,%pi*2]]);
-          (C2) plot2d([parametric,cos(t),sin(t),[t,-%pi*2,%pi*2],
-                  [nticks,8]]);
-          (C3) plot2d([x^3+2,[parametric,cos(t),sin(t),[t,-5,5]]],
-                  [x,-3,3]);
-
-
- - Function: xgraph_curves (list)
-     graphs the list of `point sets' given in list by using xgraph.
-
-     A point set may be of the form
-
-          [x0,y0,x1,y1,x2,y2,...] or
-          [[x0,y0],[x1,y1],....]
-     A point set may also contain symbols which give labels or other
-     information.
-
-           xgraph_curves([pt_set1,pt_set2,pt_set3]);
-     would graph the three point sets as three curves.
-
-          pt_set:append(["NoLines: True","LargePixels: true"],
-                  [x0,y0,x1,y1,...])
-
-     would make the point set [and subsequent ones], have no lines
-     between points, and to use large pixels.  See the man page on
-     xgraph for more options to specify.
-
-          pt_set:append([concat("\"","x^2+y")],[x0,y0,x1,y1,...])
-
-     would make there be a "label" of "x^2+y" for this particular point
-     set.    The `"' at the beginning is what tells xgraph this is a
-     label.
-
-          pt_set:append([concat("TitleText: Sample Data")],[x0,...])
-
-     would make the main title of the plot be "Sample Data" instead of
-     "Maxima PLot".
-
-     To make a bar graph with bars which are .2 units wide, and to plot
-     two possibly different such bar graphs:
-          xgraph_curves(
-                 [append(["BarGraph: true","NoLines: true","BarWidth: .2"],
-                         create_list([i-.2,i^2],i,1,3)),
-                  append(["BarGraph: true","NoLines: true","BarWidth: .2"],
-                     create_list([i+.2,.7*i^2],i,1,3))
-          ]);
-
-     A temporary file `xgraph-out' is used.
-
-
- - Variable: PLOT_OPTIONS
-     Members of this list indicate defaults for plotting.  They may be
-     altered using SET_PLOT_OPTION
-
-          [X, - 3, 3]
-          [Y, - 3, 3]
-
-     are the x range and y range respectively.
-
-     [TRANSFORM_XY, FALSE] if not false, should be the output of
-
-          make_transform([x,y,z], [f1(x,y,z),f2(x,y,z),f3(x,y,z)])
-     which produces a transformation from 3 space to 3 space, which
-     will be applied to the graph.   A built in one is polar_xy which
-     gives the same as
-
-          make_transform([r,th,z],[r*cos(th),r*sin(th),z])
-
-     [RUN_VIEWER,TRUE] if not false, means run the viewer software -
-     don't just output a data file.
-
-     [GRID,30,30] means plot3d should divide the x range into 30
-     intervals and similarly the y range.
-
-     [COLOUR_Z,false] applies to colouring done with plot_format ps.
-
-     [PLOT_FORMAT,OPENMATH] is for plot3d and currently  OPENMATH,
-     GNUPLOT, PS, and GEOMVIEW are supported.
-
-     There are good quality public domain viewers for these formats.
-     They are openmath, izic, gnuplot, ghostview, and geomview.
-
-     The Openmath viewer is in the distribution, and is based on tcl/tk.
-     The executable is `maxima/bin/omplotdata'.  The viewer lets you
-     zoom in, slide around, and rotate (if 3 dimensional).  This format
-     is also the one used by netmath, for making plots with Netmath.
-     (see `http://www.ma.utexas.edu/users/wfs/netmath.html')
-
-     geomview is from the Geometry Center at the University of
-     Minnesota, and is available from
-     `http://www.geom.umn.edu/software/download/geomview.html' or by
-     anonymous ftp from
-     `ftp://ftp.geom.umn.edu/pub/software/geomview/'.  It is currently
-     not quite as pretty as izic, but provides excellent support for
-     multiple objects and multiple lights.
-
-     gnuplot is everywhere as is ghostview.   We also provide mgnuplot,
-     a tcl interface for gnuplot, which lets you rotate the plots using
-     the mouse and a scale.
-
-     izic is available by ftp from zenon.inria.fr.  Contact one of
-
-     {fournier,kajler,mourrain}@sophia.inria.fr.
-
-     It has beautiful colour gouraud shading, and very fast wireframe.
-     It runs on X windows.
-
-
- - Function: PLOT3D (expr,xrange,yrange,...,options,..)
- - Function: PLOT3D ([expr1,expr2,expr3],xrange,yrange,...,options,..)
-          plot3d(2^(-u^2+v^2),[u,-5,5],[v,-7,7]);
-     would plot z = 2^(-u^2+v^2) with u and v varying in [-5,5] and
-     [-7,7] respectively, and with u on the x axis, and v on the y axis.
-
-     An example of the second pattern of arguments is
-          plot3d([cos(x)*(3+y*cos(x/2)),sin(x)*(3+y*cos(x/2)),y*sin(x/2)],
-             [x,-%pi,%pi],[y,-1,1],['grid,50,15])
-
-     which will plot a moebius band, parametrized by the 3 expressions
-     given as the first argument to plot3d.  An additional optional
-     argument [grid,50,15] gives the grid number of rectangles in the x
-     direction and y direction.
-
-          /* REal part of z ^ 1/3 */
-           plot3d(r^.33*cos(th/3),[r,0,1],[th,0,6*%pi],
-               ['grid,12,80],['PLOT_FORMAT,ps],
-               ['TRANSFORM_XY,POLAR_TO_XY],['VIEW_DIRECTION,1,1,1.4],
-               ['COLOUR_Z,true])
-
-     Here the View_direction indicates the direction from which we take
-     a projection.  We actually do this from infinitely far away, but
-     parallel to the line from view_direction to the origin.  This is
-     currently only used in 'ps' plot_format, since the other viewers
-     allow interactive rotating of the object.
-
-     Another example is a moebius band:
-          plot3d([cos(x)*(3+y*cos(x/2)),
-                    sin(x)*(3+y*cos(x/2)),y*sin(x/2)],
-                     [x,-%pi,%pi],[y,-1,1],['grid,50,15]);
-
-     or a klein bottle:
-
-          plot3d([5*cos(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0) - 10.0,
-                    -5*sin(x)*(cos(x/2)*cos(y)+sin(x/2)*sin(2*y)+3.0),
-                     5*(-sin(x/2)*cos(y)+cos(x/2)*sin(2*y))],
-                     [x,-%pi,%pi],[y,-%pi,%pi],['grid,40,40])
-
-     or a torus
-          plot3d([cos(y)*(10.0+6*cos(x)),
-                     sin(y)*(10.0+6*cos(x)),
-                     -6*sin(x)], [x,0,2*%pi],[y,0,2*%pi],
-                      ['grid,40,40])
-     We can output to gnplot too:
-
-           plot3d(2^(x^2-y^2),[x,-1,1],[y,-2,2],[plot_format,gnuplot])
-
-     Sometimes you may need to define a function to plot the
-     expression.  All the arguments to plot3d are evaluated before
-     being passed to plot3d, and so trying to make an expression which
-     does just what you want may be difficult, and it is just easier to
-     make a function.
-          M:MATRIX([1,2,3,4],[1,2,3,2],[1,2,3,4],[1,2,3,3])$
-          f(x,y):=float(M[?round(x),?round(y)]);
-          plot3d(f,[x,1,4],[y,1,4],['grid,4,4]);
-
-
- - Function: PLOT2D_PS (expr,range)
-     writes to pstream a sequence of postscript commands which plot
-     EXPR for RANGE.  EXPR should be an expression of 1 variable.
-     RANGE should be of the form [variable,min,max] over which to plot
-     expr.  see CLOSEPS.
-
-
- - Function: CLOSEPS ()
-     This should usually becalled at the end of a sequence of plotting
-     commands.   It closes the current output stream PSTREAM, and sets
-     it to nil.   It also may be called at the start of a plot, to
-     ensure pstream is closed if it was open.    All commands which
-     write to pstream, open it if necessary.   CLOSEPS is separate from
-     the other plotting commands, since we may want to plot 2 ranges or
-     superimpose several plots, and so must keep the stream open.
-
- - Function: SET_PLOT_OPTION (option)
-     option is of the format of one of the elements of the PLOT_OPTIONS
-     list.  Thus
-          SET_PLOT_OPTION([grid,30,40])
-     would change the default grid used by plot3d.   Note that if the
-     symbol grid has a value, then you should quote it here:
-          SET_PLOT_OPTION(['grid,30,40])
-     so that the value will not be substituted.
-
- - Function: PSDRAW_CURVE (ptlist)
-     Draws a curve connecting the points in PTLIST.   The latter may be
-     of the form [x0,y0,x1,y1,...] or [[x0,y0],[x1,y1],...]  The
-     function JOIN is handy for taking a list of x's and a list of y's
-     and splicing them together.  PSDRAW_CURVE simply invokes the more
-     primitive function PSCURVE.   Here is the definition:
-
-          (defun $psdraw_curve (lis)
-            (p "newpath")
-            ($pscurve lis)
-            (p "stroke"))
-
-     ?DRAW2D  may also be used to produce a list
-           points1:?draw2d(1/x,[.05,10],.03)
-
-
- - Function: PSCOM (com)
-     COM will be inserted in the poscript file eg
-            pscom("4.5 72 mul 5.5 72 mul translate  14 14 scale");
-
-
-
-File: maxima.info,  Node: Input and Output,  Next: Floating Point,  Prev: Plotting,  Up: Top
-
-Input and Output
-****************
-
-* Menu:
-
-* Introduction to Input and Output::
-* FILES::
-* PLAYBACK::
-* Definitions for Input and Output::
-
-
-File: maxima.info,  Node: Introduction to Input and Output,  Next: FILES,  Prev: Input and Output,  Up: Input and Output
-
-Introduction to Input and Output
-================================
-
-
-File: maxima.info,  Node: FILES,  Next: PLAYBACK,  Prev: Introduction to Input and Output,  Up: Input and Output
-
-FILES
-=====
-
-   - A file is simply an area on a particular storage device which
-contains data or text.  The only storage devices which are used on the
-MC machine are disks and tapes.  Files on the disks are figuratively
-grouped into "directories".  A directory is just a list of all the
-files stored under a given user name.  Do DESCRIBE(FILEOP); for details
-of how you may inspect your files using MACSYMA.  Other commands which
-deal with files are: SAVE, FASSAVE, STORE, LOAD, LOADFILE, RESTORE,
-UNSTORE, STRINGOUT, BATCH, BATCON, DEMO, WRITEFILE, CLOSEFILE, DELFILE,
-REMFILE, and APPENDFILE.
-
-
-File: maxima.info,  Node: PLAYBACK,  Next: Definitions for Input and Output,  Prev: FILES,  Up: Input and Output
-
-PLAYBACK
-========
-
-   It is possible to play back the input lines in a temporary scroll
-down window, and so not lose ones current work.  This can be done by
-typing Function  E.  A numeric argument tells it the line number to
-start at, otherwise it will go back about 40 lines.
 

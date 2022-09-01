@@ -364,12 +364,42 @@
     (setq tem (if $bothcases (bothcase-implode tem) (implode1 tem nil)))
   (GETALIAS tem)))
 
-(DEFUN SCAN-LISP-TOKEN ()
-  (let ((scan (SCAN-TOKEN ())))
-  (IMPLODE1 scan (not (member #\| scan)))
-  ))
-(DEFUN SCAN-keyword-TOKEN ()
-  (let ((*package* 'keyword)) (IMPLODE (SCAN-TOKEN ()))))
+(defun scan-lisp-token ()
+  (let ((charlist (scan-token nil)))
+    (if (setq charlist (lisp-token-fixup-case charlist))
+	(implode charlist)
+	(mread-synerr "Lisp symbol expected."))))
+
+;; Example: ?mismatch(x+y,x*z,?:from\-end,true); => 3
+(defun scan-keyword-token ()
+  (let ((charlist (cdr (scan-token nil))))
+    (if (and charlist
+	     (setq charlist (lisp-token-fixup-case charlist)))
+	(let ((*package* (find-package "KEYWORD")))
+	  (implode charlist))
+	(mread-synerr "Lisp keyword expected."))))
+
+;; The vertical bar | switches between preserving or folding case,
+;; except that || is a literal |.
+
+;; Note that this function modifies LIST destructively.
+(defun lisp-token-fixup-case (list)
+  (let* ((list (cons nil list))
+	 (todo list)
+	 preserve)
+    (loop
+       (unless (cdr todo)
+	 (return (cdr list)))
+       (cond
+	 ((char/= (cadr todo) #\|)
+	  (pop todo)
+	  (unless preserve
+	    (setf (car todo)
+		  (char-upcase (car todo)))))
+	 ((setf (cdr todo) (cddr todo))
+	  (if (char= (cadr todo) #\|)
+	      (pop todo)
+	      (setq preserve (not preserve))))))))
 
 (defvar $bothcases t)
 (DEFUN SCAN-TOKEN (FLAG)
@@ -419,6 +449,11 @@
 
 (DEFUN MAKE-NUMBER (DATA)
   (SETQ DATA (NREVERSE DATA))
+  ;; Maxima really wants to read in any number as a double-float
+  ;; (except when we have a bigfloat, of course!).  So convert an E or
+  ;; S exponent marker to D.
+  (when (member (car (nth 3. data)) '(#\E #\S))
+    (setf (nth 3. data) (list #\D)))
   (IF (NOT (EQUAL (NTH 3. DATA) '(#\B)))
       (READLIST (APPLY #'APPEND DATA))
       ;; For bigfloats, turn them into rational numbers then convert to bigfloat
@@ -428,7 +463,7 @@
 			  ((MEXPT) 10. ,(FUNCALL (IF (char= (FIRST (FIFTH DATA)) #\-) #'- #'+)
 						 (READLIST (SIXTH DATA))))))))
 
-(DEFUN SCAN-DIGITS (DATA CONTINUATION? CONTINUATION)
+(DEFUN SCAN-DIGITS (DATA CONTINUATION? CONTINUATION &optional exponent-p)
   (DO ((C (PARSE-TYIPEEK) (PARSE-TYIPEEK))
        (L () (CONS C L)))
       ((NOT (ASCII-NUMBERP C))
@@ -438,6 +473,11 @@
 					   (NREVERSE L)
 					   Data)
 				   ))
+	     ((and (null l) exponent-p)
+	      ;; We're trying to parse the exponent part of a number,
+	      ;; and we didn't get a value after the exponent marker.
+	      ;; That's an error.
+	      (merror "Incomplete number.  Missing exponent?"))
 	     (T
 	      (MAKE-NUMBER (CONS (NREVERSE L) DATA)))))
     (PARSE-TYI)))
@@ -455,7 +495,7 @@
 		   (PARSE-TYI)
 		   #\+))
 	DATA)
-  (SCAN-DIGITS DATA () ()))
+  (SCAN-DIGITS DATA () () t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -693,7 +733,8 @@
 (DEFMACRO DEF-LED-EQUIV (OP EQUIV)
     (LIST 'PUTPROP (LIST 'QUOTE OP) (LIST 'FUNCTION EQUIV)
           (LIST 'QUOTE 'LED)))
-(DEFMACRO LED-PROPL () ''(LED))
+(eval-when (compile load eval)
+  (DEFMACRO LED-PROPL () ''(LED)))
 (DEFMACRO DEF-LED-FUN (OP-NAME OP-L . BODY)
     (LIST* 'DEFUN-PROP (LIST* OP-NAME 'LED 'NIL) OP-L BODY))
 (DEFUN LED-CALL (OP L)
@@ -953,7 +994,8 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 	 (when *mread-prompt*
 	       (and *parse-window* (setf (car *parse-window*) nil
 					 *parse-window* (cdr *parse-window*)))
-	       (princ *mread-prompt*))
+	       (princ *mread-prompt*)
+	       (force-output))
 	 (#+lispm read-apply #-lispm apply 'mread-raw read-args)
 		    )
   #-(or NIL cl)
@@ -1827,31 +1869,6 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
     (MAPC #'(LAMBDA (X) (REMPROP NOUN-FORM X))
  	  '(DIMENSION DISSYM LBP RBP))))
 
-(defun find-stream (stream)
-   (dolist (v *stream-alist*)
-	(cond ((eq stream (instream-stream v))
-	       (return v))))
-  )
-
-
-(defun add-lineinfo (lis)
-  (if (or (atom lis) (and (eq *parse-window* *standard-input*)
-			  (not (find-stream *parse-stream*))))
-			  lis
-    (let* ((st (get-instream *parse-stream*))
- 	   (n (instream-line st))
-	   (nam (instream-name st))
-	   )
-      (or nam (return-from add-lineinfo lis))
-      (setq *current-line-info*
-	    (cond ((eq (cadr *current-line-info*) nam)
-		   (cond ((eql (car *current-line-info*) n)
-			  *current-line-info*)
-			 (t  (cons n (cdr *current-line-info*)))))
-		  (t (list n nam  'src))))
-      (cond ((null (cdr lis))
-	     (list (car lis) *current-line-info*))
-	    (t (append lis (list *current-line-info*)))))))
 
 
 ;; the functions get-instream etc.. are all defined in
@@ -1865,13 +1882,18 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
 
 (defvar *stream-alist* nil)
 
+(defun stream-name (path)
+  (let ((tem (errset (namestring (pathname path)))))
+    (car tem)))
+
 (defun instream-name (instr)
   (or (instream-stream-name instr)
       (stream-name (instream-stream instr))))
 
-(defun stream-name (str) (namestring (pathname str)))
-
-(defstruct instream stream (line 0 :type fixnum) stream-name)
+(defstruct instream
+  stream
+  (line 0 :type fixnum)
+  stream-name)
 
 ;; (closedp stream) checks if a stream is closed.. how to do this in common
 ;; lisp!!
@@ -1900,5 +1922,30 @@ entire input string to be printed out when an MAXIMA-ERROR occurs."
   ;(setq *at-newline*  (if (eql (peek-char nil str nil) #\() :all t))
   (values))
 
-)
-; end #-gcl
+) ; end #-gcl
+
+(defun find-stream (stream)
+   (dolist (v *stream-alist*)
+	(cond ((eq stream (instream-stream v))
+	       (return v))))
+  )
+
+
+(defun add-lineinfo (lis)
+  (if (or (atom lis) (and (eq *parse-window* *standard-input*)
+			  (not (find-stream *parse-stream*))))
+			  lis
+    (let* ((st (get-instream *parse-stream*))
+ 	   (n (instream-line st))
+	   (nam (instream-name st))
+	   )
+      (or nam (return-from add-lineinfo lis))
+      (setq *current-line-info*
+	    (cond ((eq (cadr *current-line-info*) nam)
+		   (cond ((eql (car *current-line-info*) n)
+			  *current-line-info*)
+			 (t  (cons n (cdr *current-line-info*)))))
+		  (t (list n nam  'src))))
+      (cond ((null (cdr lis))
+	     (list (car lis) *current-line-info*))
+	    (t (append lis (list *current-line-info*)))))))

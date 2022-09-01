@@ -54,8 +54,8 @@ be performed, for the default y range.   It may be specified
 as an option or using SET_PLOT_OPTION.
 
 @example
-(C1) plot2d(sin(x),[x,-5,5]);
-(C2) plot2d(sec(x),[x,-2,2],[y,-20,20],[nticks,200]);
+(%i1) plot2d(sin(x),[x,-5,5]);
+(%i2) plot2d(sec(x),[x,-2,2],[y,-20,20],[nticks,200]);
 @end example
 
 Anywhere there may be an EXPR you may also use a parametric
@@ -72,13 +72,15 @@ and finally we plot this together with an ordinary function of X.
 
 
 @example
-(C1) plot2d([parametric,cos(t),sin(t),[t,-%pi*2,%pi*2]]);
-(C2) plot2d([parametric,cos(t),sin(t),[t,-%pi*2,%pi*2],
+(%i1) plot2d([parametric,cos(t),sin(t),[t,-%pi*2,%pi*2],
+        [nticks,80]]);
+(%i2) plot2d([parametric,cos(t),sin(t),[t,-%pi*2,%pi*2],
         [nticks,8]]);
-(C3) plot2d([x^3+2,[parametric,cos(t),sin(t),[t,-5,5]]],
-        [x,-3,3]);
+(%i3) plot2d([x^3+2,[parametric,cos(t),sin(t),[t,-5,5],
+        [nticks,80]]],[x,-3,3]);
 @end example
 
+See PLOT_OPTIONS for more examples.
 
 @end defun
 
@@ -150,68 +152,248 @@ A temporary file @file{xgraph-out} is used.
 Members of this list indicate defaults for plotting.  They may
 be altered using SET_PLOT_OPTION
 
+PLOT_FORMAT determines which plotting package will be used. The
+supported values for PLOT_FORMAT are:
+@example
+[PLOT_FORMAT, GNUPLOT]
+@end example
+Gnuplot is the default, and most advanced, plotting package. It
+requires an external gnuplot installation.
+
+@example
+[PLOT_FORMAT, MGNUPLOT]
+@end example
+Mgnuplot is a Tk-based wrapper around gnuplot. It is included in the
+Maxima distribution. Mgnuplot offers a rudimentary GUI for gnuplot,
+but has fewer overall features than the plain gnuplot
+interface. Mgnuplot requires an external gnuplot installation and
+TCL/Tk.
+
+@example
+[PLOT_FORMAT, OPENMATH]
+@end example
+Openmath is a TCL/Tk GUI plotting program. It is included in the
+Maxima distribution.
+
+@example
+[PLOT_FORMAT, PS]
+@end example
+The PS plot format generates simple postcript files directly from
+Maxima. Much more advanced postscript output is available using the
+gnuplot plot format and gnuplot_term set to ps.
+
+RUN_VIEWER controls whether or not the appropriate viewer for the plot
+format should be run.
+@example
+[RUN_VIEWER, FALSE]
+@end example
+The default value for RUN_VIEWER is TRUE.
+
+GNUPLOT_TERM is specific to the gnuplot plot format. It sets the
+output terminal type for gnuplot
+@example
+[GNUPLOT_TERM, DEFAULT]
+@end example
+The default gnuplot terminal is a separate graphical window.
+
+@example
+[GNUPLOT_TERM, DUMB]
+@end example
+The dumb terminal produces an ASCII art approximation to graphics.
+
+@example
+[GNUPLOT_TERM, PS]
+@end example
+The ps terminal produces postscript. Use it in conjunction with
+GNUPLOT_OUT_FILE in order to write postscript to a file instead of the
+screen.
+
+GNUPLOT_OUT_FILE is specific to the gnuplot plot format. It sends
+gnuplot output to a file.
+@example
+[GNUPLOT_OUT_FILE, "myplot.ps"]
+@end example
+This example sends postscript output to the file ``myplot.ps'' when
+used in conjunction with the postscript gnuplot terminal.
+
+
+X and Y are the default horizontal and vertical ranges, respectively.
 @example
 [X, - 3, 3]
 [Y, - 3, 3]
 @end example
+Sets the horizontal and vertical ranges to [-3,3].
 
-are the x range and y range respectively.
+T is the default range for the parameter in parametric plots.
+@example
+[T, 0, 10]
+@end example
+Sets the parametric variable range to [0, 10].
 
+NTICKS and ADAPT_DEPTH control the initial number of points and the
+maximum number of splittings used by the adaptive plotting routine.
+@example
+[NTICKS 20]
+[ADAPT_DEPTH 5]
+@end example
+The default for both NTICKS and ADAPT_DEPTH is 10.
+
+GRID sets the number of grid points to use in the x- and y-directions
+for three-dimensional plotting.
+@example
+[GRID, 50, 50]
+@end example
+sets the grid to 50 by 50 points. The default grid is 30 by 30.
+
+TRANSFORM_XY allows transformations to be applied to three-dimensional
+plots.
+@example
 [TRANSFORM_XY, FALSE]
-if not false, should be the output of
-
-@example
-make_transform([x,y,z], [f1(x,y,z),f2(x,y,z),f3(x,y,z)])
 @end example
-which produces a transformation from 3 space to 3 space, which
-will be applied to the graph.   A built in one is polar_xy which
-gives the same as
-
+The default TRANSFORM_XY is FALSE. If it is not FALSE, it should be
+the output of
 @example
-make_transform([r,th,z],[r*cos(th),r*sin(th),z])
-
+make_transform([x,y,z], f1(x,y,z),f2(x,y,z),f3(x,y,z))
+@end example
+The POLAR_XY transformation is built in. It gives the same
+transformation as
+@example
+make_transform([r,th,z],r*cos(th),r*sin(th),z)
 @end example
 
-[RUN_VIEWER,TRUE] if not false, means run the viewer software - don't just
-output a data file.
+COLOUR_Z is specific to the PS plot format.
+@example
+[COLOUR_Z, TRUE]
+@end example
+The default value for COLOUR_Z is FALSE.
 
-[GRID,30,30] means plot3d should divide the x range into 30 intervals
-and similarly the y range.
+VIEW_DIRECTION is specific to the PS plot format.
+@example
+[VIEW_DIRECTION, 1, 1, 1]
+@end example
+The default VIEW_DIRECTION is [1,1,1].
 
-[COLOUR_Z,false] applies to colouring done with plot_format ps.
+GNUPLOT_PM3D, GNUPLOT_PREAMBLE, GNUPLOT_CURVE_TITLES,
+GNUPLOT_CURVE_STYLES, GNUPLOT_DEFAULT_TERM_COMMAND,
+GNUPLOT_DUMB_TERM_COMMAND and GNUPLOT_PS_TERM_COMMAND are advanced
+gnuplot options. All of these options (except GNUPLOT_PM3D) take raw
+gnuplot commands. Refer to the gnuplot documentation for more details.
 
-[PLOT_FORMAT,OPENMATH] is for plot3d and currently  OPENMATH,
-GNUPLOT, PS, and GEOMVIEW are supported.
+@example
+[GNUPLOT_PM3D, TRUE]
+@end example
+GNUPLOT_PM3D controls the usage PM3D mode, which has advanced 3D
+features. PM3D is only available in gnuplot versions after 3.7. The
+default value for GNUPLOT_PM3D is FALSE.
 
-There are good quality public domain viewers for these formats.
-They are openmath, izic, gnuplot, ghostview, and geomview.
+@example
+[GNUPLOT_PREAMBLE, "set log y"]
+@end example
+GNUPLOT_PREAMBLE inserts gnuplot commands before the plot is
+drawn. Any valid gnuplot commands may be used. Multiple commands
+should be separated with a semi-colon. The example shown produces a
+log scale plot. The default value for GNUPLOT_PREAMBLE is ``''.
 
-The Openmath viewer is in the distribution, and is based on tcl/tk.
-The executable is @file{maxima/bin/omplotdata}.  The viewer lets you
-zoom in, slide around, and rotate (if 3 dimensional).  This format is
-also the one used by netmath, for making plots with Netmath. (see
-@file{http://www.ma.utexas.edu/users/wfs/netmath.html})
+@example
+[GNUPLOT_CURVE_TITLES, ["my first function","my second function"]]
+@end example
+GNUPLOT_CURVE_TITLES controls the titles given in the plot key. The
+default value is DEFAULT, which automatically sets the title of each
+curve to the function plotted. If not DEFAULT, GNUPLOT_CURVE_TITLES
+should contain a list of strings. (To disable the plot key entirely,
+add ``set nokey'' to GNUPLOT_PREAMBLE.)
 
-geomview is from the Geometry Center at the University of Minnesota, and
-is available from
-@file{http://www.geom.umn.edu/software/download/geomview.html} or by
-anonymous ftp from @file{ftp://ftp.geom.umn.edu/pub/software/geomview/}.  It
-is currently not quite as pretty as izic, but provides excellent support
-for multiple objects and multiple lights.
+@example
+[GNUPLOT_CURVE_STYLES, ["with lines 7", "with lines 2"]]
+@end example
+GNUPLOT_CURVE_STYLES is a list of strings controlling the appearance
+of curves, i.e., color, width, dashing, etc., to be sent to the
+gnuplot plot command. The default value is ["with lines 3", "with
+lines 1", "with lines 2", "with lines 5", "with lines 4", "with lines
+6", "with lines 7"], which cycles through different colors. See the
+gnuplot documentation for ``plot'' for more information.
 
-gnuplot is everywhere as is ghostview.   We also provide mgnuplot,
-a tcl interface for gnuplot, which lets you rotate the plots using
-the mouse and a scale.
+@example
+[GNUPLOT_DEFAULT_TERM_COMMAND, "set term x11"]
+@end example
+GNUPLOT_DEFAULT_TERM_COMMAND is the gnuplot command to set the
+terminal type for the default terminal. The default value is ``'',
+i.e., use gnuplot's default.
 
-izic is available by ftp from zenon.inria.fr.  Contact one of
+@example
+[GNUPLOT_DUMB_TERM_COMMAND, "set term dumb 132 50"]
+@end example
+GNUPLOT_DUMB_TERM_COMMAND is the gnuplot command to set the
+terminal type for the dumb terminal. The default value is ``set term
+dumb 79 22'', which makes the text output 79 characters by 22
+characters.
 
-@{fournier,kajler,mourrain@}@@sophia.inria.fr.
+@example
+[GNUPLOT_PS_TERM_COMMAND, "set term postscript eps enhanced color solid 18"]
+@end example
+GNUPLOT_PS_TERM_COMMAND is the gnuplot command to set the terminal
+type for the postscript terminal. The default value is ``set size 1.5,
+1.5;set term postscript eps enhanced color solid 24'', which sets the
+size to 1.5 times gnuplot's default, and the font size to 24, among
+other things. See the gnuplot documentation for ``set term
+postscript'' for more information.
 
-It has beautiful colour gouraud shading, and very fast wireframe.  It
-runs on X windows.
+Here are some examples using various plot options.
 
+@example
+plot2d(sin(x),[x,0,2*%pi],[gnuplot_term,ps], [gnuplot_out_file,
+"sin.eps"])
+@end example
+saves a plot of sin(x) to the file ``sin.eps''.
 
+@example
+plot2d([gamma(x),1/gamma(x)],[x,-4.5,5],[y,-10,10],
+[gnuplot_preamble,"set key bottom"])
+@end example
+uses the y option to chop off singularities and the gnuplot_preamble
+option to put the key at the bottom of the plot instead of the top.
 
+@example
+plot2d([cos(x),sin(x),tan(x),cot(x)],[x,-2*%pi,2*%pi],[y,-2,2],
+[gnuplot_preamble,
+"set xzeroaxis; set xtics ('-2pi' -6.283, '-3pi/2' -4.712, '-pi' -3.1415, '-pi/2' -1.5708, '0' 0,'pi/2' 1.5708, 'pi' 3.1415,'3pi/2' 4.712, '2pi' 6.283)"])
+@end example
+uses a very complicated gnuplot_preamble to produce fancy x-axis
+labels. (Note that the above expression must be entered without any
+line breaks in the gnuplot_preamble string.)
+
+@example
+plot2d([cos(x),sin(x),tan(x)],[x,-2*%pi,2*%pi],[y,-2,2],
+[gnuplot_preamble,
+"set xzeroaxis; set xtics ('-2@{/Symbol p@}' -6.283, '-3@{/Symbol p@}/2' -4.712, '-@{/Symbol p@}' -3.1415, '-@{/Symbol p@}/2' -1.5708, '0' 0,'@{/Symbol p@}/2' 1.5708, '@{/Symbol p@}' 3.1415,'3@{/Symbol p@}/2' 4.712, '2@{/Symbol p@}' 6.283)"],
+[gnuplot_term,ps],[gnuplot_out_file,"trig.eps"])
+@end example
+is similar to the previous example, except that it produces postscript
+output that takes advantage of the advanced text formatting available
+in gnuplot. (Note that the above expression must be entered without any
+line breaks in the gnuplot_preamble string.)
+
+@example
+plot3d(atan(-x^2+y^3/4),[x,-4,4],[y,-4,4], [grid,50,50],
+[gnuplot_pm3d,true])
+@end example
+produces a three-dimensional plot using the gnuplot pm3d terminal.
+
+@example
+plot3d(atan(-x^2+y^3/4),[x,-4,4], [y,-4,4], [grid,50,50],
+[gnuplot_pm3d,true], [gnuplot_preamble,
+"set pm3d at s;unset surface;set contour;set cntrparam levels 20;unset key"])
+@end example
+produces a three-dimensional plot without a mesh and with contours
+projected on the bottom plane.
+
+@example
+plot3d(cos(-x^2+y^3/4),[x,-4,4], [y,-4,4], [gnuplot_preamble, 
+"set view map; unset surface"], [gnuplot_pm3d,true], [grid,150,150]);
+@end example
+produces a plot where the z-axis is represented by color only. (Note
+that the above expression must be entered without any line breaks in
+the gnuplot_preamble string.)
 
 @end defvar
 @c @node PLOT3D
@@ -237,7 +419,7 @@ as the first argument to plot3d.  An additional optional argument
 y direction.
 
 @example
-/* REal part of z ^ 1/3 */
+/* Real part of z ^ 1/3 */
  plot3d(r^.33*cos(th/3),[r,0,1],[th,0,6*%pi],
      ['grid,12,80],['PLOT_FORMAT,ps],
      ['TRANSFORM_XY,POLAR_TO_XY],['VIEW_DIRECTION,1,1,1.4],
@@ -289,8 +471,20 @@ f(x,y):=float(M[?round(x),?round(y)]);
 plot3d(f,[x,1,4],[y,1,4],['grid,4,4]);
 @end example
 
+See PLOT_OPTIONS for more examples.
 
 @end defun
+
+
+@defun MAKE_TRANSFORM (vars, fx, fy, fz)
+returns a function suitable for the transform function in plot3d. Use
+with the PLOT_OPTION TRANSFORM_XY.
+@example
+make_transform([r,th,z],r*cos(th),r*sin(th),z)
+@end example
+is a transformation to polar coordinates.
+@end defun
+
 @c @node PLOT2D
 @c @unnumberedsec phony
 @defun PLOT2D_PS (expr,range)
@@ -348,10 +542,10 @@ PSCURVE.   Here is the definition:
 
 @end example
 
- ?DRAW2D  may also be used to produce a list
-@example
- points1:?draw2d(1/x,[.05,10],.03) 
-@end example
+@c ?DRAW2D  may also be used to produce a list
+@c @example
+@c  points1:?draw2d(1/x,[.05,10],.03) 
+@c @end example
 
 
 @end defun

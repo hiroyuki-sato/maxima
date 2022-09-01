@@ -1,6 +1,6 @@
 # -*-mode: tcl; fill-column: 75; tab-width: 8; coding: iso-latin-1-unix -*-
 #
-#       $Id: Paths.tcl,v 1.6 2003/02/09 23:06:31 amundson Exp $
+#       $Id: Paths.tcl,v 1.13 2004/09/06 05:14:38 vvzhy Exp $
 #
 # Attach this near the bottom of the xmaxima code to find the paths needed
 # to start up the interface.
@@ -264,8 +264,13 @@ proc vMAXSetMaximaCommand {} {
 	    return
 	}
     } else {
+	set maxima_priv(xmaxima_maxima) maxima
+	if {[set exe [auto_execok $maxima_priv(xmaxima_maxima)]] == "" } {
+	    tide_failure [M "Error: Maxima executable not found\n\n Try setting the environment variable  XMAXIMA_MAXIMA."]
+	}
 	# jfa: bypass maxima script on windows
-	if {$tcl_platform(platform) == "windows"} {
+        # vvz: on Windows 9X/ME only
+	if {$tcl_platform(os) == "Windows 95"} {
 	    # maybe it's in lib - I don't like this
 	    set dir $maxima_priv(maxima_verpkglibdir)
 	    # FIXME - need autoconf(lisp) so we don't need glob
@@ -285,40 +290,43 @@ proc vMAXSetMaximaCommand {} {
 	}
     }
 
-    set lisp [file join $maxima_priv(maxima_xmaximadir) server.lisp]
-    if {![file isfile $lisp] || ![file readable $lisp]} {
-	tide_notify [M "Maxima server file not found in '%s'" \
-			 [file native $lisp]]
+    # FIXME: More gruesome windows hacks.  db: 2004-07-02
+    # Q. What if there is a space in the path component of exe? 
+    # A. Convert it to a shortname.
+    # Q. Why does that fail?
+    # A. The name is surrounded by {}.  Just rip these out. Yuk
+    if {$tcl_platform(platform) == "windows"} {
+	if {[string first " " $exe] >= 0} {
+            regsub -all "\[\{\}\]" $exe "" exe
+            set exe [file attrib $exe -shortname]
+        }
     }
 
     set command {}
     lappend command $exe
-    if {[string match *saved*maxima* [string tolow [file tail $exe]]]} {
-	# 5.6 maxima took different arguments
+    eval lappend command  $maxima_opts
 
-	lappend command -load $lisp -eval "(setup PORT)" -f
-    } else {
-	# 5.9 maxima takes different arguments
-	eval lappend command  $maxima_opts
-	lappend command -p $lisp -r ":lisp (progn (user::setup PORT)(values))"
+    # FIXME: This is gcl specific so -lisp option is bogus
+    if {$tcl_platform(os) == "Windows 95"} {
+	# A gruesome hack. Normally, we communicate to the
+	# maxima image through the maxima shell script, as
+	# above. If the maxima script is not available,
+	# as may happen on windows, directly talk to the GCL
+	# saved image. jfa 04/28/2002
+	#mike FIXME: this means xmaxima on windows is GCL only
+        # vvz: We need this only on Windows 9X/ME
 
-	# FIXME: This is gcl specific so -lisp option is bogus
-	if {$maxima_priv(platform) == "windows"} {
-	    # A gruesome hack. Normally, we communicate to the
-	    # maxima image through the maxima shell script, as
-	    # above. If the maxima script is not available,
-	    # as may happen on windows, directly talk to the GCL
-	    # saved image. jfa 04/28/2002
-	    #mike FIXME: this means xmaxima on windows is GCL only
-	
-	    set env(MAXIMA_INT_LISP_PRELOAD)  "$lisp"
-	    set env(MAXIMA_INT_INPUT_STRING)  ":lisp (progn (user::setup PORT)(values));"
-	    lappend command -eval "(run)" -f
-	
-	}
-
+	lappend command -eval "(maxima::start-server PORT)" -eval "(run)" -f
+    } else { 
+        # vvz: Windows NT/2000/XP
+	if {$tcl_platform(platform) == "windows"} {
+	  lappend command -s PORT
+        # vvz: Unix. Should be as above but we need this due to
+        # weird behaviour with some lisps - Why?
+	} else {
+          lappend command -r ":lisp (start-server PORT)"
+        }
     }
-
 
     lappend command &
     set maxima_priv(localMaximaServer) $command

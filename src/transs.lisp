@@ -271,14 +271,16 @@
 	 (setq result (list '(mlist) input-file)))
 	(t (setq result (translate-file input-file translation-output-file))
 	   (setq input-file (third result))))
-  #+(or cmu clisp)
+  #+(or cmu sbcl clisp allegro openmcl)
   (multiple-value-bind (output-truename warnings-p failure-p)
-      (compile-file input-file :output-file (or bin-file t))
+      (if bin-file
+	  (compile-file input-file :output-file bin-file)
+	  (compile-file input-file))
     ;; If the compiler encountered errors, don't set bin-file to
     ;; indicate that we found errors. Is this what we want?
     (unless failure-p
       (setq bin-file output-truename)))
-  #-(or cmu clisp)
+  #-(or cmu sbcl clisp allegro openmcl)
   (setq bin-file (compile-file input-file :output-file bin-file))
   (append result (list bin-file)))
 
@@ -379,21 +381,62 @@
 #+cl
 (defun alter-pathname (pathname &rest options)
   (apply 'make-pathname :defaults (pathname  pathname)  options))
-#+cl
+
+(defun delete-with-side-effects-if (test list)
+  (declare (function test))
+  "Rudimentary DELETE-IF which, however, is guaranteed to call
+the function TEST exactly once for each element of LIST, from
+left to right."
+  (loop
+     while (and list (funcall test (car list)))
+     do (pop list))
+  (loop
+     with list = list
+     while (cdr list)
+     if (funcall test (cadr list))
+     do (pop (cdr list))
+     else
+     do (pop list))
+  list)
+
 (defun insert-necessary-function-declares (stream)
-  (sloop for v in *untranslated-functions-called*
-	when (get v 'once-translated)
-	do (setq  *untranslated-functions-called*  (delete v *untranslated-functions-called*))
-	and
-	collecting v into warns
-	finally (cond (warns
-		       (format stream "~2%;;The following functions declaration should ~
-                                          ;;go at the front of your macsyma file ~
-                                          ~%;;" )
-		       (mgrind `(($eval_when) $translate (($declare_translated) ,@ warns))
-			         stream)
-		       (format t "~%See the extra declarations at the end of the translated file.  They ~
-                     should be included in you macsyma file, and you should retranslate.")))))
+  "Write to STREAM two lists: The functions which are known to be
+translated without actually being in the list passed to
+$DECLARE_TRANSLATED, and those which are not known to be
+translated."
+  (let (translated hint)
+    (setq *untranslated-functions-called*
+	  (delete-with-side-effects-if
+	   #'(lambda (v)
+	       (prog1
+		   (or (setq translated
+			     (or (get v 'once-translated)
+				 (get v 'translated)))
+		       (and (fboundp v)
+			    ;; might be traced
+			    (not (mget v 'mexpr)))
+		       (get v 'mfexpr*))
+		 (when (and translated
+			    (not (memq v *declared-translated-functions*)))
+		   (push v hint))))
+	   *untranslated-functions-called*))
+    (when hint
+      (format
+       stream
+       "~2%/* The compiler might be able to optimize some function calls
+   if you prepend the following declaration to your maxima code: */~%")
+      (mgrind `(($eval_when) $translate (($declare_translated) ,@hint))
+	      stream)
+      (format stream "$"))
+    (when *untranslated-functions-called*
+      (format
+       stream
+       "~2%/* The following functions are not known to be translated.~%")
+      (mgrind `((mlist) ,@(nreverse *untranslated-functions-called*)) stream)
+      (format stream "$ */"))
+    (fresh-line stream)
+    (when (or hint *untranslated-functions-called*)
+      (format t "~&See the UNLISP file for possible optimizations."))))
 
 
 #+cl
@@ -401,14 +444,16 @@
 				    &optional
 				    (TTYMSGSP  $TR_FILE_TTY_MESSAGESP) &aux  warn-file
 				    translated-file
-				    *translation-msgs-files* *untranslated-functions-called*)
+				    *translation-msgs-files* *untranslated-functions-called* *declared-translated-functions*)
   (BIND-TRANSL-STATE
     (SETQ *IN-TRANSLATE-FILE* T)
     (setq translated-file (alter-pathname (or out-file-name in-file-name) :type "LISP"))
     (setq warn-file (alter-pathname in-file-name :type "UNLISP"))
     (with-open-file (in-stream in-file-name)
-      (with-open-file (out-stream translated-file :direction :output)
-	(with-open-file (warn-stream warn-file :direction :output)
+      (with-open-file (out-stream translated-file :direction :output
+				  :if-exists :supersede)
+	(with-open-file (warn-stream warn-file :direction :output
+				     :if-exists :supersede)
 	      (setq *translation-msgs-files* (list warn-stream))
 	  (IF TTYMSGSP
 	      (SETQ *TRANSLATION-MSGS-FILES*
@@ -433,7 +478,7 @@
 	  (MFORMAT *terminal-io* "~%Translation begun on ~A.~%"
 		   (pathname in-stream))
 	  (CALL-BATCH1 in-stream out-stream)
-	  (insert-necessary-function-declares out-stream)
+	  (insert-necessary-function-declares warn-stream)
 	  ;; BATCH1 calls TRANSLATE-MACEXPR-toplevel on each expression read.
 	  (cons '(mlist) 
 		(mapcar 'namestring

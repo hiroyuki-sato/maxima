@@ -5,6 +5,7 @@
 #+(or lispm kcl)
 (error "the errset special form is defined elsewhere for these machines")
 
+#||
 #+excl ;for franz common lisp
 (defmacro errset (&rest l)
   `(multiple-value-bind
@@ -13,6 +14,7 @@
     (cond (noerr (list val))
 	  (errset (error "error inside errset"))
 	  (t nil))))
+||#
 
 #+lucid
 (defmacro errset (&rest l)
@@ -33,12 +35,13 @@
 ;;at all, that caught no errors but at least
 ;;returned a list in the normal case would be 
 
-#+(or cmu clisp)
+#+(or cmu sbcl clisp allegro mcl)
 (defmacro errset (&rest l)
    `(handler-case (list ,(car l))
      (error (e) (when errset (error e)))))
 
-#-(or excl clisp cmu lucid)
+
+#-(or excl clisp cmu sbcl mcl lucid)
 (defmacro errset (&rest l) `(list ,(car l)))
 
 
