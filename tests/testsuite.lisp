@@ -7,6 +7,7 @@
 
 (setf $testsuite_files
       '((mlist simp)
+        "rtest_rules"
         "rtestnset" "rtest1" "rtest1a"
         ((mlist) "rtest2" 86 95)
          "rtest4"
@@ -45,7 +46,7 @@
         "rtest_boolean"
         "rtest_round"
         ((mlist simp) "rtest_map" 2 3 4)
-        ((mlist simp) "rtest_sign" 21 25 30 40 65 72 77 79)
+        ((mlist simp) "rtest_sign" 21 25 30 40 65 72 79)
         "rtest_algebraic"
         "rtest_gamma"
         "rtest_expintegral"

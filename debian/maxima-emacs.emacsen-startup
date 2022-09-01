@@ -1,0 +1,37 @@
+;; -*-emacs-lisp-*-
+;;
+;; Emacs startup file for the Debian GNU/Linux maxima package
+;;
+;; Originally contributed by Nils Naumann <naumann@unileoben.ac.at>
+;; Modified by Dirk Eddelbuettel <edd@debian.org>
+;; Adapted for dh-make by Jim Van Zandt <jrv@vanzandt.mv.com>
+
+;; The maxima package follows the Debian/GNU Linux 'emacsen' policy and
+;; byte-compiles its elisp files for each 'emacs flavor' (emacs19,
+;; xemacs19, emacs20, xemacs20...).  The compiled code is then
+;; installed in a subdirectory of the respective site-lisp directory.
+;; We have to add this to the load-path:
+(debian-pkg-add-load-path-item (concat "/usr/share/"
+                              (symbol-name debian-emacs-flavor)
+                              "/site-lisp/maxima"))
+;(setq load-path (cons (concat "/usr/share/"
+;                              (symbol-name debian-emacs-flavor)
+;                              "/site-lisp/maxima") load-path ))
+
+; To enable maxima-info and maxima-help from emacs menu on Debian
+; auto-compression-mode must be on for maxima-help
+(setq maxima-info-dir "/usr/share/info/"
+      maxima-info-index-file "maxima.info-3.gz")
+
+(autoload 'maxima "maxima" "" t)
+
+
+; For emaxima.lisp to be found and tex update mode to be enabled.
+;
+;(debian-pkg-add-load-path-item "/usr/share/emacs/site-lisp/maxima")
+;
+(autoload 'emaxima-mode "emaxima" "" t)
+
+(autoload 'imaxima "imaxima" "" t)
+
+(autoload 'imath-mode "imath" "" t)
