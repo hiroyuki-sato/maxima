@@ -345,11 +345,13 @@ gcl_depends_targets = (list "binary-gcl/maxima" "tools/sys-proclaim.lisp")
 tools/sys-proclaim.lisp: maxima.system *.lisp
 	rm -rf binary-gcl
 	touch sys-proclaim.lisp
+	mkdir -p tools
+	cp sys-proclaim.lisp tools
 	$(MAKE) bd
 	echo '(load "generate-sys-proclaim.lisp") (system::quit)' | $(EXECUTEGCL)
 	rm -rf binary-gcl
 	mkdir -p tools
-	mv sys-proclaim.lisp tools
+	cp sys-proclaim.lisp tools
 
 gcl: binary-gcl/maxima
 
